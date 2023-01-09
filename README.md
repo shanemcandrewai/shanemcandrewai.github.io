@@ -1,15 +1,16 @@
 # Jack and the beanmaze
-## WASD
-move
-## R|F
-up | down
-## Q|E</b> roll, <b>up|down</b> pitch, <b>left|right</b> yaw
-		</div>
-		
+## Controls
 | Keys | Action |
-| --- | --- |
-| W | WASD |
-| move | WASD |
-| move | WASD |
-| move | WASD |
-| move | WASD |
+| ---- | ------ |
+| W | forward |
+| A | back |
+| S | left |
+| D | right |
+| R | up |
+| F | down |
+| Q | roll clockwise|
+| E | roll anticlockwise|
+| ↑ | pitch up|
+| ↓ | pitch down|
+| ← | yaw left|
+| → | yaw right|
