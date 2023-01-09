@@ -1,16 +1,16 @@
 # Jack and the beanmaze
 ## Controls
-| Keys | Action |
+| Key | Action | Mouse
 | ---- | ------ |
-| W | forward |
-| A | back |
+| W | forward | hold left-click
+| A | back | hold right-click
 | S | left |
 | D | right |
 | R | up |
 | F | down |
 | Q | roll clockwise|
 | E | roll anticlockwise|
-| ↑ | pitch up|
-| ↓ | pitch down|
-| ← | yaw left|
-| → | yaw right|
+| ↑ | pitch up| forward
+| ↓ | pitch down| backward
+| ← | yaw left| left
+| → | yaw right| right
