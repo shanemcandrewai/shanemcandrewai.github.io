@@ -1,4 +1,4 @@
-# Jack and the beanmaze
+# Jack and the mazestalk
 ## Controls
 | Key | Action | Mouse |
 | --- | ------ | ----- |
