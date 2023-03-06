@@ -3,28 +3,39 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Bootstrap w/ Webpack</title>
+    <link rel="stylesheet" href="./libs/bootstrap/dist/css/bootstrap.css">
+    <title>Bootstrap Sass &amp; ESM JS</title>
+    <script type="importmap">
+    {
+      "imports": {
+        "@popperjs/core": "./libs/@popperjs/core/dist/esm/popper-lite.js",
+        "bootstrap": "./libs/bootstrap/dist/js/bootstrap.esm.js"
+      }
+    }
+    </script>
+    <script type="module" src="js/main.js"></script>	
   </head>
   <body>
     <div class="container py-4 px-3 mx-auto">
+
       <header class="d-flex justify-content-between align-items-md-center pb-3 mb-5 border-bottom">
         <h1 class="h4">
           <a href="/" class="d-flex align-items-center text-dark text-decoration-none">
-            <img class="d-inline-block me-2" width="40" height="32" src="https://icons.getbootstrap.com/assets/icons/bootstrap-fill.svg" alt="Bootstrap">
-            <span>Webpack</span>
+            <img class="d-inline-block me-2" width="40" height="32" src="https://raw.githubusercontent.com/twbs/bootstrap/main/site/static/docs/5.3/assets/brand/bootstrap-logo-black.svg" alt="Bootstrap">
+            <span>Sass &amp; ESM JS</span>
           </a>
         </h1>
-        <a href="https://github.com/twbs/examples/tree/main/webpack/" target="_blank" rel="noopener">View on GitHub</a>
+        <a href="https://github.com/twbs/examples/tree/main/sass-js-esm/" target="_blank" rel="noopener">View on GitHub</a>
       </header>
 
-      <h1>Build Bootstrap with Webpack</h1>
+      <h1>Get started with Bootstrap</h1>
       <div class="col-lg-8 px-0">
-        <p class="fs-4">You've successfully loaded the Bootstrap + Webpack example! It's loaded up with <a href="https://getbootstrap.com/">Bootstrap 5</a> and uses Webpack to compile and bundle our Sass and JavaScript. It also includes Autoprefixer.</p>
+        <p class="fs-4">You've successfully loaded up a Bootstrap example! It's loaded up with <a href="https://getbootstrap.com/">Bootstrap 5</a>, Sass, and <a href="https://github.com/guybedford/es-module-shims">ES Modules Shims</a> for our JavaScript plugins.</p>
         <p>If this button appears blue and the link appears purple, you've done it!</p>
       </div>
 
       <button type="button" class="btn btn-primary me-3" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample">Toggle offcanvas</button>
-      <a id="popoverButton" class="text-success" href="#" role="button" data-bs-toggle="popover" title="Custom popover" data-bs-content="This is a Bootstrap popover.">Example popover</a>
+      <a id="popoverButton" class="text-success" href="#" role="button" data-bs-toggle="popover" title="Custom popover" data-bs-content="This popover is created thanks to an ESM shim.">Example popover</a>
 
       <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasExample" aria-labelledby="offcanvasExampleLabel">
         <div class="offcanvas-header">
@@ -65,6 +76,7 @@
       <p class="text-muted">Created and open sourced by the Bootstrap team. Licensed MIT.</p>
     </div>
 
-    <script src="./main.js"></script>
+    <!-- <script async src="https://ga.jspm.io/npm:es-module-shims@1.5.5/dist/es-module-shims.js"></script> -->
+
   </body>
 </html>
