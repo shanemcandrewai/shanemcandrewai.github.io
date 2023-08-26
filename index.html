@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en-US">
   <head>
     <meta charset="UTF-8" />
@@ -14,7 +14,7 @@
         <label for="fileSize">Total size:</label>
         <output id="fileSize">0</output>
       </div>
-      <div><input type="submit" value="Send file" /></div>
+      <!-- <div><input type="submit" value="Send file" /></div> -->
     </form>
 
     <script>
@@ -42,7 +42,7 @@
           ];
           const exponent = Math.min(
             Math.floor(Math.log(numberOfBytes) / Math.log(1024)),
-            units.length - 1,
+            units.length - 1
           );
           const approx = numberOfBytes / 1024 ** exponent;
           const output =
@@ -56,7 +56,7 @@
             uploadInput.files.length;
           document.getElementById("fileSize").textContent = output;
         },
-        false,
+        false
       );
     </script>
   </body>
