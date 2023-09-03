@@ -1,0 +1,26 @@
+.ui {
+  font: 0.875rem Helvetica, Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  max-width: 30rem;
+  background-color: beige;
+}
+
+button {
+  width: 4rem;
+}
+
+.row-file,
+.row-button {
+  background-color: azure;
+  display: flex;
+  justify-content: space-between;
+  margin: 0.5rem;
+}
+
+.record {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  margin: 0.5rem;
+  background-color: bisque;
+}

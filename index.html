@@ -1,64 +1,42 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-US">
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>ProJourDyn: Project Journaling client-side dynamic web page</title>
-    <script type="module" src="main.js"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>projour test</title>
+    <link href="main.css" rel="stylesheet" />
+    <script src="js/upload.js"></script>
   </head>
-  <body>
-    <div class="container py-4 mx-auto">
-      <header
-        class="d-flex justify-content-between align-items-md-center pb-3 mb-5 border-bottom"
-      >
-        <h1 class="h4">
-          <a
-            href="/"
-            class="d-flex align-items-center text-dark text-decoration-none"
-          >
-            <img
-              class="d-inline-block me-2"
-              width="40"
-              height="32"
-              src="4.png"
-              alt="ProJourDyn"
-            />
-            <span>ProJourDyn</span>
-          </a>
-        </h1>
-        <a
-          href="https://github.com/shanemcandrewai/projourdyn"
-          target="_blank"
-          rel="noopener"
-          >View on GitHub</a
-        >
-      </header>
 
-      <h3>Project Journaling client-side dynamic web page</h3>
-      <div class="container text-center font-monospace">
-        <div class="row">
-          <div class="col">
-            <div class="form-floating">
-              <textarea
-                class="form-control"
-                placeholder="Input"
-                id="floatingInput"
-                style="height: 100px; min-width: 100%"
-              ></textarea>
-            </div>
-          </div>
-          <div class="col">
-            <div class="form-floating">
-              <textarea
-                class="form-control"
-                placeholder="Output"
-                id="floatingOutput"
-                style="height: 500px; min-width: 100%"
-                readonly
-              ></textarea>
-            </div>
-          </div>
-        </div>
+  <body>
+    <div class="ui">
+      <div class="row-file">
+        <input id="uploadInput" type="file" multiple />
+        <input type="text" maxlength="80" />
+      </div>
+      <div class="row-button">
+        <button type="button">insert</button>
+        <button type="button">update</button>
+        <button type="button">delete</button>
+        <button type="button">filter</button>
+      </div>
+      <div class="row-button">
+        <button type="button">next</button>
+        <button type="button">previous</button>
+        <button type="button">up</button>
+        <button type="button">down</button>
+      </div>
+      <div class="record">
+        <label for="id">ID: </label>
+        <input id="id" type="number" max="99999" />
+        <label for="created">Created: </label>
+        <input id="created" type="date" />
+        <label for="priority">Priority: </label>
+        <input id="priority" type="number" maxlength="1" />
+        <label for="description">Description: </label>
+        <input id="description" type="text" maxlength="200" />
+        <label for="due">Due: </label>
+        <input id="due" type="date" />
       </div>
     </div>
   </body>
