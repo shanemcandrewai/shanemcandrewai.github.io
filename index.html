@@ -5,14 +5,17 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>projour test</title>
     <link href="main.css" rel="stylesheet" />
-    <script src="js/upload.js"></script>
+    <script type="module" src="js/main.js"></script>
   </head>
 
   <body>
     <div class="ui">
       <div class="row-file">
         <input id="uploadInput" type="file" multiple />
-        <input type="text" maxlength="80" />
+      </div>
+      <div class="row-file">
+        <button id="dropbox" type="button">Get dropbox access code</button>
+        <input type="text" maxlength="80" placeholder="Paste acess code here" />
       </div>
       <div class="row-button">
         <button type="button">insert</button>
@@ -32,7 +35,7 @@
         <label for="created">Created: </label>
         <input id="created" type="date" />
         <label for="priority">Priority: </label>
-        <input id="priority" type="number" maxlength="1" />
+        <input id="priority" type="number" max="5" />
         <label for="description">Description: </label>
         <input id="description" type="text" maxlength="200" />
         <label for="due">Due: </label>
