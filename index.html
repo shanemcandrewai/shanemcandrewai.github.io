@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en-US">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>projour test</title>
+    <title>wl</title>
     <link href="main.css" rel="stylesheet" />
     <script type="module" src="js/main.js"></script>
   </head>
@@ -11,11 +11,8 @@
   <body>
     <div class="ui">
       <div class="row-file">
-        <input id="uploadInput" type="file" multiple />
-      </div>
-      <div class="row-file">
-        <button id="dropbox" type="button">Get dropbox access code</button>
-        <input type="text" maxlength="80" placeholder="Paste acess code here" />
+        <input class="elem" id="uploadInput" type="file" />
+        <div class="elem" id="fileList">No files selected!</div>
       </div>
       <div class="row-button">
         <button type="button">insert</button>
@@ -30,16 +27,16 @@
         <button type="button">down</button>
       </div>
       <div class="record">
-        <label for="id">ID: </label>
-        <input id="id" type="number" max="99999" />
-        <label for="created">Created: </label>
-        <input id="created" type="date" />
-        <label for="priority">Priority: </label>
-        <input id="priority" type="number" max="5" />
-        <label for="description">Description: </label>
-        <input id="description" type="text" maxlength="200" />
-        <label for="due">Due: </label>
-        <input id="due" type="date" />
+        <label class="elem" for="id">ID</label>
+        <input class="elem"  id="id" type="number" max="99999" />
+        <label class="elem"  for="created">Created</label>
+        <input class="elem"  id="created" type="date" />
+        <label class="elem"  for="priority">Priority</label>
+        <input class="elem"  id="priority" type="number" max="5" />
+        <label class="elem"  for="description">Description</label>
+        <input class="elem"  id="description" type="text" maxlength="200" />
+        <label class="elem"  for="due">Due</label>
+        <input class="elem"  id="due" type="date" />
       </div>
     </div>
   </body>

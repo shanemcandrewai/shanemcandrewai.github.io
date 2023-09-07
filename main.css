@@ -10,21 +10,26 @@ button {
   width: 4rem;
 }
 
-#dropbox {
-  width: 11rem;
-}
-
 .row-file,
 .row-button {
   background-color: azure;
   display: flex;
   justify-content: space-between;
   margin: 0.5rem;
+  align-items: center;
 }
 
 .record {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: auto 1fr;
   margin: 0.5rem;
   background-color: bisque;
+  gap: 0 0.5rem;
+  flex-wrap: wrap;
+
+}
+
+.elem {
+  display: flex;
+  align-items: center
 }
