@@ -10,17 +10,19 @@
 
   <body>
     <div class="ui">
-      <div class="row-file">
-        <input class="elem" id="uploadInput" type="file" />
-        <div class="elem" id="fileList">No files selected!</div>
+      <div class="row">
+        <label id="selectFile" for="uploadInput">Selected file</label>
+        <input id="uploadInput" type="file" />
+        <button id="load" type="button" disabled="true">load</button>
+        <button id="save" type="button" disabled="true">save</button>
       </div>
-      <div class="row-button">
+      <div class="row">
         <button type="button">insert</button>
         <button type="button">update</button>
         <button type="button">delete</button>
         <button type="button">filter</button>
       </div>
-      <div class="row-button">
+      <div class="row">
         <button type="button">next</button>
         <button type="button">previous</button>
         <button type="button">up</button>
@@ -28,16 +30,17 @@
       </div>
       <div class="record">
         <label class="elem" for="id">ID</label>
-        <input class="elem"  id="id" type="number" max="99999" />
-        <label class="elem"  for="created">Created</label>
-        <input class="elem"  id="created" type="date" />
-        <label class="elem"  for="priority">Priority</label>
-        <input class="elem"  id="priority" type="number" max="5" />
-        <label class="elem"  for="description">Description</label>
-        <input class="elem"  id="description" type="text" maxlength="200" />
-        <label class="elem"  for="due">Due</label>
-        <input class="elem"  id="due" type="date" />
+        <input class="elem" id="id" type="number" max="99999" />
+        <label class="elem" for="created">Created</label>
+        <input class="elem" id="created" type="date" />
+        <label class="elem" for="priority">Priority</label>
+        <input class="elem" id="priority" type="number" max="5" />
+        <label class="elem" for="description">Description</label>
+        <input class="elem" id="description" type="text" maxlength="200" />
+        <label class="elem" for="due">Due</label>
+        <input class="elem" id="due" type="date" />
       </div>
+      <div id="messages" />
     </div>
   </body>
 </html>

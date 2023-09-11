@@ -1,7 +1,12 @@
+@import url("normalize.css");
+
 .ui {
-  font: 0.875rem Helvetica, Arial, sans-serif;
   display: flex;
   flex-direction: column;
+  font:
+    0.875rem Helvetica,
+    Arial,
+    sans-serif;
   max-width: 30rem;
   background-color: beige;
 }
@@ -10,26 +15,31 @@ button {
   width: 4rem;
 }
 
-.row-file,
-.row-button {
-  background-color: azure;
+.row {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   margin: 0.5rem;
-  align-items: center;
+  background-color: azure;
 }
 
 .record {
   display: grid;
   grid-template-columns: auto 1fr;
   margin: 0.5rem;
-  background-color: bisque;
   gap: 0 0.5rem;
-  flex-wrap: wrap;
-
+  background-color: bisque;
 }
 
 .elem {
   display: flex;
-  align-items: center
+  align-items: center;
+}
+
+#uploadInput {
+  opacity: 0;
+}
+
+#selectFile {
+  background-color: yellow;
 }
