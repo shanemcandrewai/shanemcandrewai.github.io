@@ -5,28 +5,28 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>wl</title>
     <link href="main.css" rel="stylesheet" />
-    <script type="module" src="js/main.js"></script>
+    <script type="module" src="js/view.js"></script>
   </head>
 
   <body>
     <div class="ui">
       <div class="row">
-        <label id="selectFile" for="uploadInput">Selected file</label>
+        <label id="selectFile" for="uploadInput">Select file</label>
         <input id="uploadInput" type="file" />
         <button id="load" type="button" disabled="true">load</button>
         <button id="save" type="button" disabled="true">save</button>
       </div>
       <div class="row">
-        <button type="button">insert</button>
-        <button type="button">update</button>
-        <button type="button">delete</button>
-        <button type="button">filter</button>
+        <button id="insert" type="button">insert</button>
+        <button id="update" type="button">update</button>
+        <button id="delete" type="button">delete</button>
+        <button id="filter" type="button">filter</button>
       </div>
       <div class="row">
-        <button type="button">next</button>
-        <button type="button">previous</button>
-        <button type="button">up</button>
-        <button type="button">down</button>
+        <button id="next" type="button">next</button>
+        <button id="previous" type="button">previous</button>
+        <button id="up" type="button">up</button>
+        <button id="down" type="button">down</button>
       </div>
       <div class="record">
         <label class="elem" for="id">ID</label>
