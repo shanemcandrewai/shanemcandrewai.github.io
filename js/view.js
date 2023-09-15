@@ -1,77 +1,72 @@
-import {
-  readFile, getRec, getdb, insertRec, recStruct,
-} from './model.js';
+import * as model from './model.js';
 
-const selectFile = document.getElementById('selectFile');
-const uploadInput = document.getElementById('uploadInput');
-const load = document.getElementById('load');
-const save = document.getElementById('save');
-const insert = document.getElementById('insert');
-
-const view = {};
-for (const element of recStruct) {
-  view[element] = document.getElementById(element);
-}
-
-const messages = document.getElementById('messages');
+const viewDataNames = ['id', 'created', 'priority', 'description', 'due'];
+const viewElemNames = ['selectFile', 'uploadInput', 'load', 'save', 'insert',
+  'update', 'messages'].concat(viewDataNames);
+const viewElems = new Map();
+for (const elem of viewElemNames) viewElems.set(elem, document.getElementById(elem));
 
 const changeEventCB = async () => {
-  save.disabled = false;
-  load.disabled = false;
-  selectFile.innerText = uploadInput.files[0].name;
+  viewElems.get('save').disabled = false;
+  viewElems.get('load').disabled = false;
+  viewElems.get('selectFile').innerText = viewElems.get('uploadInput').files[0].name;
 };
 
-const fillView = (idin) => {
-  const rec = getRec(idin);
-  for (const [k, v] of Object.entries(view)) {
-    v.value = rec[k];
+const fillView = (id) => {
+  const rec = model.getRec(id);
+  if (rec) viewElems.get('id').value = id;
+  for (const [k, v] of rec) {
+    viewElems.get(k).value = v;
   }
 };
 
 const loadCB = async () => {
-  selectFile.innerText = uploadInput.files[0].name;
-  messages.innerText = '';
+  viewElems.get('selectFile').innerText = viewElems.get('uploadInput').files[0].name;
+  viewElems.get('messages').innerText = '';
   try {
-    await readFile(uploadInput.files);
-    if (!view.id.value) fillView(0);
+    await model.readFile(viewElems.get('uploadInput').files[0]);
+    const currId = viewElems.get('id').value;
+    if (currId) {
+      fillView(Number(currId));
+    } else {
+      fillView(1);
+    }
   } catch (readFileError) {
-    messages.innerText = readFileError;
-    selectFile.innerText = 'Select file again';
+    viewElems.get('messages').innerText = readFileError;
+    viewElems.get('selectFile').innerText = 'Select file again';
   }
 };
 
 const saveCB = () => {
-  const bjson = new Blob([JSON.stringify(getdb(), null, 2)], { type: 'application/json' });
+  const bjson = model.getdbBlob();
   const anc = document.createElement('a');
-  anc.download = uploadInput.files[0].name;
+  anc.download = viewElems.get('uploadInput').files[0].name;
   anc.href = window.URL.createObjectURL(bjson);
   anc.click();
 };
 
-const insertCB = () => {
-  const rec = {};
-  for (const [k, v] of Object.entries(view)) {
-    rec[k] = v.value;
+const getRec = () => {
+  const rec = new Map();
+  for (const elem of viewDataNames) {
+    if (viewElems.get(elem).type === 'number') {
+      rec.set(elem, Number(viewElems.get(elem).value));
+    } else {
+      rec.set(elem, viewElems.get(elem).value);
+    }
   }
-  insertRec(rec);
+  return rec;
 };
 
-uploadInput.addEventListener(
-  'change',
-  changeEventCB,
-);
+const insertCB = () => {
+  viewElems.get('messages').innerText = model.insertRec(getRec());
+};
 
-load.addEventListener(
-  'click',
-  loadCB,
-);
+const updateCB = () => {
+  viewElems.get('messages').innerText = model.updateRec(getRec());
+};
 
-save.addEventListener(
-  'click',
-  saveCB,
-);
-
-insert.addEventListener(
-  'click',
-  insertCB,
-);
+viewElems.get('uploadInput').addEventListener('change', changeEventCB);
+viewElems.get('load').addEventListener('click', loadCB);
+viewElems.get('save').addEventListener('click', saveCB);
+viewElems.get('insert').addEventListener('click', insertCB);
+viewElems.get('update').addEventListener('click', updateCB);
