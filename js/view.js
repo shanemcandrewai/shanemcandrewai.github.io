@@ -1,4 +1,6 @@
-import * as model from './model.js';
+import {
+  insertRec, updateRec, getRecDb, readFile, getdbBlob,
+} from './model.js';
 
 const viewDataNames = ['id', 'created', 'priority', 'description', 'due'];
 const viewElemNames = ['selectFile', 'uploadInput', 'load', 'save', 'insert',
@@ -13,7 +15,7 @@ const changeEventCB = async () => {
 };
 
 const fillView = (id) => {
-  const rec = model.getRec(id);
+  const rec = getRecDb(id);
   if (rec) viewElems.get('id').value = id;
   for (const [k, v] of rec) {
     viewElems.get(k).value = v;
@@ -24,7 +26,7 @@ const loadCB = async () => {
   viewElems.get('selectFile').innerText = viewElems.get('uploadInput').files[0].name;
   viewElems.get('messages').innerText = '';
   try {
-    await model.readFile(viewElems.get('uploadInput').files[0]);
+    await readFile(viewElems.get('uploadInput').files[0]);
     const currId = viewElems.get('id').value;
     if (currId) {
       fillView(Number(currId));
@@ -38,7 +40,7 @@ const loadCB = async () => {
 };
 
 const saveCB = () => {
-  const bjson = model.getdbBlob();
+  const bjson = getdbBlob();
   const anc = document.createElement('a');
   anc.download = viewElems.get('uploadInput').files[0].name;
   anc.href = window.URL.createObjectURL(bjson);
@@ -58,11 +60,11 @@ const getRec = () => {
 };
 
 const insertCB = () => {
-  viewElems.get('messages').innerText = model.insertRec(getRec());
+  viewElems.get('messages').innerText = insertRec(getRec());
 };
 
 const updateCB = () => {
-  viewElems.get('messages').innerText = model.updateRec(getRec());
+  viewElems.get('messages').innerText = updateRec(getRec());
 };
 
 viewElems.get('uploadInput').addEventListener('change', changeEventCB);
