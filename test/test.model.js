@@ -1,107 +1,50 @@
 import './mocha.js';
 import './chai.js';
-import {
-  empty, insertRec, updateRec, deleteRec, getRecDb, getArrayObjs,
-} from '../js/model.js';
-import { mapEncoder, mapDecoder, getExcel } from '../js/converters.js';
+import * as model from '../js/model.js';
 
-mocha.setup('tdd');
-mocha.checkLeaks();
+// const dbTest = new Map([[1, new Map([['created', '2023-09-15'], ['priority', 1],
+// ['description', 'aaa'], ['due', '']])], [2, new Map([['created', '2023-09-16'],
+// ['priority', 2], ['description', 'bbb'], ['due', '']])]]);
 
-/* global suite, test, mocha, chai */
+const dbTestInsert1 = new Map([['id', 1], ['created', '2023-09-15'], ['priority', 1], ['description', 'aaa'], ['due', '']]);
+const dbTestInsert2 = new Map([['id', 2], ['created', '2023-09-16'], ['priority', 2], ['description', 'bbb'], ['due', '']]);
 
-suite('Data conversions', () => {
-  test('Map encoded to JSON', () => {
-    const db = new Map([[1, new Map([['created', '2023-09-16']])]]);
-    const encodedDb = JSON.stringify(db, mapEncoder);
-    const expectText = '{"dataType":"Map","value":[[1,{"dataType":"Map","value":'
-      + '[["created","2023-09-16"]]}]]}';
-    chai.assert.equal(encodedDb, expectText);
-  });
-  test('JSON decoded to the Map', () => {
-    const dbjson = '{"dataType":"Map","value":[[1,{"dataType":"Map","value":'
-      + '[["created","2023-09-16"]]}]]}';
-    const db = JSON.parse(dbjson, mapDecoder);
-    chai.assert.equal(db.get(1).get('created'), '2023-09-16');
-  });
-});
+/* global suite, test, chai */
 
 suite('DB record operations', () => {
   test('empty', () => {
-    const rec = JSON.parse('{"dataType":"Map","value":[["id",1],["created","2023-09-15"],'
-    + '["priority",3],["description","aaa"],["due",""]]}', mapDecoder);
-    chai.assert.equal(insertRec(rec), 'Record successfully inserted');
-    chai.assert.equal(empty(), 'DB succesfully emptied');
+    chai.assert.equal(model.insertRec(new Map(dbTestInsert1)), 'Record successfully inserted');
+    chai.assert.equal(model.empty(), 'DB succesfully emptied');
   });
   test('insert', () => {
-    empty();
-    let rec = JSON.parse('{"dataType":"Map","value":[["id",1],["created","2023-09-15"],'
-    + '["priority",3],["description","aaa"],["due",""]]}', mapDecoder);
-    chai.assert.equal(insertRec(new Map(rec)), 'Record successfully inserted');
-    rec = JSON.parse('{"dataType":"Map","value":[["id",3],["created","2023-09-15"],'
-    + '["priority",3],["description","aaa"],["due",""]]}', mapDecoder);
-    insertRec(rec);
-    chai.assert.equal(getRecDb(3).get('priority'), 3);
+    model.empty();
+    model.insertRec(new Map(dbTestInsert1));
+    model.insertRec(new Map(dbTestInsert2));
+    chai.assert.equal(model.getRecDb(2).get('priority'), 2);
   });
   test('insert resists duplicate keys', () => {
-    empty();
-    const rec = JSON.parse('{"dataType":"Map","value":[["id",3],["created","2023-09-15"],'
-    + '["priority",3],["description","aaa"],["due",""]]}', mapDecoder);
-    insertRec(new Map(rec));
-    chai.assert.notEqual(insertRec(new Map(rec)), 'Record successfully inserted');
+    model.empty();
+    model.insertRec(new Map(dbTestInsert1));
+    chai.assert.notEqual(model.insertRec(dbTestInsert1), 'Record successfully inserted');
   });
   test('update', () => {
-    empty();
-    let rec = JSON.parse('{"dataType":"Map","value":[["id",3],["created","2023-09-15"],'
-    + '["priority",3],["description","aaa"],["due",""]]}', mapDecoder);
-    insertRec(rec);
-    rec = JSON.parse('{"dataType":"Map","value":[["id",3],["created","2023-09-15"],'
-    + '["priority",4],["description","aaa"],["due",""]]}', mapDecoder);
-    updateRec(rec);
-    chai.assert.equal(getRecDb(3).get('priority'), 4);
+    model.empty();
+    model.insertRec(new Map(dbTestInsert1));
+    model.insertRec(new Map(dbTestInsert2));
+    const updated = new Map(dbTestInsert2);
+    updated.set('priority', 4);
+    model.updateRec(updated);
+    chai.assert.equal(model.getRecDb(2).get('priority'), 4);
   });
   test('delete', () => {
-    empty();
-    const rec = JSON.parse('{"dataType":"Map","value":[["id",1],["created","2023-09-15"],'
-    + '["priority",3],["description","aaa"],["due",""]]}', mapDecoder);
-    chai.assert.equal(insertRec(rec), 'Record successfully inserted');
-    chai.assert.equal(deleteRec(1), 'Record successfully deleted');
+    model.empty();
+    chai.assert.equal(model.insertRec(new Map(dbTestInsert1)), 'Record successfully inserted');
+    chai.assert.equal(model.deleteRec(1), 'Record successfully deleted');
+  });
+  test('get max id', () => {
+    model.empty();
+    chai.assert.equal(model.insertRec(new Map(dbTestInsert2)), 'Record successfully inserted');
+    chai.assert.equal(model.insertRec(new Map(dbTestInsert1)), 'Record successfully inserted');
+    chai.assert.equal(model.getMaxID(), 2);
   });
 });
-
-suite('DB to Excel', () => {
-  test('convert db to array of objects', () => {
-    empty();
-    let rec = JSON.parse(
-      '{"dataType":"Map","value":[["id",1],["created",'
-    + '"2023-09-15"],["priority",1],["description","aaa"],["due",""]]}',
-      mapDecoder,
-    );
-    insertRec(rec);
-    rec = JSON.parse(
-      '{"dataType":"Map","value":[["id",2],["created",'
-    + '"2023-09-15"],["priority",2],["description","bbb"],["due",""]]}',
-      mapDecoder,
-    );
-    insertRec(rec);
-    chai.assert.equal(getArrayObjs()[1].priority, 2);
-  });
-  test('convert db to workbook', () => {
-    empty();
-    let rec = JSON.parse(
-      '{"dataType":"Map","value":[["id",1],["created",'
-    + '"2023-09-15"],["priority",1],["description","aaa"],["due",""]]}',
-      mapDecoder,
-    );
-    insertRec(rec);
-    rec = JSON.parse(
-      '{"dataType":"Map","value":[["id",2],["created",'
-    + '"2023-09-15"],["priority",2],["description","bbb"],["due",""]]}',
-      mapDecoder,
-    );
-    insertRec(rec);
-    chai.assert.equal(getExcel().SheetNames[0], 'main');
-  });
-});
-
-mocha.run();

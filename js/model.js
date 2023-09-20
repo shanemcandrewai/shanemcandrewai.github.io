@@ -1,4 +1,5 @@
 import { mapEncoder, mapDecoder } from './converters.js';
+import { read, utils } from './xlsx.mjs';
 
 let db = new Map();
 
@@ -25,12 +26,28 @@ export const updateRec = (viewRec) => {
   return 'Record successfully updated';
 };
 export const deleteRec = (id) => {
-  db.delete(id);
-  return 'Record successfully deleted';
+  if (db.delete(id)) return 'Record successfully deleted';
+  return 'Record deletion failed';
+};
+
+export const getDbFromArrayObjs = (arrayObjs) => {
+  empty();
+  for (const [ind, obj] of arrayObjs.entries()) {
+    const row = new Map();
+    for (const [label, col] of Object.entries(obj)) {
+      row.set(label, col);
+    }
+    db.set(ind, row);
+  }
 };
 
 export const readFile = async (file) => {
-  if (file) db = JSON.parse(await file.text(), mapDecoder);
+  if (file) {
+    if (file.name.split('.').pop() === 'xlsx') {
+      const wb = read(await file.arrayBuffer());
+      getDbFromArrayObjs(utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]));
+    } else db = JSON.parse(await file.text(), mapDecoder);
+  }
 };
 
 export const getdbBlob = () => new Blob(
@@ -48,3 +65,5 @@ export const getArrayObjs = () => {
   }
   return dbArray;
 };
+
+export const getMaxID = () => Math.max(...db.keys());
