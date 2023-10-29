@@ -1,7 +1,7 @@
 export default class Local {
-  save(db) {
+  static save(db, filename) {
     const anc = document.createElement('a');
-    anc.download = this.file.name;
+    anc.download = filename;
     anc.href = window.URL.createObjectURL(db.getBlob());
     anc.click();
   }

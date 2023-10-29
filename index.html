@@ -17,20 +17,22 @@
         <button id="save" type="button" disabled="true">save</button>
       </div>
       <div class="row">
-        <button id="insert" type="button">insert</button>
-        <button id="update" type="button">update</button>
-        <button id="delete" type="button">delete</button>
-        <button id="filter" type="button">filter</button>
+        <button id="insert" type="button" disabled="true">insert</button>
+        <button id="update" type="button" disabled="true">update</button>
+        <button id="delete" type="button" disabled="true">delete</button>
+        <button id="filter" type="button" disabled="true">filter</button>
       </div>
       <div class="row">
-        <button id="next" type="button">next</button>
-        <button id="previous" type="button">previous</button>
-        <button id="up" type="button">up</button>
-        <button id="down" type="button">down</button>
+        <button id="next" type="button" disabled="true">next</button>
+        <button id="previous" type="button" disabled="true">previous</button>
+        <button id="up" type="button" disabled="true">up</button>
+        <button id="down" type="button" disabled="true">down</button>
       </div>
       <div class="record">
         <label class="elem" for="id">ID</label>
         <input class="elem" id="id" type="number" max="99999" />
+        <label class="elem" for="parent">Parent ID</label>
+        <input class="elem" id="parent" type="number" max="99999" />
         <label class="elem" for="created">Created</label>
         <input class="elem" id="created" type="datetime-local" />
         <label class="elem" for="priority">Priority</label>

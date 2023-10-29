@@ -5,60 +5,110 @@ export default class DataView {
     [
       ['id', new Map([
         ['elemID', null],
-        ['type', Number]])],
+        ['type', Number],
+        ['event', 'keyup']])],
+      ['parent', new Map([
+        ['elemID', null],
+        ['type', Number],
+        ['event', 'keyup']])],
       ['created', new Map([
         ['elemID', null],
-        ['type', 'datetime-local']])],
+        ['type', 'datetime-local'],
+        ['event', 'change']])],
       ['priority', new Map([
         ['elemID', null],
-        ['type', Number]])],
+        ['type', Number],
+        ['event', 'keyup']])],
       ['description', new Map([
         ['elemID', null],
-        ['type', String]])],
+        ['type', String],
+        ['event', 'keyup']])],
       ['due', new Map([
         ['elemID', null],
-        ['type', 'datetime-local']])],
+        ['type', 'datetime-local'],
+        ['event', 'change']])],
     ],
   );
 
-  db2view(id) {
+  db2view(db, id) {
     let recDB;
-    let nextID = id;
-    if (id === undefined) [nextID, recDB] = this.db.getIter().next().value;
-    else recDB = this.db.getRec(id);
-    if (recDB) this.data.get('id').get('elemID').value = nextID;
-    for (const [elem, value] of recDB) {
-      if (this.data.get(elem).get('type') === 'datetime-local' && value) {
-        const utc = UtcConv.getLocalDateTime(value);
-        this.data.get(elem).get('elemID').value = utc;
-      } else this.data.get(elem).get('elemID').value = value;
+    let nextID;
+    if (id === undefined) [nextID, recDB] = db.getIter().next().value;
+    else {
+      nextID = id;
+      recDB = db.getRec(id);
     }
-  }
-
-  view2db() {
-    let id;
-    for (const [elemName, elemRec] of this.data) {
-      const { value } = elemRec.get('elemID');
-      const type = elemRec.get('type');
-      if (elemName === 'id') {
-        id = Number(value);
-      } else if (type === Number) {
-        this.db.setRec(id, elemName, Number(value));
-      } else if (type === 'datetime-local' && value) {
-        this.db.setRec(id, elemName, UtcConv.getUTCDateTime(value));
-      } else if (type === 'datetime-local') {
-        this.db.setRec(id, elemName, null);
-      } else {
-        this.db.setRec(id, elemName, value);
+    if (recDB) {
+      this.data.get('id').get('elemID').value = nextID;
+      for (const [elemName, elemRec] of this.data) {
+        if (elemName !== 'id') {
+          const valueDB = recDB.get(elemName);
+          if (valueDB === undefined) {
+            elemRec.get('elemID').value = '';
+          } else if (elemRec.get('type') === 'datetime-local' && valueDB) {
+            const utc = UtcConv.getLocalDateTime(valueDB);
+            elemRec.get('elemID').value = utc;
+          } else elemRec.get('elemID').value = valueDB;
+        }
       }
     }
   }
 
-  constructor(db) {
-    this.db = db;
-    for (const [field, attributes] of this.data) {
-      const elemID = document.getElementById(field);
-      attributes.set('elemID', elemID);
+  view2db = (db) => {
+    const viewID = Number(this.data.get('id').get('elemID').value);
+    for (const [elemName, elemRec] of this.data) {
+      if (elemName !== 'id') {
+        const valueView = elemRec.get('elemID').value;
+        const type = elemRec.get('type');
+        if (type === Number && valueView) {
+          db.setRec(viewID, elemName, Number(valueView));
+        } else if (type === 'datetime-local' && valueView) {
+          db.setRec(viewID, elemName, UtcConv.getUTCDateTime(valueView));
+        } else if (type === 'datetime-local') {
+          db.setRec(viewID, elemName, null);
+        } else {
+          db.setRec(viewID, elemName, valueView);
+        }
+      }
     }
+  };
+
+  needsUpdate(viewID, db) {
+    const dbRec = db.getRec(viewID);
+    if (dbRec === undefined) return false;
+    for (const [elemName, elemRec] of this.data) {
+      if (elemName !== 'id') {
+        const valueView = elemRec.get('elemID').value;
+        const type = elemRec.get('type');
+        const valueDB = dbRec.get(elemName);
+        if (type === Number && valueView) {
+          if (valueDB !== Number(valueView)) return true;
+        } else if (type === 'datetime-local' && valueView) {
+          if (valueDB !== UtcConv.getUTCDateTime(valueView)) return true;
+        } else if (type === 'datetime-local') {
+          if (valueDB) return true;
+        } else if (valueDB !== valueView) return true;
+      }
+    }
+    return false;
+  }
+
+  dataListener = () => {
+    this.controlview.updateControls();
+  };
+
+  callbacks = new Map(
+    [
+      ['id', this.dataListener],
+      ['parent', this.dataListener],
+      ['created', this.dataListener],
+      ['priority', this.dataListener],
+      ['description', this.dataListener],
+      ['due', this.dataListener],
+    ],
+  );
+
+  constructor(controlview) {
+    this.controlview = controlview;
   }
 }

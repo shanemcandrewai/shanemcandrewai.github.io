@@ -1,13 +1,13 @@
 import './libs/mocha.js';
 import './libs/chai.js';
-import ControlsView from '../js/controlsview.js';
+import ControlView from '../js/controlview.js';
 
-const controlsview = new ControlsView();
+const controlview = new ControlView();
 
 /* global suite, test, chai */
 
 suite('ControlsView', () => {
   test('instantiate', () => {
-    chai.assert.equal(controlsview.controls.get('uploadInput').get('event'), 'change');
+    chai.assert.equal(controlview.controls.get('uploadInput').get('event'), 'change');
   });
 });

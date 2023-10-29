@@ -31,9 +31,10 @@ suite(() => {
       await description.sendKeys('bbb');
       const update = await driver.findElement(By.id('update'));
       await update.click();
+
       const save = await driver.findElement(By.id('save'));
       await save.click();
-      await save.sendKeys('db.json');
+      await save.sendKeys('C:\\Users\\shane\\dev\\wl\\pub\\test\\db2.json');
     });
   });
 }, { browsers: [Browser.CHROME] });
