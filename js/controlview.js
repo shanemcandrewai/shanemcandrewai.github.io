@@ -54,8 +54,8 @@ export default class ControlView {
     this.storage = new Local(file);
     this.filename = file.name;
     this.controls.get('selectFile').get('elemID').innerText = file.name;
-    if (file.name.split('.').pop() === 'xlsx') this.db = new Xlsx(this.db);
-    else this.db = new Json(this.db);
+    if (file.name.split('.').pop() === 'xlsx') this.db = new Xlsx(this.db.getMap());
+    else this.db = new Json(this.db.getMap());
     this.updateControls();
   };
 
@@ -100,13 +100,49 @@ export default class ControlView {
 
   nextListener = () => {
     const viewID = Number(this.dataview.data.get('id').get('elemID').value);
-    this.dataview.db2view(this.db, Number(viewID) + 1);
+    let viewParent = this.dataview.data.get('parent').get('elemID').value;
+    if (typeof viewParent !== 'string' || viewParent) viewParent = Number(viewParent);
+    const keys = [...this.db.getMap().keys()].sort();
+    let nextFound = false;
+    for (const key of keys) {
+      if (key > viewID && this.db.getMap().get(key).get('parent') === viewParent) {
+        this.dataview.db2view(this.db, key);
+        nextFound = true;
+        break;
+      }
+    }
+    if (!nextFound) {
+      for (const key of keys) {
+        if (key > viewID) {
+          this.dataview.db2view(this.db, key);
+          break;
+        }
+      }
+    }
     this.updateControls();
   };
 
   previousListener = () => {
     const viewID = Number(this.dataview.data.get('id').get('elemID').value);
-    this.dataview.db2view(this.db, Number(viewID) - 1);
+    let viewParent = this.dataview.data.get('parent').get('elemID').value;
+    if (typeof viewParent !== 'string' || viewParent) viewParent = Number(viewParent);
+    const keys = [...this.db.getMap().keys()].sort().reverse();
+    let previousFound = false;
+    for (const key of keys) {
+      if (key < viewID && this.db.getMap().get(key).get('parent') === viewParent) {
+        this.dataview.db2view(this.db, key);
+        previousFound = true;
+        break;
+      }
+    }
+    if (!previousFound) {
+      for (const key of keys) {
+        if (key < viewID) {
+          this.dataview.db2view(this.db, key);
+          break;
+        }
+      }
+    }
     this.updateControls();
   };
 
@@ -118,9 +154,10 @@ export default class ControlView {
 
   downListener = () => {
     const viewID = Number(this.dataview.data.get('id').get('elemID').value);
-    for (const [dbID, dbRec] of this.db.getIter()) {
+    for (const [dbID, dbRec] of this.db.getMap()) {
       if (dbRec.get('parent') === viewID) {
         this.dataview.db2view(this.db, dbID);
+        break;
       }
     }
 
@@ -139,47 +176,55 @@ export default class ControlView {
     } else {
       this.controls.get('load').get('elemID').disabled = true;
     }
+
     const viewID = this.dataview.data.get('id').get('elemID').value;
     if (typeof viewID === 'string' && !viewID) {
       this.controls.get('insert').get('elemID').disabled = true;
       this.controls.get('delete').get('elemID').disabled = true;
-    } else if (this.db.getRec(viewID)) {
-      this.controls.get('insert').get('elemID').disabled = true;
-      this.controls.get('delete').get('elemID').disabled = false;
-    } else {
-      this.controls.get('insert').get('elemID').disabled = false;
-      this.controls.get('delete').get('elemID').disabled = true;
-    }
-    if (typeof viewID === 'string' && !viewID) {
       this.controls.get('update').get('elemID').disabled = true;
-    } else if (this.dataview.needsUpdate(viewID, this.db)) {
-      this.controls.get('update').get('elemID').disabled = false;
-    } else {
-      this.controls.get('update').get('elemID').disabled = true;
-    }
-    if (typeof viewID === 'string' && !viewID) {
       this.controls.get('next').get('elemID').disabled = true;
-    } else if (this.db.getRec(Number(viewID) + 1)) {
-      this.controls.get('next').get('elemID').disabled = false;
-    } else {
-      this.controls.get('next').get('elemID').disabled = true;
-    }
-    if (typeof viewID === 'string' && !viewID) {
       this.controls.get('previous').get('elemID').disabled = true;
-    } else if (this.db.getRec(Number(viewID) - 1)) {
-      this.controls.get('previous').get('elemID').disabled = false;
-    } else {
-      this.controls.get('previous').get('elemID').disabled = true;
-    }
-    const viewParent = this.dataview.data.get('parent').get('elemID').value;
-    if (typeof viewParent === 'string' && !viewParent) {
       this.controls.get('up').get('elemID').disabled = true;
-    } else if (this.db.getRec(Number(viewParent))) {
-      this.controls.get('up').get('elemID').disabled = false;
+      this.controls.get('down').get('elemID').disabled = true;
     } else {
-      this.controls.get('up').get('elemID').disabled = true;
+      if (this.db.getRec(viewID)) {
+        this.controls.get('insert').get('elemID').disabled = true;
+        this.controls.get('delete').get('elemID').disabled = false;
+      } else {
+        this.controls.get('insert').get('elemID').disabled = false;
+        this.controls.get('delete').get('elemID').disabled = true;
+      }
+      if (this.dataview.needsUpdate(viewID, this.db)) {
+        this.controls.get('update').get('elemID').disabled = false;
+      } else {
+        this.controls.get('update').get('elemID').disabled = true;
+      }
+
+      const keys = [...this.db.getMap().keys()];
+      if (keys.some((elem) => elem > viewID)) {
+        this.controls.get('next').get('elemID').disabled = false;
+      } else {
+        this.controls.get('next').get('elemID').disabled = true;
+      }
+      if (keys.some((elem) => elem < viewID)) {
+        this.controls.get('previous').get('elemID').disabled = false;
+      } else {
+        this.controls.get('previous').get('elemID').disabled = true;
+      }
+      const viewParent = this.dataview.data.get('parent').get('elemID').value;
+      if (this.db.getRec(Number(viewParent))) {
+        this.controls.get('up').get('elemID').disabled = false;
+      } else {
+        this.controls.get('up').get('elemID').disabled = true;
+      }
+      this.controls.get('down').get('elemID').disabled = true;
+      for (const dbRec of this.db.getMap().values()) {
+        if (dbRec.get('parent') === Number(viewID)) {
+          this.controls.get('down').get('elemID').disabled = false;
+          break;
+        }
+      }
     }
-    this.controls.get('down').get('elemID').disabled = false;
   }
 
   callbacks = new Map(

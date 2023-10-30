@@ -36,13 +36,15 @@ export default class Json {
 
   getIter() { return this.db.getIter(); }
 
+  getMap() { return this.db.getMap(); }
+
   hasID(id) { return this.db.hasID(id); }
 
   size() { return this.db.size(); }
 
   deleteRec(id) { this.db.deleteRec(id); }
 
-  constructor(db) {
-    if (db !== undefined) this.db = db; else this.db = new Db();
+  constructor(map) {
+    if (map !== undefined) this.db = new Db(map); else this.db = new Db();
   }
 }
