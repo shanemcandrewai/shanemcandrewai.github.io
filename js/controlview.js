@@ -102,7 +102,7 @@ export default class ControlView {
     const viewID = Number(this.dataview.data.get('id').get('elemID').value);
     let viewParent = this.dataview.data.get('parent').get('elemID').value;
     if (typeof viewParent !== 'string' || viewParent) viewParent = Number(viewParent);
-    const keys = [...this.db.getMap().keys()].sort();
+    const keys = new Uint32Array([...this.db.getMap().keys()]).sort();
     let nextFound = false;
     for (const key of keys) {
       if (key > viewID && this.db.getMap().get(key).get('parent') === viewParent) {
@@ -126,7 +126,7 @@ export default class ControlView {
     const viewID = Number(this.dataview.data.get('id').get('elemID').value);
     let viewParent = this.dataview.data.get('parent').get('elemID').value;
     if (typeof viewParent !== 'string' || viewParent) viewParent = Number(viewParent);
-    const keys = [...this.db.getMap().keys()].sort().reverse();
+    const keys = new Uint32Array([...this.db.getMap().keys()]).sort().reverse();
     let previousFound = false;
     for (const key of keys) {
       if (key < viewID && this.db.getMap().get(key).get('parent') === viewParent) {
