@@ -1,5 +1,3 @@
-import './libs/mocha.js';
-import './libs/chai.js';
 import ArrObj from '../js/arrobj.js';
 
 const arrobj = new ArrObj();

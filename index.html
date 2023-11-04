@@ -1,10 +1,10 @@
 <!doctype html>
 <html lang="en-US">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>wl</title>
-    <link href="main.css" rel="stylesheet" />
+    <link href="main.css" rel="stylesheet">
     <script type="module" src="js/controller.js"></script>
   </head>
 
@@ -12,37 +12,45 @@
     <div class="ui">
       <div class="row">
         <label id="selectFile" for="uploadInput">Select file</label>
-        <input id="uploadInput" type="file" />
-        <button id="load" type="button" disabled="true">load</button>
-        <button id="save" type="button" disabled="true">save</button>
+        <input id="uploadInput" type="file">
+        <button id="load" type="button" disabled>load</button>
+        <button id="save" type="button" disabled>save</button>
       </div>
       <div class="row">
-        <button id="insert" type="button" disabled="true">insert</button>
-        <button id="update" type="button" disabled="true">update</button>
-        <button id="delete" type="button" disabled="true">delete</button>
-        <button id="filter" type="button" disabled="true">filter</button>
+        <button id="insert" type="button" disabled>insert</button>
+        <button id="update" type="button" disabled>update</button>
+        <button id="delete" type="button" disabled>delete</button>
+        <button id="filter" type="button" disabled>filter</button>
       </div>
       <div class="row">
-        <button id="next" type="button" disabled="true">next</button>
-        <button id="previous" type="button" disabled="true">previous</button>
-        <button id="up" type="button" disabled="true">up</button>
-        <button id="down" type="button" disabled="true">down</button>
+        <button id="next" type="button" disabled>next</button>
+        <button id="previous" type="button" disabled>previous</button>
+        <button id="up" type="button" disabled>up</button>
+        <button id="down" type="button" disabled>down</button>
+      </div>
+      <div class="row">
+        <label id="testlab" for="test">Test</label>
+        <input id="test" type="checkbox">
+        <button id="first" type="button" disabled>first</button>
+        <button id="last" type="button" disabled>last</button>
+        <button id="sort" type="button" disabled>sort</button>
       </div>
       <div class="record">
         <label class="elem" for="id">ID</label>
-        <input class="elem" id="id" type="number" max="99999" />
+        <input class="elem" id="id" type="number" max="99999">
         <label class="elem" for="parent">Parent ID</label>
-        <input class="elem" id="parent" type="number" max="99999" />
+        <input class="elem" id="parent" type="number" max="9999">
         <label class="elem" for="created">Created</label>
-        <input class="elem" id="created" type="datetime-local" />
+        <input class="elem" id="created" type="datetime-local">
         <label class="elem" for="priority">Priority</label>
-        <input class="elem" id="priority" type="number" max="5" />
+        <input class="elem" id="priority" type="number" max="5">
         <label class="elem" for="description">Description</label>
-        <input class="elem" id="description" type="text" maxlength="200" />
+        <input class="elem" id="description" type="text" maxlength="200">
         <label class="elem" for="due">Due</label>
-        <input class="elem" id="due" type="datetime-local" />
+        <input class="elem" id="due" type="datetime-local">
       </div>
-      <div id="messages" />
+      <div id="messages"></div>
+      <div id="mocha" hidden></div>
     </div>
   </body>
 </html>

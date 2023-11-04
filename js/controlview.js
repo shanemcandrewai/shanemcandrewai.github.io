@@ -72,7 +72,10 @@ export default class ControlView {
   };
 
   saveListener = async () => {
-    if (typeof this.db.getBlob === 'undefined') this.db = new Json(this.db);
+    const keys = new Uint32Array([...this.db.getMap().keys()]).sort();
+    const dbSorted = new Map();
+    for (const key of keys) dbSorted.set(key, this.db.getMap().get(key));
+    this.db = new Json(dbSorted);
     this.controls.get('messages').innerText = '';
     try {
       await Local.save(this.db, this.filename);
@@ -93,57 +96,42 @@ export default class ControlView {
   };
 
   deleteListener = () => {
-    const viewID = Number(this.dataview.data.get('id').get('elemID').value);
-    this.db.deleteRec(viewID);
-    this.updateControls();
+    const viewID = this.dataview.data.get('id').get('elemID').value;
+    if (viewID) {
+      this.db.deleteRec(viewID);
+      this.updateControls();
+    }
   };
 
-  nextListener = () => {
-    const viewID = Number(this.dataview.data.get('id').get('elemID').value);
-    let viewParent = this.dataview.data.get('parent').get('elemID').value;
-    if (typeof viewParent !== 'string' || viewParent) viewParent = Number(viewParent);
-    const keys = new Uint32Array([...this.db.getMap().keys()]).sort();
-    let nextFound = false;
-    for (const key of keys) {
-      if (key > viewID && this.db.getMap().get(key).get('parent') === viewParent) {
-        this.dataview.db2view(this.db, key);
-        nextFound = true;
-        break;
-      }
-    }
-    if (!nextFound) {
+  nextprevListener = (evt) => {
+    const viewID = this.dataview.data.get('id').get('elemID').value;
+    if (viewID) {
+      const viewParent = this.dataview.data.get('parent').get('elemID').value;
+      let nextFound = false;
+      const keys = new Uint32Array([...this.db.getMap().keys()]).sort();
+      if (evt.target.id === 'previous') keys.reverse();
       for (const key of keys) {
-        if (key > viewID) {
+        if (((evt.target.id === 'next' && key > Number(viewID))
+        || (evt.target.id === 'previous' && key < Number(viewID)))
+        && ((viewParent && this.db.getMap().get(key).get('parent') === viewParent)
+        || (!viewParent && !this.db.getMap().get(key).get('parent')))) {
           this.dataview.db2view(this.db, key);
+          nextFound = true;
+          this.updateControls();
           break;
         }
       }
-    }
-    this.updateControls();
-  };
-
-  previousListener = () => {
-    const viewID = Number(this.dataview.data.get('id').get('elemID').value);
-    let viewParent = this.dataview.data.get('parent').get('elemID').value;
-    if (typeof viewParent !== 'string' || viewParent) viewParent = Number(viewParent);
-    const keys = new Uint32Array([...this.db.getMap().keys()]).sort().reverse();
-    let previousFound = false;
-    for (const key of keys) {
-      if (key < viewID && this.db.getMap().get(key).get('parent') === viewParent) {
-        this.dataview.db2view(this.db, key);
-        previousFound = true;
-        break;
-      }
-    }
-    if (!previousFound) {
-      for (const key of keys) {
-        if (key < viewID) {
-          this.dataview.db2view(this.db, key);
-          break;
+      if (!nextFound) {
+        for (const key of keys) {
+          if ((evt.target.id === 'next' && key > Number(viewID))
+          || (evt.target.id === 'previous' && key < Number(viewID))) {
+            this.dataview.db2view(this.db, key);
+            this.updateControls();
+            break;
+          }
         }
       }
     }
-    this.updateControls();
   };
 
   upListener = () => {
@@ -178,7 +166,7 @@ export default class ControlView {
     }
 
     const viewID = this.dataview.data.get('id').get('elemID').value;
-    if (typeof viewID === 'string' && !viewID) {
+    if (!viewID) {
       this.controls.get('insert').get('elemID').disabled = true;
       this.controls.get('delete').get('elemID').disabled = true;
       this.controls.get('update').get('elemID').disabled = true;
@@ -187,17 +175,20 @@ export default class ControlView {
       this.controls.get('up').get('elemID').disabled = true;
       this.controls.get('down').get('elemID').disabled = true;
     } else {
-      if (this.db.getRec(viewID)) {
-        this.controls.get('insert').get('elemID').disabled = true;
-        this.controls.get('delete').get('elemID').disabled = false;
-      } else {
+      if (this.dataview.canInsert(viewID, this.db)) {
         this.controls.get('insert').get('elemID').disabled = false;
-        this.controls.get('delete').get('elemID').disabled = true;
+      } else {
+        this.controls.get('insert').get('elemID').disabled = true;
       }
-      if (this.dataview.needsUpdate(viewID, this.db)) {
+      if (this.dataview.canUpdate(viewID, this.db)) {
         this.controls.get('update').get('elemID').disabled = false;
       } else {
         this.controls.get('update').get('elemID').disabled = true;
+      }
+      if (this.db.getRec(viewID)) {
+        this.controls.get('delete').get('elemID').disabled = false;
+      } else {
+        this.controls.get('delete').get('elemID').disabled = true;
       }
 
       const keys = [...this.db.getMap().keys()];
@@ -235,10 +226,20 @@ export default class ControlView {
       ['insert', this.insertListener],
       ['update', this.updateListener],
       ['delete', this.deleteListener],
-      ['next', this.nextListener],
-      ['previous', this.previousListener],
+      ['next', this.nextprevListener],
+      ['previous', this.nextprevListener],
       ['up', this.upListener],
       ['down', this.downListener],
     ],
   );
+
+  constructor() {
+    for (const [elem, elemRec] of this.controls) {
+      const elemID = document.getElementById(elem);
+      elemRec.set('elemID', elemID);
+      if (elemRec.has('event')) {
+        elemID.addEventListener(elemRec.get('event'), this.callbacks.get(elem));
+      }
+    }
+  }
 }

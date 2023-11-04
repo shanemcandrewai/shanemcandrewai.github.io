@@ -1,5 +1,3 @@
-import './libs/mocha.js';
-import './libs/chai.js';
 import Json from '../js/json.js';
 
 const json = new Json();

@@ -1,5 +1,3 @@
-import './libs/mocha.js';
-import './libs/chai.js';
 import Xlsx from '../js/xlsx.js';
 
 const xlsx = new Xlsx();

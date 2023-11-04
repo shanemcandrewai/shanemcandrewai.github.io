@@ -1,11 +1,16 @@
 export default class Db {
-  getRec(id) { return this.db.get(Number(id)); }
+  getRec(id) {
+    if (id) return this.db.get(Number(id));
+    return undefined;
+  }
 
   setRec(id, field, val) {
-    if (this.db.has(Number(id))) {
+    if ((id && field && (typeof val === 'number' || val))) {
       const dbRec = this.db.get(Number(id));
-      dbRec.set(field, val);
-    } else this.db.set(Number(id), new Map([[field, val]]));
+      if (dbRec !== undefined) {
+        dbRec.set(field, val);
+      } else this.db.set(Number(id), new Map([[field, val]]));
+    }
   }
 
   getIter() { return this.db[Symbol.iterator](); }

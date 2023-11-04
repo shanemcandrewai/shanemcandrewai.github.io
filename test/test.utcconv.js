@@ -1,5 +1,3 @@
-import './libs/mocha.js';
-import './libs/chai.js';
 import UtcConv from '../js/utcconv.js';
 
 /* global suite, test, chai */

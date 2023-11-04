@@ -4,11 +4,9 @@ import Db from './db.js';
 export default class ArrObj {
   static obj2Map(rowObj) {
     const rowMap = new Map();
-    for (const col in rowObj) {
-      if (Object.hasOwn(rowObj, col)) {
-        if (col === 'created') rowMap.set(col, UtcConv.getUTCDateTime(rowObj[col]));
-        else if (col !== 'id') rowMap.set(col, rowObj[col]);
-      }
+    for (const [label, value] of Object.entries(rowObj)) {
+      if (label === 'created') rowMap.set(label, UtcConv.getUTCDateTime(value));
+      else if (label !== 'id') rowMap.set(label, value);
     }
     return rowMap;
   }

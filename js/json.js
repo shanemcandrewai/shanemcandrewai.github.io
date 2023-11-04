@@ -27,7 +27,10 @@ export default class Json {
 
   async readFile(file) {
     const fileObj = JSON.parse(await file.text(), Json.mapDecoder);
-    for (const [key, value] of fileObj) this.db.db.set(key, value);
+    for (const [key, rec] of fileObj) {
+      for (const [label, value] of rec) if (!value) rec.delete(label);
+      if (rec) this.db.db.set(key, rec);
+    }
   }
 
   getRec(id) { return this.db.getRec(id); }

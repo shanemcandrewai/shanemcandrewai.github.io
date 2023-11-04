@@ -1,4 +1,5 @@
 import UtcConv from './utcconv.js';
+import ControlView from './controlview.js';
 
 export default class DataView {
   data = new Map(
@@ -30,16 +31,41 @@ export default class DataView {
     ],
   );
 
-  db2view(db, id) {
-    let recDB;
-    let nextID;
-    if (id === undefined) [nextID, recDB] = db.getIter().next().value;
-    else {
-      nextID = id;
-      recDB = db.getRec(id);
+  view2db = (db) => {
+    const viewID = this.data.get('id').get('elemID').value;
+    if (viewID) {
+      for (const [elemName, elemRec] of this.data) {
+        if (elemName !== 'id') {
+          const valueView = elemRec.get('elemID').value;
+          if (valueView) {
+            const type = elemRec.get('type');
+            if (type === Number) {
+              db.setRec(
+                Number(viewID),
+                elemName,
+                Number(valueView),
+              );
+            } else if (type === 'datetime-local') {
+              db.setRec(
+                Number(viewID),
+                elemName,
+                UtcConv.getUTCDateTime(valueView),
+              );
+            } else {
+              db.setRec(viewID, elemName, valueView);
+            }
+          }
+        }
+      }
     }
-    if (recDB) {
-      this.data.get('id').get('elemID').value = nextID;
+  };
+
+  db2view(db, id) {
+    let idDB = id || this.data.get('id').get('elemID').value;
+    let recDB = db.getRec(idDB);
+    if (!recDB) { [idDB, recDB] = db.getMap()[Symbol.iterator]().next().value; }
+    if (idDB) {
+      this.data.get('id').get('elemID').value = idDB;
       for (const [elemName, elemRec] of this.data) {
         if (elemName !== 'id') {
           const valueDB = recDB.get(elemName);
@@ -54,26 +80,7 @@ export default class DataView {
     }
   }
 
-  view2db = (db) => {
-    const viewID = Number(this.data.get('id').get('elemID').value);
-    for (const [elemName, elemRec] of this.data) {
-      if (elemName !== 'id') {
-        const valueView = elemRec.get('elemID').value;
-        const type = elemRec.get('type');
-        if (type === Number && valueView) {
-          db.setRec(viewID, elemName, Number(valueView));
-        } else if (type === 'datetime-local' && valueView) {
-          db.setRec(viewID, elemName, UtcConv.getUTCDateTime(valueView));
-        } else if (type === 'datetime-local') {
-          db.setRec(viewID, elemName, null);
-        } else {
-          db.setRec(viewID, elemName, valueView);
-        }
-      }
-    }
-  };
-
-  needsUpdate(viewID, db) {
+  canUpdate(viewID, db) {
     const dbRec = db.getRec(viewID);
     if (dbRec === undefined) return false;
     for (const [elemName, elemRec] of this.data) {
@@ -81,14 +88,26 @@ export default class DataView {
         const valueView = elemRec.get('elemID').value;
         const type = elemRec.get('type');
         const valueDB = dbRec.get(elemName);
-        if (type === Number && valueView) {
-          if (valueDB !== Number(valueView)) return true;
-        } else if (type === 'datetime-local' && valueView) {
-          if (valueDB !== UtcConv.getUTCDateTime(valueView)) return true;
-        } else if (type === 'datetime-local') {
-          if (valueDB) return true;
-        } else if (valueDB !== valueView) return true;
+        if (valueView) {
+          if (type === Number) {
+            if (valueDB !== Number(valueView)) return true;
+          } else if (type === 'datetime-local') {
+            if (valueDB !== UtcConv.getUTCDateTime(valueView)) return true;
+          } else if (valueDB !== valueView) return true;
+        } else if (valueDB) return true;
       }
+    }
+    return false;
+  }
+
+  canInsert(viewID, db) {
+    const dbRec = db.getRec(viewID);
+    // if (dbRec === undefined) {
+    for (const [elemName, elemRec] of this.data) {
+      const valueView = elemRec.get('elemID').value;
+      if (dbRec === undefined) {
+        if (elemName !== 'id' && valueView) return true;
+      } else if (elemName !== 'id' && valueView !== dbRec.get(elemName)) return true;
     }
     return false;
   }
@@ -109,6 +128,15 @@ export default class DataView {
   );
 
   constructor(controlview) {
-    this.controlview = controlview;
+    if (controlview) this.controlview = controlview;
+    else this.controlview = new ControlView();
+
+    for (const [elem, elemRec] of this.data) {
+      const elemID = document.getElementById(elem);
+      elemRec.set('elemID', elemID);
+      if (elemRec.has('event')) {
+        elemID.addEventListener(elemRec.get('event'), this.callbacks.get(elem));
+      }
+    }
   }
 }
