@@ -2,6 +2,7 @@ import Local from './local.js';
 import Db from './db.js';
 import Json from './json.js';
 import Xlsx from './xlsx.js';
+import DataView from './dataview.js';
 
 export default class ControlView {
   filename = 'db2.json';
@@ -233,7 +234,9 @@ export default class ControlView {
     ],
   );
 
-  constructor() {
+  constructor(dataview) {
+    if (dataview) this.dataview = dataview;
+    else this.dataview = new DataView();
     for (const [elem, elemRec] of this.controls) {
       const elemID = document.getElementById(elem);
       elemRec.set('elemID', elemID);

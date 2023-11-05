@@ -1,12 +1,10 @@
-import DataView from './dataview.js';
 import ControlView from './controlview.js';
+import DataView from './dataview.js';
 
 export default class MainView {
-  controlview = new ControlView();
+  dataview = new DataView();
 
-  dataview = new DataView(this.controlview);
+  controlview = new ControlView(this.dataview);
 
-  constructor() {
-    this.controlview.dataview = this.dataview;
-  }
+  constructor() { this.dataview.controlview = this.controlview; }
 }

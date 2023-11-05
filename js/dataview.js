@@ -1,5 +1,4 @@
 import UtcConv from './utcconv.js';
-import ControlView from './controlview.js';
 
 export default class DataView {
   data = new Map(
@@ -102,7 +101,6 @@ export default class DataView {
 
   canInsert(viewID, db) {
     const dbRec = db.getRec(viewID);
-    // if (dbRec === undefined) {
     for (const [elemName, elemRec] of this.data) {
       const valueView = elemRec.get('elemID').value;
       if (dbRec === undefined) {
@@ -127,10 +125,7 @@ export default class DataView {
     ],
   );
 
-  constructor(controlview) {
-    if (controlview) this.controlview = controlview;
-    else this.controlview = new ControlView();
-
+  constructor() {
     for (const [elem, elemRec] of this.data) {
       const elemID = document.getElementById(elem);
       elemRec.set('elemID', elemID);

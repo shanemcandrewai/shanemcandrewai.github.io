@@ -26,9 +26,15 @@ export default class Json {
   }
 
   async readFile(file) {
-    const fileObj = JSON.parse(await file.text(), Json.mapDecoder);
+    this.readText(await file.text());
+  }
+
+  readText(text) {
+    const fileObj = JSON.parse(text, Json.mapDecoder);
     for (const [key, rec] of fileObj) {
-      for (const [label, value] of rec) if (!value) rec.delete(label);
+      for (const [label, value] of rec) {
+        if (typeof value !== 'number' && !value) rec.delete(label);
+      }
       if (rec) this.db.db.set(key, rec);
     }
   }

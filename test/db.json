@@ -52,7 +52,7 @@
           ],
           [
             "description",
-            "Stand ag"
+            ""
           ]
         ]
       }
@@ -205,6 +205,10 @@
           [
             "description",
             "klm todo"
+          ],
+          [
+            "priority",
+            0
           ]
         ]
       }
