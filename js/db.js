@@ -5,11 +5,17 @@ export default class Db {
   }
 
   setRec(id, field, val) {
-    if ((id && field && (typeof val === 'number' || val))) {
-      const dbRec = this.db.get(Number(id));
-      if (dbRec !== undefined) {
-        dbRec.set(field, val);
-      } else this.db.set(Number(id), new Map([[field, val]]));
+    if (id && field) {
+      if (typeof val === 'number' || val || val === undefined) {
+        const dbRec = this.db.get(Number(id));
+        if (dbRec !== undefined) {
+          if (val === undefined) {
+            dbRec.delete(field);
+          } else {
+            dbRec.set(field, val);
+          }
+        } else this.db.set(Number(id), new Map([[field, val]]));
+      }
     }
   }
 

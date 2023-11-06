@@ -100,12 +100,11 @@ export default class DataView {
   }
 
   canInsert(viewID, db) {
+    if (!viewID) return false;
     const dbRec = db.getRec(viewID);
     for (const [elemName, elemRec] of this.data) {
       const valueView = elemRec.get('elemID').value;
-      if (dbRec === undefined) {
-        if (elemName !== 'id' && valueView) return true;
-      } else if (elemName !== 'id' && valueView !== dbRec.get(elemName)) return true;
+      if (elemName !== 'id' && dbRec === undefined && valueView) return true;
     }
     return false;
   }

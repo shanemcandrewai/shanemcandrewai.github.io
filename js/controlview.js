@@ -99,7 +99,13 @@ export default class ControlView {
   deleteListener = () => {
     const viewID = this.dataview.data.get('id').get('elemID').value;
     if (viewID) {
+      const viewParent = this.db.getRec(viewID).get('parent');
       this.db.deleteRec(viewID);
+      for (const [dbID, dbRec] of this.db.getMap()) {
+        if (dbRec.get('parent') === Number(viewID)) {
+          this.db.setRec(dbID, 'parent', viewParent);
+        }
+      }
       this.updateControls();
     }
   };

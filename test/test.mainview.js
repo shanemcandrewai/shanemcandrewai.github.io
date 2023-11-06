@@ -15,7 +15,8 @@ suite('MainView', () => {
   test('instantiate data', () => {
     chai.assert.equal(mainview.dataview.data.get('priority').get('type'), Number);
   });
-  test('set priority to number 0', () => {
+  test('insert priority 0', () => {
+    mainview.controlview.db = new Json();
     mainview.dataview.data.get('id').get('elemID').value = 1;
     mainview.dataview.data.get('parent').get('elemID').value = '';
     mainview.dataview.data.get('created').get('elemID').value = '';
@@ -23,10 +24,10 @@ suite('MainView', () => {
     mainview.dataview.data.get('description').get('elemID').value = '';
     mainview.dataview.data.get('due').get('elemID').value = '';
     mainview.controlview.insertListener();
-    mainview.dataview.db2view(mainview.controlview.db, 1);
     chai.assert.equal(mainview.controlview.db.getRec(1).get('priority'), 0);
   });
   test('Insert button disabled if no data values', () => {
+    mainview.controlview.db = new Json();
     mainview.dataview.data.get('id').get('elemID').value = 5;
     mainview.dataview.data.get('parent').get('elemID').value = '';
     mainview.dataview.data.get('created').get('elemID').value = '';
@@ -45,18 +46,102 @@ suite('MainView', () => {
     const desc = mainview.controlview.db.getRec(2).get('description');
     chai.assert.equal(desc, 'Change tr');
   });
-  test('load priority 0', async () => {
+  test('load file with priority 0', async () => {
     const dbmap = await import('./dbmap.js');
     mainview.controlview.db = new Json();
     const strObj = JSON.stringify(dbmap.default, mainview.controlview.db.mapEncoder);
     mainview.controlview.db.readText(strObj);
     chai.assert.equal(mainview.controlview.db.getRec(11).get('priority'), 0);
   });
-  test('empty string not inserted into db', async () => {
+  test('empty string in file is not inserted into db', async () => {
     const dbmap = await import('./dbmap.js');
     mainview.controlview.db = new Json();
     const strObj = JSON.stringify(dbmap.default, mainview.controlview.db.mapEncoder);
     mainview.controlview.db.readText(strObj);
     chai.assert.equal(mainview.controlview.db.getRec(3).get('description'), undefined);
+  });
+  test('insert and update buttons are disabled after loading file', async () => {
+    const dbmap = await import('./dbmap.js');
+    mainview.controlview.db = new Json();
+    const strObj = JSON.stringify(dbmap.default, mainview.controlview.db.mapEncoder);
+    mainview.controlview.db.readText(strObj);
+    mainview.dataview.db2view(mainview.controlview.db);
+    mainview.controlview.updateControls();
+    chai.assert.equal(mainview.controlview.controls.get('insert').get('elemID').disabled, true);
+    chai.assert.equal(mainview.controlview.controls.get('update').get('elemID').disabled, true);
+  });
+  test('record with description can be inserted', () => {
+    mainview.controlview.db = new Json();
+    mainview.dataview.data.get('id').get('elemID').value = 1;
+    mainview.dataview.data.get('parent').get('elemID').value = '';
+    mainview.dataview.data.get('created').get('elemID').value = '';
+    mainview.dataview.data.get('priority').get('elemID').value = '';
+    mainview.dataview.data.get('description').get('elemID').value = 'aaa';
+    mainview.dataview.data.get('due').get('elemID').value = '';
+    mainview.controlview.insertListener();
+    chai.assert.equal(mainview.controlview.db.getRec(1).get('description'), 'aaa');
+  });
+  test('records flagged canUpdate disable insert button', () => {
+    mainview.controlview.db = new Json();
+    mainview.dataview.data.get('id').get('elemID').value = 1;
+    mainview.dataview.data.get('parent').get('elemID').value = '';
+    mainview.dataview.data.get('created').get('elemID').value = '';
+    mainview.dataview.data.get('priority').get('elemID').value = '';
+    mainview.dataview.data.get('description').get('elemID').value = 'aaa';
+    mainview.dataview.data.get('due').get('elemID').value = '';
+    mainview.controlview.insertListener();
+    mainview.dataview.data.get('description').get('elemID').value = 'bbb';
+    mainview.controlview.updateControls();
+    chai.assert.equal(mainview.controlview.controls.get('update').get('elemID').disabled, false);
+    chai.assert.equal(mainview.controlview.controls.get('insert').get('elemID').disabled, true);
+  });
+  test('empty string descriptions can flag records canUpdate', () => {
+    mainview.controlview.db = new Json();
+    mainview.dataview.data.get('id').get('elemID').value = 1;
+    mainview.dataview.data.get('parent').get('elemID').value = '';
+    mainview.dataview.data.get('created').get('elemID').value = '';
+    mainview.dataview.data.get('priority').get('elemID').value = '';
+    mainview.dataview.data.get('description').get('elemID').value = 'aaa';
+    mainview.dataview.data.get('due').get('elemID').value = '';
+    mainview.controlview.insertListener();
+    mainview.dataview.data.get('description').get('elemID').value = '';
+    mainview.controlview.updateControls();
+    chai.assert.equal(mainview.controlview.controls.get('update').get('elemID').disabled, false);
+  });
+  test('zero numeric fields can flag records canUpdate', () => {
+    mainview.controlview.db = new Json();
+    mainview.dataview.data.get('id').get('elemID').value = 1;
+    mainview.dataview.data.get('parent').get('elemID').value = '';
+    mainview.dataview.data.get('created').get('elemID').value = '';
+    mainview.dataview.data.get('priority').get('elemID').value = 2;
+    mainview.dataview.data.get('description').get('elemID').value = 'aaa';
+    mainview.dataview.data.get('due').get('elemID').value = '';
+    mainview.controlview.insertListener();
+    mainview.dataview.data.get('priority').get('elemID').value = 0;
+    mainview.controlview.updateControls();
+    chai.assert.equal(mainview.controlview.controls.get('update').get('elemID').disabled, false);
+  });
+  test('can delete records with children', async () => {
+    mainview.controlview.db = new Json();
+    mainview.dataview.data.get('id').get('elemID').value = 1;
+    mainview.dataview.data.get('parent').get('elemID').value = '';
+    mainview.dataview.data.get('created').get('elemID').value = '';
+    mainview.dataview.data.get('priority').get('elemID').value = '';
+    mainview.dataview.data.get('description').get('elemID').value = 'aaa';
+    mainview.dataview.data.get('due').get('elemID').value = '';
+    mainview.controlview.insertListener();
+    mainview.dataview.data.get('id').get('elemID').value = 2;
+    mainview.dataview.data.get('parent').get('elemID').value = '1';
+    mainview.dataview.data.get('description').get('elemID').value = 'bbb';
+    mainview.controlview.insertListener();
+    mainview.dataview.data.get('id').get('elemID').value = 3;
+    mainview.dataview.data.get('parent').get('elemID').value = '';
+    mainview.dataview.data.get('description').get('elemID').value = 'ccc';
+    mainview.controlview.insertListener();
+    mainview.dataview.data.get('id').get('elemID').value = 1;
+    mainview.controlview.deleteListener();
+    mainview.controlview.updateControls();
+    chai.assert.equal(mainview.controlview.db.getRec(1), undefined);
+    chai.assert.equal(mainview.controlview.db.getRec(2).get('parent'), undefined);
   });
 });
