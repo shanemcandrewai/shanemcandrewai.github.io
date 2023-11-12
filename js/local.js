@@ -1,5 +1,5 @@
 export default class Local {
-  static save(db, filename) {
+  static save(db, filename = 'dbtest.json') {
     const anc = document.createElement('a');
     anc.download = filename;
     anc.href = window.URL.createObjectURL(db.getBlob());

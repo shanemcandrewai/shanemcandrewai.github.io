@@ -3,6 +3,7 @@ import Db from './db.js';
 import Json from './json.js';
 import Xlsx from './xlsx.js';
 import DataView from './dataview.js';
+import Dropbox from './dropbox.js';
 
 export default class ControlView {
   filename = 'db2.json';
@@ -21,6 +22,9 @@ export default class ControlView {
       ['load', new Map([
         ['elemID', null],
         ['event', 'click']])],
+      ['tokenInput', new Map([
+        ['elemID', null],
+        ['event', 'change']])],
       ['save', new Map([
         ['elemID', null],
         ['event', 'click']])],
@@ -50,7 +54,7 @@ export default class ControlView {
     ],
   );
 
-  changeInputListener = () => {
+  uploadInputListener = () => {
     const file = this.controls.get('uploadInput').get('elemID').files[0];
     this.storage = new Local(file);
     this.filename = file.name;
@@ -60,10 +64,16 @@ export default class ControlView {
     this.updateControls();
   };
 
+  tokenInputListener = () => {
+    this.storage = new Dropbox();
+    this.db = new Json(this.db.getMap());
+    this.updateControls();
+  };
+
   loadListener = async () => {
     this.controls.get('messages').innerText = '';
     try {
-      await this.storage.load(this.db);
+      await this.storage.load(this.db, 'db.json', this.controls.get('tokenInput').get('elemID').value);
       this.dataview.db2view(this.db);
     } catch (readFileError) {
       this.controls.get('messages').get('elemID').innerText = readFileError;
@@ -79,7 +89,7 @@ export default class ControlView {
     this.db = new Json(dbSorted);
     this.controls.get('messages').innerText = '';
     try {
-      await Local.save(this.db, this.filename);
+      await this.storage.save(this.db, 'db.json', this.controls.get('tokenInput').get('elemID').value);
     } catch (readFileError) {
       this.controls.get('messages').get('elemID').innerText = readFileError;
       this.controls.get('selectFile').get('elemID').innerText = 'Select file again';
@@ -165,7 +175,8 @@ export default class ControlView {
     } else {
       this.controls.get('save').get('elemID').disabled = true;
     }
-    if (this.controls.get('uploadInput').get('elemID').files.length
+    if ((this.controls.get('uploadInput').get('elemID').files.length
+         || this.controls.get('tokenInput').get('elemID').value)
      && typeof this.db.readFile !== 'undefined') {
       this.controls.get('load').get('elemID').disabled = false;
     } else {
@@ -227,9 +238,10 @@ export default class ControlView {
 
   callbacks = new Map(
     [
-      ['uploadInput', this.changeInputListener],
+      ['uploadInput', this.uploadInputListener],
       ['load', this.loadListener],
       ['save', this.saveListener],
+      ['tokenInput', this.tokenInputListener],
       ['insert', this.insertListener],
       ['update', this.updateListener],
       ['delete', this.deleteListener],

@@ -13,6 +13,8 @@
       <div class="row">
         <label id="selectFile" for="uploadInput">Select file</label>
         <input id="uploadInput" type="file">
+        <label id="token" for="tokenInput">Token</label>
+        <input id="tokenInput" type="password">
         <button id="load" type="button" disabled>load</button>
         <button id="save" type="button" disabled>save</button>
       </div>
@@ -32,6 +34,7 @@
         <button id="first" type="button" disabled>first</button>
         <button id="last" type="button" disabled>last</button>
         <button id="sort" type="button" disabled>sort</button>
+        <button id="downlast" type="button" disabled>down last</button>
       </div>
       <div class="record">
         <label class="elem" for="id">ID</label>
@@ -48,7 +51,7 @@
         <input class="elem" id="due" type="datetime-local">
       </div>
       <div id="messages"></div>
-      <div id="mocha"></div>
+	  <div id="mocha"></div>
     </div>
   </body>
 </html>

@@ -18,11 +18,15 @@ export default class Json {
   }
 
   getBlob() {
-    const strObj = JSON.stringify(this.db.db, Json.mapEncoder, 2);
+    const strObj = this.getString();
     return new Blob(
       [strObj],
       { type: 'application/json' },
     );
+  }
+
+  getString() {
+    return JSON.stringify(this.db.db, Json.mapEncoder, 2);
   }
 
   async readFile(file) {
