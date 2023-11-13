@@ -187,4 +187,22 @@ suite('MainView', () => {
     mainview.controlview.updateControls();
     chai.assert.equal(mainview.controlview.controls.get('insert').get('elemID').disabled, true);
   });
+  test('new button fill first gap in IDs', async () => {
+    mainview.controlview.db = new Db();
+    mainview.dataview.data.get('id').get('elemID').value = 1;
+    mainview.dataview.data.get('parent').get('elemID').value = '';
+    mainview.dataview.data.get('created').get('elemID').value = '';
+    mainview.dataview.data.get('priority').get('elemID').value = '';
+    mainview.dataview.data.get('description').get('elemID').value = 'aaa';
+    mainview.dataview.data.get('due').get('elemID').value = '';
+    mainview.controlview.insertListener();
+    mainview.dataview.data.get('id').get('elemID').value = 2;
+    mainview.controlview.insertListener();
+    mainview.dataview.data.get('id').get('elemID').value = 4;
+    mainview.controlview.insertListener();
+    mainview.dataview.data.get('id').get('elemID').value = 5;
+    mainview.controlview.insertListener();
+    mainview.controlview.newListener();
+    chai.assert.equal(mainview.dataview.data.get('id').get('elemID').value, 3);
+  });
 });
