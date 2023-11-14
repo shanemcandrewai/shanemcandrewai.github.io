@@ -83,7 +83,7 @@ export default class ControlView {
         'db.json',
         this.controls.get('codetokenInput').get('elemID').value,
       );
-      if (result.has('refreshToken')) {
+      if (result instanceof Map && result.has('refreshToken')) {
         this.controls.get('messages').get('elemID').innerText = result.get('refreshToken');
       }
       this.dataview.db2view(this.db);
@@ -107,7 +107,7 @@ export default class ControlView {
         'db.json',
         this.controls.get('codetokenInput').get('elemID').value,
       );
-      if (result.has('refreshToken')) {
+      if (result instanceof Map && result.has('refreshToken')) {
         this.controls.get('messages').get('elemID').innerText = result.get('refreshToken');
       }
     } catch (readFileError) {
