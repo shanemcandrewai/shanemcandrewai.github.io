@@ -1,7 +1,8 @@
 export default class Local {
-  static save(db, filename = 'dbtest.json') {
+  save(db, filename = 'dbtest.json') {
     const anc = document.createElement('a');
-    anc.download = filename;
+    if (typeof filename !== 'undefined') this.filename = filename;
+    anc.download = this.file.filename;
     anc.href = window.URL.createObjectURL(db.getBlob());
     anc.click();
   }
@@ -14,5 +15,10 @@ export default class Local {
     }
   }
 
-  constructor(file) { this.file = file; }
+  constructor(file) {
+    if (file instanceof File) {
+      this.file = file;
+      this.filename = file.name;
+    }
+  }
 }

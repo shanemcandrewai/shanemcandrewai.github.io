@@ -4,6 +4,7 @@ import Json from './json.js';
 import Xlsx from './xlsx.js';
 import DataView from './dataview.js';
 import Dropbox from './dropbox.js';
+import UtcConv from './utcconv.js';
 
 export default class ControlView {
   filename = 'db2.json';
@@ -22,7 +23,7 @@ export default class ControlView {
       ['load', new Map([
         ['elemID', null],
         ['event', 'click']])],
-      ['tokenInput', new Map([
+      ['codetokenInput', new Map([
         ['elemID', null],
         ['event', 'change']])],
       ['save', new Map([
@@ -35,6 +36,9 @@ export default class ControlView {
         ['elemID', null],
         ['event', 'click']])],
       ['delete', new Map([
+        ['elemID', null],
+        ['event', 'click']])],
+      ['new', new Map([
         ['elemID', null],
         ['event', 'click']])],
       ['next', new Map([
@@ -64,16 +68,24 @@ export default class ControlView {
     this.updateControls();
   };
 
-  tokenInputListener = () => {
+  codetokenInputListener = () => {
     this.storage = new Dropbox();
     this.db = new Json(this.db.getMap());
     this.updateControls();
   };
 
   loadListener = async () => {
+    this.controls.get('load').get('elemID').disabled = true;
     this.controls.get('messages').innerText = '';
     try {
-      await this.storage.load(this.db, 'db.json', this.controls.get('tokenInput').get('elemID').value);
+      const result = await this.storage.load(
+        this.db,
+        'db.json',
+        this.controls.get('codetokenInput').get('elemID').value,
+      );
+      if (result instanceof Map && result.has('refreshToken')) {
+        this.controls.get('messages').get('elemID').innerText = result.get('refreshToken');
+      }
       this.dataview.db2view(this.db);
     } catch (readFileError) {
       this.controls.get('messages').get('elemID').innerText = readFileError;
@@ -83,13 +95,21 @@ export default class ControlView {
   };
 
   saveListener = async () => {
+    this.controls.get('save').get('elemID').disabled = true;
     const keys = new Uint32Array([...this.db.getMap().keys()]).sort();
     const dbSorted = new Map();
     for (const key of keys) dbSorted.set(key, this.db.getMap().get(key));
     this.db = new Json(dbSorted);
     this.controls.get('messages').innerText = '';
     try {
-      await this.storage.save(this.db, 'db.json', this.controls.get('tokenInput').get('elemID').value);
+      const result = await this.storage.save(
+        this.db,
+        'db.json',
+        this.controls.get('codetokenInput').get('elemID').value,
+      );
+      if (result instanceof Map && result.has('refreshToken')) {
+        this.controls.get('messages').get('elemID').innerText = result.get('refreshToken');
+      }
     } catch (readFileError) {
       this.controls.get('messages').get('elemID').innerText = readFileError;
       this.controls.get('selectFile').get('elemID').innerText = 'Select file again';
@@ -120,34 +140,39 @@ export default class ControlView {
     }
   };
 
+  newListener = () => {
+    const keys = new Uint32Array([...this.db.getMap().keys()]).sort();
+    const nextNum = keys.find((id, ind, arr) => (arr[ind + 1] - id) !== 1) + 1;
+    this.dataview.data.get('id').get('elemID').value = nextNum || 1;
+    this.dataview.data.get('created').get('elemID').value = UtcConv.getLocalDateTime();
+    this.updateControls();
+  };
+
   nextprevListener = (evt) => {
     const viewID = this.dataview.data.get('id').get('elemID').value;
     if (viewID) {
       const viewParent = this.dataview.data.get('parent').get('elemID').value;
-      let nextFound = false;
+      // let nextprevFound = false;
+      // let nextprevFound2 = false;
       const keys = new Uint32Array([...this.db.getMap().keys()]).sort();
       if (evt.target.id === 'previous') keys.reverse();
       for (const key of keys) {
         if (((evt.target.id === 'next' && key > Number(viewID))
         || (evt.target.id === 'previous' && key < Number(viewID)))
-        && ((viewParent && this.db.getMap().get(key).get('parent') === viewParent)
+        && ((viewParent && this.db.getMap().get(key).get('parent') === Number(viewParent))
         || (!viewParent && !this.db.getMap().get(key).get('parent')))) {
           this.dataview.db2view(this.db, key);
-          nextFound = true;
-          this.updateControls();
+          // if (!nextprevFound) nextprevFound = true;
+          // else if (!nextprevFound2) nextprevFound2 = true;
+          // if (nextprevFound && nextprevFound2) {
           break;
+          // }
         }
       }
-      if (!nextFound) {
-        for (const key of keys) {
-          if ((evt.target.id === 'next' && key > Number(viewID))
-          || (evt.target.id === 'previous' && key < Number(viewID))) {
-            this.dataview.db2view(this.db, key);
-            this.updateControls();
-            break;
-          }
-        }
-      }
+      // if (nextprevFound && !nextprevFound2) {
+      // this.controls.get(evt.target.id).get('elemID').disabled = true;
+      // }
+      this.updateControls();
     }
   };
 
@@ -176,7 +201,7 @@ export default class ControlView {
       this.controls.get('save').get('elemID').disabled = true;
     }
     if ((this.controls.get('uploadInput').get('elemID').files.length
-         || this.controls.get('tokenInput').get('elemID').value)
+         || this.controls.get('codetokenInput').get('elemID').value)
      && typeof this.db.readFile !== 'undefined') {
       this.controls.get('load').get('elemID').disabled = false;
     } else {
@@ -194,8 +219,10 @@ export default class ControlView {
       this.controls.get('down').get('elemID').disabled = true;
     } else {
       if (this.dataview.canInsert(viewID, this.db)) {
+        this.controls.get('new').get('elemID').disabled = true;
         this.controls.get('insert').get('elemID').disabled = false;
       } else {
+        this.controls.get('new').get('elemID').disabled = false;
         this.controls.get('insert').get('elemID').disabled = true;
       }
       if (this.dataview.canUpdate(viewID, this.db)) {
@@ -209,18 +236,29 @@ export default class ControlView {
         this.controls.get('delete').get('elemID').disabled = true;
       }
 
-      const keys = [...this.db.getMap().keys()];
-      if (keys.some((elem) => elem > viewID)) {
-        this.controls.get('next').get('elemID').disabled = false;
-      } else {
-        this.controls.get('next').get('elemID').disabled = true;
-      }
-      if (keys.some((elem) => elem < viewID)) {
-        this.controls.get('previous').get('elemID').disabled = false;
-      } else {
-        this.controls.get('previous').get('elemID').disabled = true;
-      }
       const viewParent = this.dataview.data.get('parent').get('elemID').value;
+      this.controls.get('next').get('elemID').disabled = true;
+      const keys = new Uint32Array([...this.db.getMap().keys()]).sort();
+      for (const key of keys) {
+        if (key > Number(viewID)
+        && ((viewParent && this.db.getMap().get(key).get('parent') === Number(viewParent))
+        || (!viewParent && !this.db.getMap().get(key).get('parent')))) {
+          this.controls.get('next').get('elemID').disabled = false;
+          break;
+        }
+      }
+
+      this.controls.get('previous').get('elemID').disabled = true;
+      keys.reverse();
+      for (const key of keys) {
+        if (key < Number(viewID)
+        && ((viewParent && this.db.getMap().get(key).get('parent') === Number(viewParent))
+        || (!viewParent && !this.db.getMap().get(key).get('parent')))) {
+          this.controls.get('previous').get('elemID').disabled = false;
+          break;
+        }
+      }
+
       if (this.db.getRec(Number(viewParent))) {
         this.controls.get('up').get('elemID').disabled = false;
       } else {
@@ -241,10 +279,11 @@ export default class ControlView {
       ['uploadInput', this.uploadInputListener],
       ['load', this.loadListener],
       ['save', this.saveListener],
-      ['tokenInput', this.tokenInputListener],
+      ['codetokenInput', this.codetokenInputListener],
       ['insert', this.insertListener],
       ['update', this.updateListener],
       ['delete', this.deleteListener],
+      ['new', this.newListener],
       ['next', this.nextprevListener],
       ['previous', this.nextprevListener],
       ['up', this.upListener],

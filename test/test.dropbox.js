@@ -1,7 +1,7 @@
 import Dropbox from '../js/dropbox.js';
 import Json from '../js/json.js';
 
-const dropbox = new Dropbox();
+const dropbox = await new Dropbox(document.getElementById('codetokenInput').value);
 
 /* global suite, test, chai */
 
@@ -12,10 +12,10 @@ suite('Dropbox', async () => {
     const response = await dropbox.save(
       json,
       'dbtest.json',
-      document.getElementById('tokenInput').value,
+      document.getElementById('codetokenInput').value,
     );
     chai.assert.equal(
-      response.content_hash,
+      response.get('upload_response').content_hash,
       '09e12d4cfb2e47c6181b6f7b4b785dbacb6809ab1f412006847ebf1d5111fd04',
     );
   });
@@ -25,7 +25,7 @@ suite('Dropbox', async () => {
     await dropbox.save(
       json,
       'dbtest.json',
-      document.getElementById('tokenInput').value,
+      document.getElementById('codetokenInput').value,
     );
     json.setRec(1, 'priority', 2);
     const response = await dropbox.save(
@@ -33,18 +33,19 @@ suite('Dropbox', async () => {
       'dbtest.json',
     );
     chai.assert.equal(
-      response.content_hash,
+      response.get('upload_response').content_hash,
       '09e12d4cfb2e47c6181b6f7b4b785dbacb6809ab1f412006847ebf1d5111fd04',
     );
   });
   test('download', async () => {
-    const json = new Json();
+    let json = new Json();
     json.setRec(1, 'priority', 4);
     await dropbox.save(
       json,
       'dbtest.json',
-      document.getElementById('tokenInput').value,
+      document.getElementById('codetokenInput').value,
     );
+    json = new Json();
     await dropbox.load(json, 'dbtest.json');
     chai.assert.equal(json.getRec(1).get('priority'), 4);
   });
