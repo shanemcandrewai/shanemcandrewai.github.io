@@ -53,7 +53,7 @@ export default class DataView {
             } else {
               db.setRec(viewID, elemName, valueView);
             }
-          }
+          } else if (db.hasID(Number(viewID))) { db.deleteField(Number(viewID), elemName); }
         }
       }
     }

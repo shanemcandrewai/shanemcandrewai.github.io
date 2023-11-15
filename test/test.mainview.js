@@ -122,6 +122,23 @@ suite('MainView', () => {
     mainview.controlview.updateControls();
     chai.assert.equal(mainview.controlview.controls.get('update').get('elemID').disabled, false);
   });
+  test('children can be unlinked from parents', () => {
+    mainview.controlview.db = new Db();
+    mainview.dataview.data.get('id').get('elemID').value = 1;
+    mainview.dataview.data.get('parent').get('elemID').value = '';
+    mainview.dataview.data.get('created').get('elemID').value = '';
+    mainview.dataview.data.get('priority').get('elemID').value = '';
+    mainview.dataview.data.get('description').get('elemID').value = 'aaa';
+    mainview.dataview.data.get('due').get('elemID').value = '';
+    mainview.controlview.insertListener();
+    mainview.controlview.newListener();
+    mainview.dataview.data.get('parent').get('elemID').value = 1;
+    mainview.controlview.insertListener();
+    chai.assert.equal(mainview.controlview.db.getRec(2).get('parent'), 1);
+    mainview.dataview.data.get('parent').get('elemID').value = '';
+    mainview.controlview.updateListener();
+    chai.assert.equal(mainview.controlview.db.getRec(2).get('parent'), undefined);
+  });
   test('can delete records with children', async () => {
     mainview.controlview.db = new Db();
     mainview.dataview.data.get('id').get('elemID').value = 1;

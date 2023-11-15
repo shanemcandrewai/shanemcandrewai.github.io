@@ -57,6 +57,8 @@ export default class Json {
 
   deleteRec(id) { this.db.deleteRec(id); }
 
+  deleteField(id, elemName) { this.db.deleteField(id, elemName); }
+
   constructor(map) {
     if (map !== undefined) this.db = new Db(map); else this.db = new Db();
   }

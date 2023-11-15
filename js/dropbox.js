@@ -100,6 +100,5 @@ export default class Dropbox {
   ) {
     this.appKey = appKey;
     this.codeChallenge = codeChallenge;
-    // if (codeToken) this.init(codeToken);
   }
 }
