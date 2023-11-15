@@ -152,8 +152,6 @@ export default class ControlView {
     const viewID = this.dataview.data.get('id').get('elemID').value;
     if (viewID) {
       const viewParent = this.dataview.data.get('parent').get('elemID').value;
-      // let nextprevFound = false;
-      // let nextprevFound2 = false;
       const keys = new Uint32Array([...this.db.getMap().keys()]).sort();
       if (evt.target.id === 'previous') keys.reverse();
       for (const key of keys) {
@@ -162,16 +160,9 @@ export default class ControlView {
         && ((viewParent && this.db.getMap().get(key).get('parent') === Number(viewParent))
         || (!viewParent && !this.db.getMap().get(key).get('parent')))) {
           this.dataview.db2view(this.db, key);
-          // if (!nextprevFound) nextprevFound = true;
-          // else if (!nextprevFound2) nextprevFound2 = true;
-          // if (nextprevFound && nextprevFound2) {
           break;
-          // }
         }
       }
-      // if (nextprevFound && !nextprevFound2) {
-      // this.controls.get(evt.target.id).get('elemID').disabled = true;
-      // }
       this.updateControls();
     }
   };
