@@ -78,13 +78,13 @@ export default class ControlView {
     this.controls.get('load').get('elemID').disabled = true;
     this.controls.get('messages').innerText = '';
     try {
-      const result = await this.storage.load(
+      const messages = await this.storage.load(
         this.db,
         'db.json',
         this.controls.get('codetokenInput').get('elemID').value,
       );
-      if (result instanceof Map && result.has('refreshToken')) {
-        this.controls.get('messages').get('elemID').innerText = result.get('refreshToken');
+      if (messages instanceof Map && messages.has('display')) {
+        this.controls.get('messages').get('elemID').innerText = messages.get('display');
       }
       this.dataview.db2view(this.db);
     } catch (readFileError) {
@@ -102,13 +102,13 @@ export default class ControlView {
     this.db = new Json(dbSorted);
     this.controls.get('messages').innerText = '';
     try {
-      const result = await this.storage.save(
+      const messages = await this.storage.save(
         this.db,
         'db.json',
         this.controls.get('codetokenInput').get('elemID').value,
       );
-      if (result instanceof Map && result.has('refreshToken')) {
-        this.controls.get('messages').get('elemID').innerText = result.get('refreshToken');
+      if (messages instanceof Map && messages.has('display')) {
+        this.controls.get('messages').get('elemID').innerText = messages.get('display');
       }
     } catch (readFileError) {
       this.controls.get('messages').get('elemID').innerText = readFileError;

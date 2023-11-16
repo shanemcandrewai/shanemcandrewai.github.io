@@ -19,7 +19,7 @@ suite('Dropbox', async () => {
       '09e12d4cfb2e47c6181b6f7b4b785dbacb6809ab1f412006847ebf1d5111fd04',
     );
   });
-  test('upload db without', async () => {
+  test('upload db without refresh token', async () => {
     const json = new Json();
     json.setRec(1, 'priority', 3);
     await dropbox.save(
@@ -48,5 +48,16 @@ suite('Dropbox', async () => {
     json = new Json();
     await dropbox.load(json, 'dbtest.json');
     chai.assert.equal(json.getRec(1).get('priority'), 4);
+  });
+  test('access token renewal message', async () => {
+    const json = new Json();
+    json.setRec(1, 'priority', 4);
+    delete dropbox.accessToken;
+    const messages = await dropbox.save(
+      json,
+      'dbtest.json',
+      document.getElementById('codetokenInput').value,
+    );
+    chai.assert.equal(messages.get('display'), 'Access token renewed');
   });
 });
