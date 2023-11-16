@@ -44,7 +44,7 @@ export default class Dropbox {
 
   async getRefreshToken(authCode) {
     // get authorization code (authCode) from
-    // https://www.dropbox.com/oauth2/authorize?client_id=tbvg8rezh4v1th3&response_type=code&code_challenge=0-qX5rNGO-CxDjEuTs5iY_fS6dgXkMLSHJw-dIfJb8o&code_challenge_method=S256&token_access_type=offline
+    // https://www.dropbox.com/oauth2/authorize?client_id=r70n2c1pvk7jfny&response_type=code&code_challenge=0-qX5rNGO-CxDjEuTs5iY_fS6dgXkMLSHJw-dIfJb8o&code_challenge_method=S256&token_access_type=offline
     // where code_challenge is SHA-256 encypted codeChallenge https://tonyxu-io.github.io/pkce-generator/
     const response = await fetch('https://api.dropbox.com/oauth2/token', {
       method: 'POST',
@@ -98,7 +98,7 @@ export default class Dropbox {
 
   constructor(
     codeToken,
-    appKey = 'tbvg8rezh4v1th3',
+    appKey = 'r70n2c1pvk7jfny',
     codeChallenge = '5etjDk74rywQgfkklrLt67terlJLJFJASLLej64556e',
   ) {
     this.appKey = appKey;
