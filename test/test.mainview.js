@@ -236,6 +236,6 @@ suite('MainView', () => {
     mainview.dataview.data.get('description').get('elemID').value = 'bbb';
     mainview.controlview.insertListener();
     mainview.controlview.upListener();
-    chai.assert.equal(mainview.controlview.controls.get('messages').get('elemID').innerText, 'ID 2: bbb');
+    chai.assert.equal(mainview.controlview.controls.get('messages').get('elemID').innerText, '2: bbb\n');
   });
 });
