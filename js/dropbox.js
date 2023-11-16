@@ -80,20 +80,20 @@ export default class Dropbox {
         this.accessToken = await this.getAccessToken(codeToken);
         this.refreshToken = codeToken;
         if (this.accessToken) {
-          return new Map([['display', 'Access token renewed']]);
+          return new Map([['display', 'Access token renewed\n']]);
         }
       } else this.accessToken = await this.getAccessToken(this.refreshToken);
-      return new Map([['display', 'Access token renewed']]);
+      return new Map([['display', 'Access token renewed\n']]);
     } catch (accessTokenError) {
       try {
         const result = await this.getRefreshToken(codeToken);
         if (typeof result.refresh_token !== 'undefined') {
           this.refreshToken = result.refresh_token;
           this.accessToken = result.access_token;
-          return new Map([['display', `Refresh token renewed: ${this.refreshToken}`], ['refreshToken', this.refreshToken]]);
+          return new Map([['display', `Refresh token renewed: ${this.refreshToken}\n`], ['refreshToken', this.refreshToken]]);
         }
       } catch (refreshError) { return new Map([['refreshError', refreshError]]); }
-    } return new Map([['result', 'OK']]);
+    } return new Map([['result', 'OK\n']]);
   }
 
   constructor(

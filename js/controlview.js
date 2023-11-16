@@ -263,6 +263,12 @@ export default class ControlView {
         }
       }
     }
+    for (const [dbID, dbRec] of this.db.getMap()) {
+      if (dbRec.get('parent') === Number(viewID)) {
+        const textLine = `ID ${dbID}: ${dbRec.get('description')}\n`;
+        this.controls.get('messages').get('elemID').innerText += textLine;
+      }
+    }
   }
 
   callbacks = new Map(

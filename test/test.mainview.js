@@ -222,4 +222,20 @@ suite('MainView', () => {
     mainview.controlview.newListener();
     chai.assert.equal(mainview.dataview.data.get('id').get('elemID').value, 3);
   });
+  test('messages contains child', async () => {
+    mainview.controlview.db = new Db();
+    mainview.dataview.data.get('id').get('elemID').value = 1;
+    mainview.dataview.data.get('parent').get('elemID').value = '';
+    mainview.dataview.data.get('created').get('elemID').value = '';
+    mainview.dataview.data.get('priority').get('elemID').value = '';
+    mainview.dataview.data.get('description').get('elemID').value = 'aaa';
+    mainview.dataview.data.get('due').get('elemID').value = '';
+    mainview.controlview.insertListener();
+    mainview.controlview.newListener();
+    mainview.dataview.data.get('parent').get('elemID').value = 1;
+    mainview.dataview.data.get('description').get('elemID').value = 'bbb';
+    mainview.controlview.insertListener();
+    mainview.controlview.upListener();
+    chai.assert.equal(mainview.controlview.controls.get('messages').get('elemID').innerText, 'ID 2: bbb');
+  });
 });
