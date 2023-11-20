@@ -53,6 +53,9 @@ export default class ControlView {
       ['down', new Map([
         ['elemID', null],
         ['event', 'click']])],
+      ['archive', new Map([
+        ['elemID', null],
+        ['event', 'click']])],
       ['messages', new Map([
         ['elemID', null]])],
     ],
@@ -98,7 +101,7 @@ export default class ControlView {
     this.controls.get('save').get('elemID').disabled = true;
     const keys = new Uint32Array([...this.db.getMap().keys()]).sort();
     const dbSorted = new Map();
-    for (const key of keys) dbSorted.set(key, this.db.getMap().get(key));
+    for (const key of keys) dbSorted.set(key, this.db.getRec(key));
     this.db = new Json(dbSorted);
     this.controls.get('messages').innerText = '';
     try {
@@ -157,8 +160,8 @@ export default class ControlView {
       for (const key of keys) {
         if (((evt.target.id === 'next' && key > Number(viewID))
         || (evt.target.id === 'previous' && key < Number(viewID)))
-        && ((viewParent && this.db.getMap().get(key).get('parent') === Number(viewParent))
-        || (!viewParent && !this.db.getMap().get(key).get('parent')))) {
+        && ((viewParent && this.db.getRec(key).get('parent') === Number(viewParent))
+        || (!viewParent && !this.db.getRec(key).get('parent')))) {
           this.dataview.db2view(this.db, key);
           break;
         }
@@ -185,6 +188,43 @@ export default class ControlView {
     this.updateControls();
   };
 
+  archiveListener = () => {
+    let ancestors = new Map();
+    const arcFromID = Number(this.dataview.data.get('id').get('elemID').value);
+    let currID = arcFromID;
+    while (currID) {
+      const currRec = this.db.getRec(currID);
+      ancestors.set(currID, currRec);
+      const parentID = currRec.get('parent');
+      if (!this.db.getChildren(currID).size) this.db.deleteRec(currID);
+      currID = parentID;
+    }
+    ancestors = new Map([...ancestors].reverse());
+    const keys = new Uint32Array([...this.db.getMap().keys()]).sort();
+    let nextArcNum = this.db.hasID(100000) ? Math.max(...keys) + 1 : 100000;
+    let previousArcNum;
+    for (const ancestorRec of ancestors.values()) {
+      const currRec = new Map([...ancestorRec]);
+      currRec.set('id', nextArcNum);
+      if (previousArcNum) currRec.set('parent', previousArcNum);
+      else currRec.set('parent', 2);
+      const siblings = this.db.getChildren(currRec.get('parent'));
+      let duplicateFound;
+      for (const [elemID, elemRec] of siblings) {
+        if (elemRec.get('description') === currRec.get('description')) {
+          duplicateFound = elemID;
+        }
+      }
+      if (!duplicateFound) {
+        this.dataview.rec2db(this.db, currRec);
+        previousArcNum = nextArcNum;
+        nextArcNum += 1;
+      } else previousArcNum = duplicateFound;
+    }
+    this.dataview.db2view(this.db, previousArcNum);
+    this.updateControls();
+  };
+
   updateControls() {
     if (this.db.size()) {
       this.controls.get('save').get('elemID').disabled = false;
@@ -208,13 +248,16 @@ export default class ControlView {
       this.controls.get('previous').get('elemID').disabled = true;
       this.controls.get('up').get('elemID').disabled = true;
       this.controls.get('down').get('elemID').disabled = true;
+      this.controls.get('archive').get('elemID').disabled = true;
     } else {
       if (this.dataview.canInsert(viewID, this.db)) {
         this.controls.get('new').get('elemID').disabled = true;
         this.controls.get('insert').get('elemID').disabled = false;
+        this.controls.get('archive').get('elemID').disabled = true;
       } else {
         this.controls.get('new').get('elemID').disabled = false;
         this.controls.get('insert').get('elemID').disabled = true;
+        this.controls.get('archive').get('elemID').disabled = false;
       }
       if (this.dataview.canUpdate(viewID, this.db)) {
         this.controls.get('update').get('elemID').disabled = false;
@@ -232,8 +275,8 @@ export default class ControlView {
       const keys = new Uint32Array([...this.db.getMap().keys()]).sort();
       for (const key of keys) {
         if (key > Number(viewID)
-        && ((viewParent && this.db.getMap().get(key).get('parent') === Number(viewParent))
-        || (!viewParent && !this.db.getMap().get(key).get('parent')))) {
+        && ((viewParent && this.db.getRec(key).get('parent') === Number(viewParent))
+        || (!viewParent && !this.db.getRec(key).get('parent')))) {
           this.controls.get('next').get('elemID').disabled = false;
           break;
         }
@@ -243,8 +286,8 @@ export default class ControlView {
       keys.reverse();
       for (const key of keys) {
         if (key < Number(viewID)
-        && ((viewParent && this.db.getMap().get(key).get('parent') === Number(viewParent))
-        || (!viewParent && !this.db.getMap().get(key).get('parent')))) {
+        && ((viewParent && this.db.getRec(key).get('parent') === Number(viewParent))
+        || (!viewParent && !this.db.getRec(key).get('parent')))) {
           this.controls.get('previous').get('elemID').disabled = false;
           break;
         }
@@ -255,21 +298,20 @@ export default class ControlView {
       } else {
         this.controls.get('up').get('elemID').disabled = true;
       }
-      this.controls.get('down').get('elemID').disabled = true;
-      for (const dbRec of this.db.getMap().values()) {
-        if (dbRec.get('parent') === Number(viewID)) {
-          this.controls.get('down').get('elemID').disabled = false;
-          break;
+
+      const children = this.db.getChildren(Number(viewID));
+      this.controls.get('messages').get('elemID').innerText = '';
+      if (children.size) {
+        this.controls.get('down').get('elemID').disabled = false;
+        this.controls.get('archive').get('elemID').disabled = true;
+        for (const [childID, childRec] of children) {
+          this.controls.get('messages').get('elemID').innerText
+            += `${childID}: ${childRec.get('description')}\n`;
         }
+      } else {
+        this.controls.get('down').get('elemID').disabled = true;
       }
     }
-    let textLine = '';
-    for (const [dbID, dbRec] of this.db.getMap()) {
-      if (dbRec.get('parent') === Number(viewID)) {
-        textLine += `${dbID}: ${dbRec.get('description')}\n`;
-      }
-    }
-    if (textLine) this.controls.get('messages').get('elemID').innerText = textLine;
   }
 
   callbacks = new Map(
@@ -286,6 +328,7 @@ export default class ControlView {
       ['previous', this.nextprevListener],
       ['up', this.upListener],
       ['down', this.downListener],
+      ['archive', this.archiveListener],
     ],
   );
 

@@ -19,11 +19,17 @@ export default class Db {
     }
   }
 
-  getIter() { return this.db[Symbol.iterator](); }
-
   getMap() { return this.db; }
 
   hasID(id) { return this.db.has(Number(id)); }
+
+  getChildren(id) {
+    const children = new Map();
+    for (const [recID, rec] of this.db) {
+      if (id === rec.get('parent')) children.set(recID, rec);
+    }
+    return children;
+  }
 
   size() { return this.db.size; }
 

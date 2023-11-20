@@ -47,11 +47,11 @@ export default class Json {
 
   setRec(id, field, val) { this.db.setRec(id, field, val); }
 
-  getIter() { return this.db.getIter(); }
-
   getMap() { return this.db.getMap(); }
 
   hasID(id) { return this.db.hasID(id); }
+
+  getChildren(id) { return this.db.getChildren(id); }
 
   size() { return this.db.size(); }
 

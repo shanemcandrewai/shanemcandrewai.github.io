@@ -31,29 +31,37 @@ export default class DataView {
   );
 
   view2db = (db) => {
-    const viewID = this.data.get('id').get('elemID').value;
-    if (viewID) {
+    const rec = new Map();
+    for (const [elemName, elemRec] of this.data) {
+      rec.set(elemName, elemRec.get('elemID').value);
+    }
+    this.rec2db(db, rec);
+  };
+
+  rec2db = (db, rec) => {
+    const recID = Number(rec.get('id'));
+    if (recID) {
       for (const [elemName, elemRec] of this.data) {
         if (elemName !== 'id') {
-          const valueView = elemRec.get('elemID').value;
-          if (valueView) {
+          const recValue = rec.get(elemName);
+          if (recValue) {
             const type = elemRec.get('type');
             if (type === Number) {
               db.setRec(
-                Number(viewID),
+                recID,
                 elemName,
-                Number(valueView),
+                Number(recValue),
               );
             } else if (type === 'datetime-local') {
               db.setRec(
-                Number(viewID),
+                recID,
                 elemName,
-                UtcConv.getUTCDateTime(valueView),
+                UtcConv.getUTCDateTime(recValue),
               );
             } else {
-              db.setRec(viewID, elemName, valueView);
+              db.setRec(recID, elemName, recValue);
             }
-          } else if (db.hasID(Number(viewID))) { db.deleteField(Number(viewID), elemName); }
+          } else if (db.hasID(recID)) { db.deleteField(recID, elemName); }
         }
       }
     }
