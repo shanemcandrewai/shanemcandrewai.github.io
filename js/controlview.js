@@ -201,7 +201,10 @@ export default class ControlView {
     }
     ancestors = new Map([...ancestors].reverse());
     const keys = new Uint32Array([...this.db.getMap().keys()]).sort();
-    let nextArcNum = this.db.hasID(100000) ? Math.max(...keys) + 1 : 100000;
+    let nextArcNum;
+    if (this.db.hasID(100000)) {
+      nextArcNum = keys.find((id, ind, arr) => (id > 99999 && ((arr[ind + 1] - id) !== 1))) + 1;
+    } else nextArcNum = 100000;
     let previousArcNum;
     for (const ancestorRec of ancestors.values()) {
       const currRec = new Map([...ancestorRec]);
