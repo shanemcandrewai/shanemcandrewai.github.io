@@ -201,7 +201,10 @@ export default class ControlView {
     }
     ancestors = new Map([...ancestors].reverse());
     const keys = new Uint32Array([...this.db.getMap().keys()]).sort();
-    let nextArcNum = this.db.hasID(100000) ? Math.max(...keys) + 1 : 100000;
+    let nextArcNum;
+    if (this.db.hasID(100000)) {
+      nextArcNum = keys.find((id, ind, arr) => (id > 99999 && ((arr[ind + 1] - id) !== 1))) + 1;
+    } else nextArcNum = 100000;
     let previousArcNum;
     for (const ancestorRec of ancestors.values()) {
       const currRec = new Map([...ancestorRec]);
@@ -299,8 +302,15 @@ export default class ControlView {
         this.controls.get('up').get('elemID').disabled = true;
       }
 
-      const children = this.db.getChildren(Number(viewID));
+      const messageText = this.controls.get('messages').get('elemID').innerText.split('\n');
+      const messageTextFiltered = messageText.filter((line) => line.substring(0, 7) === 'Dropbox');
       this.controls.get('messages').get('elemID').innerText = '';
+      for (const message of messageTextFiltered) {
+        this.controls.get('messages').get('elemID').innerText += message;
+        this.controls.get('messages').get('elemID').innerText += '\n';
+      }
+
+      const children = this.db.getChildren(Number(viewID));
       if (children.size) {
         this.controls.get('down').get('elemID').disabled = false;
         this.controls.get('archive').get('elemID').disabled = true;
