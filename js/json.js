@@ -41,6 +41,7 @@ export default class Json {
       }
       if (rec) this.db.db.set(key, rec);
     }
+    return fileObj.size;
   }
 
   getRec(id) { return this.db.getRec(id); }

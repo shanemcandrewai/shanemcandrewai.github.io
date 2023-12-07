@@ -1,5 +1,5 @@
 export default class Dropbox {
-  async save(json, filename, codeToken) {
+  async save(json, filename = 'dbtest.json', codeToken = undefined) {
     let messages = new Map();
     if (typeof this.accessToken === 'undefined') messages = await this.init(codeToken, filename);
     try {
@@ -13,7 +13,7 @@ export default class Dropbox {
         body: json.getString(),
       });
       const respjson = await response.json();
-      if (respjson.error_summary === 'expired_access_token/..') delete this.accessToken;
+      if (respjson.error_summary.substring(0, 20) === 'expired_access_token') delete this.accessToken;
       messages.set('upload_response', respjson);
       return messages;
     } catch (uploadError) {
@@ -34,7 +34,7 @@ export default class Dropbox {
         },
       });
       messages.set('download_response', response);
-      json.readText(await response.text());
+      messages.set('records loaded', json.readText(await response.text()));
       return messages;
     } catch (downloadError) {
       delete this.accessToken;

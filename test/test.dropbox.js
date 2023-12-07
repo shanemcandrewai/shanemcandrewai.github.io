@@ -58,6 +58,6 @@ suite('Dropbox', async () => {
       'dbtest.json',
       document.getElementById('codetokenInput').value,
     );
-    chai.assert.equal(messages.get('display'), 'Access token renewed\n');
+    chai.assert.equal(messages.get('display'), 'Dropbox access token renewed from input refresh token\n');
   });
 });
