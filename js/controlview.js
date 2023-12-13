@@ -12,22 +12,22 @@ export default class ControlView {
 
   uploadInputListener = () => {
     const file = this.modelController.controls.get('uploadInput').get('elemID').files[0];
-    this.storage = new Local(file);
     this.modelController.controls.get('selectFile').set('innerText', file.name);
     this.modelController.controls.get('uploadInput').set('fileName', file.name);
+    this.storage = new Local(file);
     if (file.name.split('.').pop() === 'xlsx') this.modelController.db = new Xlsx(this.modelController.db.getMap());
     else this.modelController.db = new Json(this.modelController.db.getMap());
-    this.modelController.update();
+    this.modelController.updateControls();
   };
 
   codetokenInputListener = () => {
-    this.storage = new Dropbox();
-    this.modelController.db = new Json(this.modelController.db.getMap());
     this.modelController.controls.get('codetokenInput').set(
       'value',
       this.modelController.controls.get('codetokenInput').get('elemID').value,
     );
-    this.modelController.update();
+    this.storage = new Dropbox();
+    this.modelController.db = new Json(this.modelController.db.getMap());
+    this.modelController.updateControls();
   };
 
   loadListener = async () => {
@@ -38,14 +38,14 @@ export default class ControlView {
       messages = await this.storage.load(
         this.modelController.db,
         'db.json',
-        this.modelController.controls.get('codetokenInput').get('elemID').value,
+        this.modelController.controls.get('codetokenInput').get('value'),
       );
-      this.modelController.datatransfer.db2view(this.modelController.db);
+      this.modelController.db2view(this.modelController.db);
     } catch (readFileError) {
       messages.set('readFileError', readFileError);
       this.modelController.controls.get('selectFile').set('innerText', 'Select file again');
     }
-    this.modelController.update();
+    this.modelController.updateControls();
   };
 
   saveListener = async () => {
@@ -54,12 +54,12 @@ export default class ControlView {
     const dbSorted = new Map();
     for (const key of keys) dbSorted.set(key, this.modelController.db.getRec(key));
     this.modelController.db = new Json(dbSorted);
-    this.modelController.controls.get('messages').innerText = '';
+    this.modelController.controls.get('messages').set('innerText', '');
     try {
       const messages = await this.storage.save(
         this.modelController.db,
         'db.json',
-        this.modelController.controls.get('codetokenInput').get('elemID').value,
+        this.modelController.controls.get('codetokenInput').get('value'),
       );
       if (messages instanceof Map && messages.has('display')) {
         this.modelController.controls.get('messages').set('innerText', messages.getDisplay());
@@ -72,16 +72,16 @@ export default class ControlView {
 
   insertListener = () => {
     this.modelController.datatransfer.view2db(this.modelController.db);
-    this.modelController.update();
+    this.modelController.updateControls();
   };
 
   updateListener = () => {
     this.modelController.datatransfer.view2db(this.modelController.db);
-    this.modelController.update();
+    this.modelController.updateControls();
   };
 
   deleteListener = () => {
-    const viewID = this.modelController.data.get('id').get('elemID').value;
+    const viewID = this.modelController.data.get('id').get('value');
     if (viewID) {
       const viewParent = this.modelController.db.getRec(viewID).get('parent');
       this.modelController.db.deleteRec(viewID);
@@ -90,7 +90,7 @@ export default class ControlView {
           this.modelController.db.setRec(dbID, 'parent', viewParent);
         }
       }
-      this.modelController.update();
+      this.modelController.updateControls();
     }
   };
 
@@ -98,14 +98,16 @@ export default class ControlView {
     const keys = new Uint32Array([...this.modelController.db.getMap().keys()]).sort();
     const nextNum = keys.find((id, ind, arr) => (arr[ind + 1] - id) !== 1) + 1;
     this.modelController.data.get('id').set('value', nextNum || 1);
-    this.modelController.data.get('created').get('elemID').value = UtcConv.getLocalDateTime();
-    this.modelController.update();
+    this.modelController.data.get('id').get('elemID').value = this.modelController.data.get('id').get('value');
+    this.modelController.data.get('created').set('value', UtcConv.getLocalDateTime());
+    this.modelController.data.get('created').get('elemID').value = this.modelController.data.get('created').get('value');
+    this.modelController.updateControls();
   };
 
   nextprevListener = (evt) => {
-    const viewID = this.modelController.data.get('id').get('elemID').value;
+    const viewID = this.modelController.data.get('id').get('value');
     if (viewID) {
-      const viewParent = this.modelController.data.get('parent').get('elemID').value;
+      const viewParent = this.modelController.data.get('parent').get('value');
       const keys = new Uint32Array([...this.modelController.db.getMap().keys()]).sort();
       if (evt.target.id === 'previous') keys.reverse();
       for (const key of keys) {
@@ -113,35 +115,35 @@ export default class ControlView {
         || (evt.target.id === 'previous' && key < Number(viewID)))
         && ((viewParent && this.modelController.db.getRec(key).get('parent') === Number(viewParent))
         || (!viewParent && !this.modelController.db.getRec(key).get('parent')))) {
-          this.modelController.datatransfer.db2view(this.modelController.db, key);
+          this.modelController.db2view(this.modelController.db, key);
           break;
         }
       }
-      this.modelController.update();
+      this.modelController.updateControls();
     }
   };
 
   upListener = () => {
-    const viewParent = Number(this.modelController.data.get('parent').get('elemID').value);
-    this.modelController.datatransfer.db2view(this.modelController.db, viewParent);
-    this.modelController.update();
+    const viewParent = Number(this.modelController.data.get('parent').get('value'));
+    this.modelController.db2view(this.modelController.db, viewParent);
+    this.modelController.updateControls();
   };
 
   downListener = () => {
-    const viewID = Number(this.modelController.data.get('id').get('elemID').value);
+    const viewID = Number(this.modelController.data.get('id').get('value'));
     for (const [dbID, dbRec] of this.modelController.db.getMap()) {
       if (dbRec.get('parent') === viewID) {
-        this.modelController.datatransfer.db2view(this.modelController.db, dbID);
+        this.modelController.db2view(this.modelController.db, dbID);
         break;
       }
     }
 
-    this.modelController.update();
+    this.modelController.updateControls();
   };
 
   archiveListener = () => {
     let ancestors = new Map();
-    const arcFromID = Number(this.modelController.data.get('id').get('elemID').value);
+    const arcFromID = Number(this.modelController.data.get('id').get('value'));
     let currID = arcFromID;
     while (currID) {
       const currRec = this.modelController.db.getRec(currID);
@@ -177,8 +179,8 @@ export default class ControlView {
         nextArcNum += 1;
       } else previousArcNum = duplicateFound;
     }
-    this.modelController.datatransfer.db2view(this.modelController.db, previousArcNum);
-    this.modelController.update();
+    this.modelController.db2view(this.modelController.db, previousArcNum);
+    this.modelController.updateControls();
   };
 
   callbacks = new Map(

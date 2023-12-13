@@ -1,16 +1,15 @@
 import UtcConv from './utcconv.js';
 
 export default class DataTransfer {
-  view2db = (db) => {
+  view2db(db) {
     const rec = new Map();
     for (const [elemName, elemRec] of this.data) {
-      elemRec.set('value', elemRec.get('elemID').value);
       rec.set(elemName, elemRec.get('value'));
     }
     this.rec2db(db, rec);
-  };
+  }
 
-  rec2db = (db, rec) => {
+  rec2db(db, rec) {
     const recID = Number(rec.get('id'));
     if (recID) {
       for (const [elemName, elemRec] of this.data) {
@@ -37,44 +36,6 @@ export default class DataTransfer {
         }
       }
     }
-  };
-
-  fillView() {
-    for (const properties of this.data.values()) {
-      if (properties.has('value') && properties.get('elemID')) {
-        properties.get('elemID').value = properties.get('value');
-      }
-    }
-  }
-
-  tranferView() {
-    for (const properties of this.data.values()) {
-      properties.set('value', properties.get('elemID').value);
-    }
-  }
-
-  db2view(db, id) {
-    let idDB = id || this.data.get('id').get('elemID').value;
-    let recDB = db.getRec(idDB);
-    if (!recDB) { [idDB, recDB] = db.getMap()[Symbol.iterator]().next().value; }
-    if (idDB) {
-      this.data.get('id').set('value', idDB);
-      for (const [elemName, elemRec] of this.data) {
-        if (elemName !== 'id') {
-          const valueDB = recDB.get(elemName);
-          if (valueDB === undefined) {
-            elemRec.set('value', '');
-          } else if (elemRec.get('type') === 'datetime-local' && valueDB) {
-            const utc = UtcConv.getLocalDateTime(valueDB);
-            elemRec.set('value', utc);
-          } else elemRec.set('value', valueDB);
-        }
-      }
-      this.fillView();
-    }
-    return new Map([['system',
-      new Map([['record read from DB', idDB]]),
-    ]]);
   }
 
   canUpdate(viewID, db) {
@@ -82,7 +43,7 @@ export default class DataTransfer {
     if (dbRec === undefined) return false;
     for (const [elemName, elemRec] of this.data) {
       if (elemName !== 'id') {
-        const valueView = elemRec.get('elemID').value;
+        const valueView = elemRec.get('value');
         const type = elemRec.get('type');
         const valueDB = dbRec.get(elemName);
         if (valueView) {

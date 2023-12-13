@@ -13,7 +13,8 @@ export default class Dropbox {
         body: json.getString(),
       });
       const respjson = await response.json();
-      if (respjson.error_summary.substring(0, 20) === 'expired_access_token') delete this.accessToken;
+      if (Object.hasOwn(respjson, 'error_summary')
+        && respjson.error_summary.substring(0, 20) === 'expired_access_token') delete this.accessToken;
       messages.set('upload_response', respjson);
       return messages;
     } catch (uploadError) {

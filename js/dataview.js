@@ -1,7 +1,10 @@
 export default class DataView {
-  dataListener = () => {
-    this.modelController.datatransfer.tranferView();
-    this.modelController.update();
+  dataListener = (evt) => {
+    this.modelController.data.get(evt.target.id).set(
+      'value',
+      this.modelController.data.get(evt.target.id).get('elemID').value,
+    );
+    this.modelController.updateControls();
   };
 
   callbacks = new Map(

@@ -1,6 +1,6 @@
+import ModelController from './modelcontroller.js';
 import ControlView from './controlview.js';
 import DataView from './dataview.js';
-import ModelController from './modelcontroller.js';
 
 export default class MainView {
   controls = new Map(
@@ -106,7 +106,7 @@ export default class MainView {
 
   modelController = new ModelController(this.controls, this.data);
 
-  dataview = new DataView(this.modelController);
-
   controlview = new ControlView(this.modelController);
+
+  dataview = new DataView(this.modelController);
 }
