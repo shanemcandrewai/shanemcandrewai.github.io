@@ -1,112 +1,75 @@
-import ModelController from './modelcontroller.js';
 import ControlView from './controlview.js';
-import DataView from './dataview.js';
 
 export default class MainView {
   controls = new Map(
     [
       ['selectFile', new Map([
-        ['elemID', null],
-        ['innerText', null],
-        ['disabled', false]])],
+        ['elemProp', 'innerText']])],
       ['uploadInput', new Map([
-        ['elemID', null],
-        ['event', 'change'],
-        ['fileName', null],
-        ['disabled', false]])],
+        ['event', 'change']])],
       ['codetokenInput', new Map([
-        ['elemID', null],
-        ['event', 'change'],
-        ['value', null],
-        ['disabled', false]])],
+        ['event', 'change']])],
       ['load', new Map([
-        ['elemID', null],
         ['event', 'click'],
-        ['disabled', false]])],
+        ['elemProp', 'disabled']])],
       ['save', new Map([
-        ['elemID', null],
         ['event', 'click'],
-        ['disabled', false]])],
+        ['elemProp', 'disabled']])],
       ['insert', new Map([
-        ['elemID', null],
         ['event', 'click'],
-        ['disabled', false]])],
+        ['elemProp', 'disabled']])],
       ['update', new Map([
-        ['elemID', null],
         ['event', 'click'],
-        ['disabled', false]])],
+        ['elemProp', 'disabled']])],
       ['delete', new Map([
-        ['elemID', null],
         ['event', 'click'],
-        ['disabled', false]])],
+        ['elemProp', 'disabled']])],
       ['new', new Map([
-        ['elemID', null],
         ['event', 'click'],
-        ['disabled', false]])],
+        ['elemProp', 'disabled']])],
       ['next', new Map([
-        ['elemID', null],
         ['event', 'click'],
-        ['disabled', false]])],
+        ['elemProp', 'disabled']])],
       ['previous', new Map([
-        ['elemID', null],
         ['event', 'click'],
-        ['disabled', false]])],
+        ['elemProp', 'disabled']])],
       ['up', new Map([
-        ['elemID', null],
         ['event', 'click'],
-        ['disabled', false]])],
+        ['elemProp', 'disabled']])],
       ['down', new Map([
-        ['elemID', null],
         ['event', 'click'],
-        ['disabled', false]])],
+        ['elemProp', 'disabled']])],
       ['archive', new Map([
-        ['elemID', null],
         ['event', 'click'],
-        ['disabled', false]])],
-      ['messages', new Map([
-        ['elemID', null],
-        ['innerText', null]])],
-    ],
-  );
-
-  data = new Map(
-    [
+        ['elemProp', 'disabled']])],
       ['id', new Map([
-        ['elemID', null],
         ['type', Number],
         ['event', 'keyup'],
-        ['value', 1]])],
+        ['elemProp', 'value']])],
       ['parent', new Map([
-        ['elemID', null],
         ['type', Number],
         ['event', 'keyup'],
-        ['value', null]])],
+        ['elemProp', 'value']])],
       ['created', new Map([
-        ['elemID', null],
         ['type', 'datetime-local'],
         ['event', 'change'],
-        ['value', null]])],
+        ['elemProp', 'value']])],
       ['priority', new Map([
-        ['elemID', null],
         ['type', Number],
         ['event', 'keyup'],
-        ['value', null]])],
+        ['elemProp', 'value']])],
       ['description', new Map([
-        ['elemID', null],
         ['type', String],
         ['event', 'keyup'],
-        ['value', null]])],
+        ['elemProp', 'value']])],
       ['due', new Map([
-        ['elemID', null],
         ['type', 'datetime-local'],
         ['event', 'change'],
-        ['value', null]])],
+        ['elemProp', 'value']])],
+      ['messages', new Map([
+        ['elemProp', 'innerText']])],
     ],
   );
 
-  modelController = new ModelController(this.controls, this.data);
-
-  controlview = new ControlView(this.modelController);
-
-  dataview = new DataView(this.modelController);
+  controlView = new ControlView(this.controls);
 }

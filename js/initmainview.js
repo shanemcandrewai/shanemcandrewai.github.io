@@ -1,6 +1,6 @@
 import MainView from './mainview.js';
 
-export default class Controller {
+export default class InitMainView {
   static {
     this.mainview = new MainView();
   }

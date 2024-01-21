@@ -35,7 +35,9 @@ export default class Db {
 
   deleteRec(id) { this.db.delete(Number(id)); }
 
-  deleteField(id, elemName) { this.db.get(id).delete(elemName); }
+  deleteField(id, elemName) {
+    this.db.get(Number(id)).delete(elemName);
+  }
 
   constructor(map) {
     if (map !== undefined) this.db = map; else this.db = new Map();

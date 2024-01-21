@@ -25,8 +25,8 @@ export default class Json {
     );
   }
 
-  getString() {
-    return JSON.stringify(this.db.db, Json.mapEncoder, 2);
+  getString(spacer = 2) {
+    return JSON.stringify(this.db.db, Json.mapEncoder, spacer);
   }
 
   async readFile(file) {
