@@ -123,7 +123,7 @@ suite('MainView', () => {
     mainview.controlView.modelController.db.readText(strObj);
     mainview.controlView.modelController.db2view();
     mainview.controlView.modelController.postLoad();
-    mainview.controlView.copyWrites();
+    mainview.controlView.writeCache();
     chai.assert.equal(mainview.controls.get('insert').get('elemID').disabled, true);
     chai.assert.equal(mainview.controls.get('update').get('elemID').disabled, true);
   });
@@ -192,7 +192,7 @@ suite('MainView', () => {
     mainview.controlView.modelController.db.readText(strObj);
     mainview.controlView.modelController.db2view();
     mainview.controlView.modelController.postLoad();
-    mainview.controlView.copyWrites();
+    mainview.controlView.writeCache();
     chai.assert.equal(mainview.controls.get('previous').get('elemID').disabled, true);
     chai.assert.equal(mainview.controls.get('next').get('elemID').disabled, false);
   });

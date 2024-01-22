@@ -3,6 +3,13 @@ import Db from './db.js';
 import UtcConv from './utcconv.js';
 
 export default class ModelController {
+  setCache(property, value) {
+    if (this.controls.get(property).get('cache') !== value) {
+      this.controls.get(property).set('cache', value);
+      this.controls.get(property).set('write', true);
+    }
+  }
+
   view2db() {
     const rec = new Map();
     for (const [elemName, elemRec] of this.controls) {
@@ -97,53 +104,31 @@ export default class ModelController {
     let recDB = this.db.getRec(idDB);
     if (!recDB) { [idDB, recDB] = this.db.getMap()[Symbol.iterator]().next().value; }
     if (idDB) {
-      if (this.controls.get('id').get('cache') !== idDB) {
-        this.controls.get('id').set('cache', idDB);
-        this.controls.get('id').set('write', true);
-      }
+      this.setCache('id', idDB);
       const classMessages = new Messages();
       let displayMessages = classMessages.getDisplay();
       for (const [elemName, elemRec] of this.controls) {
         if (elemName === 'id') {
           const children = this.db.getChildren(Number(idDB));
           if (children.size) {
-            this.controls.get('down').set('cache', false);
-            this.controls.get('down').set('write', true);
-            this.controls.get('archive').set('cache', true);
-            this.controls.get('archive').set('write', true);
+            this.setCache('down', false);
+            this.setCache('archive', true);
             for (const [childID, childRec] of children) {
               displayMessages += `${childID}: ${childRec.get('description')}\n`;
             }
-          } else {
-            this.controls.get('down').set('cache', true);
-            this.controls.get('down').set('write', true);
-          }
-          this.controls.get('messages').set('cache', displayMessages);
-          this.controls.get('messages').set('write', true);
+          } else this.setCache('down', true);
+          this.setCache('messages', displayMessages);
         } else if (elemRec.has('type')) {
           const valueDB = recDB.get(elemName);
-          if (elemName === 'messages') {
-            elemRec.set('cache', displayMessages);
-            elemRec.set('write', true);
-          } else if (valueDB === undefined) {
-            elemRec.set('cache', '');
-            elemRec.set('write', true);
-          } else if (elemRec.get('type') === 'datetime-local' && valueDB) {
+          if (elemName === 'messages') this.setCache(elemName, displayMessages);
+          else if (valueDB === undefined) this.setCache(elemName, '');
+          else if (elemRec.get('type') === 'datetime-local' && valueDB) {
             const utc = UtcConv.getLocalDateTime(valueDB);
-            elemRec.set('cache', utc);
-            elemRec.set('write', true);
-          } else {
-            elemRec.set('cache', valueDB);
-            elemRec.set('write', true);
-          }
+            this.setCache(elemName, utc);
+          } else this.setCache(elemName, valueDB);
           if (elemName === 'parent') {
-            if (this.db.hasID(valueDB)) {
-              this.controls.get('up').set('cache', false);
-              this.controls.get('up').set('write', true);
-            } else {
-              this.controls.get('up').set('cache', true);
-              this.controls.get('up').set('write', true);
-            }
+            if (this.db.hasID(valueDB)) this.setCache('up', false);
+            else this.setCache('up', true);
           }
         }
       }
@@ -154,116 +139,74 @@ export default class ModelController {
   }
 
   postLoad() {
-    if (this.controls.get('new').get('cache')) {
-      this.controls.get('new').set('cache', false);
-      this.controls.get('new').set('write', true);
-    }
-    if (!this.controls.get('insert').get('cache')) {
-      this.controls.get('insert').set('cache', true);
-      this.controls.get('insert').set('write', true);
-    }
-    if (!this.controls.get('update').get('cache')) {
-      this.controls.get('update').set('cache', true);
-      this.controls.get('update').set('write', true);
-    }
-    if (this.controls.get('delete').get('cache')) {
-      this.controls.get('delete').set('cache', false);
-      this.controls.get('delete').set('write', true);
-    }
+    this.setCache('new', false);
+    this.setCache('insert', true);
+    this.setCache('update', true);
+    this.setCache('delete', false);
     this.postNextprev();
   }
 
   postNew() {
-    if (!this.controls.get('new').get('cache')) {
-      this.controls.get('new').set('cache', true);
-      this.controls.get('new').set('write', true);
-    }
-    if (this.controls.get('insert').get('cache')) {
-      this.controls.get('insert').set('cache', false);
-      this.controls.get('insert').set('write', true);
-    }
-    if (!this.controls.get('update').get('cache')) {
-      this.controls.get('update').set('cache', true);
-      this.controls.get('update').set('write', true);
-    }
-    if (!this.controls.get('delete').get('cache')) {
-      this.controls.get('delete').set('cache', true);
-      this.controls.get('delete').set('write', true);
-    }
+    this.setCache('new', true);
+    this.setCache('insert', false);
+    this.setCache('update', true);
+    this.setCache('delete', true);
   }
 
   postView2db() {
-    if (this.controls.get('new').get('cache')) {
-      this.controls.get('new').set('cache', false);
-      this.controls.get('new').set('write', true);
-    }
-    if (!this.controls.get('insert').get('cache')) {
-      this.controls.get('insert').set('cache', true);
-      this.controls.get('insert').set('write', true);
-    }
-    if (!this.controls.get('update').get('cache')) {
-      this.controls.get('update').set('cache', true);
-      this.controls.get('update').set('write', true);
-    }
-    if (this.controls.get('delete').get('cache')) {
-      this.controls.get('delete').set('cache', false);
-      this.controls.get('delete').set('write', true);
-    }
-    this.controls.get('save').set('cache', false);
-    this.controls.get('save').set('write', true);
+    this.postLoad();
+    this.setCache('save', false);
   }
 
   postData() {
     const messages = new Messages();
     const id = this.controls.get('id').get('cache');
 
-    if (this.canInsert(id, this.db)) {
-      if (!this.controls.get('new').get('cache')) {
-        this.controls.get('new').set('cache', true);
-        this.controls.get('new').set('write', true);
-      }
-      if (this.controls.get('insert').get('cache')) {
-        this.controls.get('insert').set('cache', false);
-        this.controls.get('insert').set('write', true);
-      }
-      if (!this.controls.get('archive').get('cache')) {
-        this.controls.get('archive').set('cache', true);
-        this.controls.get('archive').set('write', true);
-      }
-    } else {
-      if (this.controls.get('new').get('cache')) {
-        this.controls.get('new').set('cache', false);
-        this.controls.get('new').set('write', true);
-      }
-      if (!this.controls.get('insert').get('cache')) {
-        this.controls.get('insert').set('cache', true);
-        this.controls.get('insert').set('write', true);
-      }
-      if (this.controls.get('archive').get('cache')) {
-        this.controls.get('archive').set('cache', false);
-        this.controls.get('archive').set('write', true);
-      }
-    }
+    if (this.canInsert(id, this.db)) this.postNew();
+    else this.postLoad();
     if (this.canUpdate(id, this.db)) {
-      if (this.controls.get('update').get('cache')) {
-        this.controls.get('update').set('cache', false);
-        this.controls.get('update').set('write', true);
-      }
+      this.setCache('update', false);
     } else if (!this.controls.get('update').get('cache')) {
-      this.controls.get('update').set('cache', true);
-      this.controls.get('update').set('write', true);
-    }
-    if (this.db.getRec(id)) {
-      if (this.controls.get('delete').get('cache')) {
-        this.controls.get('delete').set('cache', false);
-        this.controls.get('delete').set('write', true);
-      }
-    } else if (!this.controls.get('delete').get('cache')) {
-      this.controls.get('delete').set('cache', true);
-      this.controls.get('delete').set('write', true);
+      this.setCache('update', true);
     }
 
     return messages;
+  }
+
+  setSelectFile(fileName) {
+    this.setCache('selectFile', fileName);
+  }
+
+  setUploadInput(loadVal) {
+    this.setCache('load', loadVal);
+  }
+
+  setCodeToken(code) {
+    this.setCache('codetokenInput', code);
+  }
+
+  setLoad(loadVal, messagesVal) {
+    this.setCache('load', loadVal);
+    this.setCache('messages', messagesVal);
+  }
+
+  setSave(saveVal) {
+    this.setCache('save', saveVal);
+  }
+
+  setNew(idVal, createdVal) {
+    this.setCache('id', idVal);
+    this.setCache('created', createdVal);
+  }
+
+  setParent(parent) {
+    this.setCache('parent', parent);
+    if (!parent || this.db.hasID(parent)) this.setCache('up', false);
+    else this.setCache('up', true);
+  }
+
+  setData(id, value) {
+    this.setCache(id, value);
   }
 
   postNextprev(id) {
@@ -271,27 +214,23 @@ export default class ModelController {
     if (id !== undefined) viewID = id;
     else if (this.controls.get('id').get('cache')) viewID = this.controls.get('id').get('cache');
     const viewParent = this.controls.get('parent').get('cache');
-    this.controls.get('next').set('cache', true);
-    this.controls.get('next').set('write', true);
+    this.setCache('next', true);
     const keys = new Uint32Array([...this.db.getMap().keys()]).sort();
     for (const key of keys) {
       if (key > Number(viewID)
         && ((viewParent && this.db.getRec(key).get('parent') === Number(viewParent))
         || (!viewParent && !this.db.getRec(key).get('parent')))) {
-        this.controls.get('next').set('cache', false);
-        this.controls.get('next').set('write', true);
+        this.setCache('next', false);
         break;
       }
     }
-    this.controls.get('previous').set('cache', true);
-    this.controls.get('previous').set('write', true);
+    this.setCache('previous', true);
     keys.reverse();
     for (const key of keys) {
       if (key < Number(viewID)
         && ((viewParent && this.db.getRec(key).get('parent') === Number(viewParent))
         || (!viewParent && !this.db.getRec(key).get('parent')))) {
-        this.controls.get('previous').set('cache', false);
-        this.controls.get('previous').set('write', true);
+        this.setCache('previous', false);
         break;
       }
     }

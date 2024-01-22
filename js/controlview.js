@@ -9,36 +9,27 @@ import Messages from './messages.js';
 export default class ControlView {
   uploadInputListener = (evt) => {
     const file = evt.target.files[0];
-    this.controls.get('selectFile').set('cache', file.name);
-    this.controls.get('selectFile').set('write', true);
+    this.modelController.setSelectFile(file.name);
     this.storage = new Local(file);
-
     const dbMap = this.modelController.db.getMap();
     if (file.name.split('.').pop() === 'xlsx') this.modelController.db = new Xlsx(dbMap);
     else this.modelController.db = new Json(dbMap);
     if (!dbMap.size) this.loadListener();
-    else if (this.controls.get('load').get('cache')) {
-      this.controls.get('load').set('cache', false);
-      this.controls.get('load').set('write', true);
-    }
-    this.copyWrites();
+    else this.modelController.setUploadInput(false);
+    this.writeCache();
   };
 
   codetokenInputListener = (evt) => {
-    const code = evt.target.value;
-    this.controls.get('codetokenInput').set('cache', code);
+    this.modelController.setCodeToken(evt.target.value);
     this.storage = new Dropbox();
     this.modelController.db = new Json(this.modelController.db.getMap());
     if (!this.modelController.db.size()) this.loadListener();
-    this.copyWrites();
+    this.writeCache();
   };
 
   loadListener = async () => {
-    this.controls.get('load').set('cache', true);
-    this.controls.get('load').set('write', true);
-    this.controls.get('messages').set('cache', '');
-    this.controls.get('messages').set('write', true);
-    this.copyWrites();
+    this.modelController.setLoad(true, '');
+    this.writeCache();
     let messages;
     try {
       messages = await this.storage.load(
@@ -52,13 +43,12 @@ export default class ControlView {
       this.controls.get('selectFile').set('fileName', 'Select file again');
     }
     this.modelController.postLoad();
-    this.copyWrites();
+    this.writeCache();
   };
 
   saveListener = async () => {
-    this.controls.get('save').set('cache', true);
-    this.controls.get('save').set('write', true);
-    this.copyWrites();
+    this.modelController.setSave(true);
+    this.writeCache();
     const keys = new Uint32Array([...this.modelController.db.getMap().keys()]).sort();
     const dbSorted = new Map();
     for (const key of keys) dbSorted.set(key, this.modelController.db.getRec(key));
@@ -81,26 +71,23 @@ export default class ControlView {
 
   newListener = () => {
     const keys = new Uint32Array([...this.modelController.db.getMap().keys()]).sort();
-    const nextNum = keys.find((id, ind, arr) => (arr[ind + 1] - id) !== 1) + 1;
-    this.controls.get('id').set('cache', nextNum || 1);
-    this.controls.get('id').set('write', true);
-    this.controls.get('created').set('cache', UtcConv.getLocalDateTime());
-    this.controls.get('created').set('write', true);
+    const nextNum = keys.find((id, ind, arr) => (arr[ind + 1] - id) !== 1) + 1 || 1;
+    this.modelController.setNew(nextNum, UtcConv.getLocalDateTime());
     this.modelController.postNew();
     this.modelController.postNextprev(nextNum);
-    this.copyWrites();
+    this.writeCache();
   };
 
   insertListener = () => {
     this.modelController.view2db(this.modelController.db);
     this.modelController.postView2db();
-    this.copyWrites();
+    this.writeCache();
   };
 
   updateListener = () => {
     this.modelController.view2db(this.modelController.db);
     this.modelController.postView2db();
-    this.copyWrites();
+    this.writeCache();
   };
 
   deleteListener = () => {
@@ -114,7 +101,7 @@ export default class ControlView {
         }
       }
       this.modelController.postNew();
-      this.copyWrites();
+      this.writeCache();
     }
   };
 
@@ -130,12 +117,12 @@ export default class ControlView {
         && ((viewParent && this.modelController.db.getRec(key).get('parent') === Number(viewParent))
         || (!viewParent && !this.modelController.db.getRec(key).get('parent')))) {
           this.modelController.db2view(key);
-          this.copyWrites();
+          this.writeCache();
           break;
         }
       }
       this.modelController.postNextprev();
-      this.copyWrites();
+      this.writeCache();
     }
   };
 
@@ -143,7 +130,7 @@ export default class ControlView {
     const viewParent = Number(this.controls.get('parent').get('cache'));
     this.modelController.db2view(viewParent);
     this.modelController.postNextprev();
-    this.copyWrites();
+    this.writeCache();
   };
 
   downListener = () => {
@@ -154,7 +141,7 @@ export default class ControlView {
         break;
       }
     }
-    this.copyWrites();
+    this.writeCache();
   };
 
   archiveListener = () => {
@@ -196,31 +183,23 @@ export default class ControlView {
       } else previousArcNum = duplicateFound;
     }
     this.modelController.db2view(previousArcNum);
-    this.copyWrites();
+    this.writeCache();
   };
 
   dataListener = (evt) => {
-    this.controls.get(evt.target.id).set('cache', evt.target.value);
-    this.controls.get(evt.target.id).set('write', true);
+    this.modelController.setData(evt.target.id, evt.target.value);
     this.modelController.postData();
-    this.copyWrites();
+    this.writeCache();
   };
 
   parentListener = (evt) => {
     const viewParent = evt.target.value;
-    this.controls.get('parent').set('cache', viewParent);
-    if (!viewParent || this.modelController.db.hasID(viewParent)) {
-      this.controls.get('up').set('cache', false);
-      this.controls.get('up').set('write', true);
-    } else {
-      this.controls.get('up').set('cache', true);
-      this.controls.get('up').set('write', true);
-    }
+    this.modelController.setParent(viewParent);
     this.modelController.postData();
-    this.copyWrites();
+    this.writeCache();
   };
 
-  copyWrites() {
+  writeCache() {
     for (const properties of this.controls.values()) {
       if (properties.get('write')) {
         if (properties.get('elemProp') === 'disabled') {
