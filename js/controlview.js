@@ -7,7 +7,7 @@ import UtcConv from './utcconv.js';
 import Messages from './messages.js';
 
 export default class ControlView {
-  uploadInputListener = (evt) => {
+  uploadinputListener = (evt) => {
     const file = evt.target.files[0];
     this.modelController.setSelectFile(file.name);
     this.storage = new Local(file);
@@ -40,7 +40,7 @@ export default class ControlView {
       this.modelController.db2view();
     } catch (readFileError) {
       messages.set('readFileError', readFileError);
-      this.controls.get('selectFile').set('fileName', 'Select file again');
+      this.controls.get('selectfile').set('fileName', 'Select file again');
     }
     this.modelController.postLoad();
     this.writeCache();
@@ -65,7 +65,7 @@ export default class ControlView {
       }
     } catch (readFileError) {
       this.controls.get('messages').set('innerText', readFileError);
-      this.controls.get('selectFile').set('innerText', 'Select file again');
+      this.controls.get('selectfile').set('innerText', 'Select file again');
     }
   };
 
@@ -216,7 +216,7 @@ export default class ControlView {
 
   callbacks = new Map(
     [
-      ['uploadInput', this.uploadInputListener],
+      ['uploadinput', this.uploadinputListener],
       ['load', this.loadListener],
       ['save', this.saveListener],
       ['codetokenInput', this.codetokenInputListener],

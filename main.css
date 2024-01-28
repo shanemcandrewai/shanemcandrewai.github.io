@@ -1,5 +1,4 @@
 @import url("normalize.css");
-@import url("test/libs/mocha.css");
 
 .ui {
   display: flex;
@@ -38,9 +37,8 @@ button:active {
 }
 
 button:disabled {
-  background-color: transparent;
-  color: blue;
-  opacity: 0.65;
+  pointer-events: none;  
+  opacity: 0.35;
 }
 
 button:focus-visible {
@@ -62,7 +60,6 @@ button:focus-visible {
   display: grid;
   grid-template-columns: auto 1fr;
   margin: 0.5rem;
-  background-color: bisque;
 }
 
 .datalabel {
@@ -105,10 +102,10 @@ button:focus-visible {
   outline: 0;
 }
 
-#uploadInput {
+#uploadinput {
   opacity: 0;
 }
 
-#selectFile {
+#selectfile {
   background-color: yellow;
 }

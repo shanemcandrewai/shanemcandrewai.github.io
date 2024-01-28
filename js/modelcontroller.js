@@ -174,7 +174,7 @@ export default class ModelController {
   }
 
   setSelectFile(fileName) {
-    this.setCache('selectFile', fileName);
+    this.setCache('selectfile', fileName);
   }
 
   setUploadInput(loadVal) {

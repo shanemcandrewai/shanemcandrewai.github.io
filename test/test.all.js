@@ -5,18 +5,20 @@ import './libs/chai.js';
 
 const codetokenElem = document.getElementById('codetokenInput');
 
-const start = async () => {
-  mocha.setup('tdd');
-  mocha.checkLeaks();
-  if (codetokenElem.value) await import('./test.dropbox.js');
-  await import('./test.db.js');
-  await import('./test.mainview.js');
-  await import('./test.arrobj.js');
-  await import('./test.json.js');
-  await import('./test.xlsx.js');
-  await import('./test.utcconv.js');
-  mocha.run();
-};
+const styleSheet = document.createElement('style');
+styleSheet.innerText = '@import url("test/libs/mocha.css")';
+document.head.appendChild(styleSheet);
 
-codetokenElem.addEventListener('change', start);
-codetokenElem.addEventListener('click', start);
+mocha.setup('tdd');
+mocha.checkLeaks();
+if (codetokenElem.value !== 't') {
+  codetokenElem.value = codetokenElem.value.slice(1);
+  await import('./test.dropbox.js');
+}
+await import('./test.db.js');
+await import('./test.mainview.js');
+await import('./test.arrobj.js');
+await import('./test.json.js');
+await import('./test.xlsx.js');
+await import('./test.utcconv.js');
+mocha.run();

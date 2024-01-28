@@ -10,7 +10,7 @@ suite('MainView', () => {
     mainview = new MainView();
   });
   test('instantiate controls', () => {
-    chai.assert.equal(mainview.controls.get('uploadInput').get('event'), 'change');
+    chai.assert.equal(mainview.controls.get('uploadinput').get('event'), 'change');
     chai.assert.equal(mainview.controls.get('insert').get('elemID').disabled, true);
   });
   test('instantiate read inputs', () => {

@@ -3,12 +3,12 @@ import ControlView from './controlview.js';
 export default class MainView {
   controls = new Map(
     [
-      ['selectFile', new Map([
+      ['selectfile', new Map([
         ['elemProp', 'innerText']])],
-      ['uploadInput', new Map([
+      ['uploadinput', new Map([
         ['event', 'change']])],
-      ['codetokenInput', new Map([
-        ['event', 'change']])],
+      ['codetokenInput', new Map()],
+      // ['event', 'change']])],
       ['load', new Map([
         ['event', 'click'],
         ['elemProp', 'disabled']])],
