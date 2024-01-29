@@ -71,7 +71,6 @@ button:focus-visible {
   border-width: 1px;
   box-sizing: border-box;
   display: flex;
-  font-size: 1rem;
   padding: .375rem .75rem;
 }
 
@@ -82,7 +81,6 @@ button:focus-visible {
   border-width: 1px;  
   box-sizing: border-box;
   cursor: text;
-  font-size: 1rem;
   padding: .375rem .75rem;
   position: relative;
   transition: box-shadow 0s ease-in-out 0.15s;
@@ -100,6 +98,10 @@ button:focus-visible {
 .elem:disabled {
   background-color: lightgrey;
   outline: 0;
+}
+
+.token {
+  font-size: .75rem
 }
 
 #uploadinput {

@@ -8,7 +8,6 @@ export default class MainView {
       ['uploadinput', new Map([
         ['event', 'change']])],
       ['codetokenInput', new Map()],
-      // ['event', 'change']])],
       ['load', new Map([
         ['event', 'click'],
         ['elemProp', 'disabled']])],
