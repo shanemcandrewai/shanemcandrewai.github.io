@@ -1,10 +1,5 @@
 @import url("bootstrap-reboot.css");
 @import url("bootstrap.css");
-/* @import url("bootstrap-grid.css"); */
-
-body {
-  max-width: 30rem;
-}
 
 button {
   width: 5rem;
@@ -18,4 +13,5 @@ button {
     0.875rem Helvetica,
     Arial,
     sans-serif;
+  /* max-width: 30rem; */
 }
