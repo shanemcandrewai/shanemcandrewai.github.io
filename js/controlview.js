@@ -9,7 +9,6 @@ import Messages from './messages.js';
 export default class ControlView {
   uploadinputListener = (evt) => {
     const file = evt.target.files[0];
-    this.modelController.setSelectFile(file.name);
     this.storage = new Local(file);
     const dbMap = this.modelController.db.getMap();
     if (file.name.split('.').pop() === 'xlsx') this.modelController.db = new Xlsx(dbMap);
@@ -40,7 +39,6 @@ export default class ControlView {
       this.modelController.db2view();
     } catch (readFileError) {
       messages.set('readFileError', readFileError);
-      this.controls.get('selectfile').set('fileName', 'Select file again');
     }
     this.modelController.postLoad();
     this.writeCache();
@@ -65,7 +63,6 @@ export default class ControlView {
       }
     } catch (readFileError) {
       this.controls.get('messages').set('innerText', readFileError);
-      this.controls.get('selectfile').set('innerText', 'Select file again');
     }
   };
 

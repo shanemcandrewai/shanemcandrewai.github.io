@@ -4,52 +4,224 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>wl</title>
-    <link href="main.css" rel="stylesheet">
+    <link href="css/main.css" rel="stylesheet">
     <script type="module" src="js/initmainview.js"></script>
   </head>
 
   <body>
     <div id="mocha"></div>
-    <div class="ui">
+    <div class="container row-gap-1">
       <div class="row">
-        <label id="selectfile" for="uploadinput">Select file</label>
-        <input id="uploadinput" type="file">
-        <label class="datalabel token" for="codetokenInput">authorization</label>
-        <input class="elem token" id="codetokenInput" type="password">
-        <button id="load" type="button" disabled>load</button>
-        <button id="save" type="button" disabled>save</button>
+        <div class="col-sm">
+          <input
+            class="form-control form-control-sm"
+            id="uploadinput"
+            type="file"
+          >
+        </div>
       </div>
       <div class="row">
-        <button id="new" type="button">new</button>
-        <button id="insert" type="button" disabled>insert</button>
-        <button id="update" type="button" disabled>update</button>
-        <button id="delete" type="button" disabled>delete</button>
+        <div class="col-sm-3">
+          <label class="col-form-label form-control-sm" for="codetokenInput"
+            >Authorization</label
+          >
+        </div>
+        <div class="col-sm">
+          <input
+            class="form-control form-control-sm"
+            id="codetokenInput"
+            type="password"
+          >
+        </div>
+        <div class="col-sm">
+          <button
+            id="load"
+            type="button"
+            disabled
+            class="btn btn-outline-primary btn-sm"
+          >
+            load
+          </button>
+        </div>
+        <div class="col-sm">
+          <button
+            id="save"
+            type="button"
+            disabled
+            class="btn btn-outline-primary btn-sm"
+          >
+            save
+          </button>
+        </div>
       </div>
       <div class="row">
-        <button id="next" type="button" disabled>next</button>
-        <button id="previous" type="button" disabled>previous</button>
-        <button id="up" type="button" disabled>up</button>
-        <button id="down" type="button" disabled>down</button>
+        <div class="col-sm">
+          <button id="new" type="button" class="btn btn-outline-primary btn-sm">
+            new
+          </button>
+        </div>
+        <div class="col-sm">
+          <button
+            id="insert"
+            type="button"
+            class="btn btn-outline-primary btn-sm"
+            disabled
+          >
+            insert
+          </button>
+        </div>
+        <div class="col-sm">
+          <button
+            id="update"
+            type="button"
+            class="btn btn-outline-primary btn-sm"
+            disabled
+          >
+            update
+          </button>
+        </div>
+        <div class="col-sm">
+          <button
+            id="delete"
+            type="button"
+            class="btn btn-outline-primary btn-sm"
+            disabled
+          >
+            delete
+          </button>
+        </div>
       </div>
       <div class="row">
-        <button id="archive" type="button" disabled>archive</button>
-        <button id="last" type="button" disabled>last</button>
-        <button id="sort" type="button" disabled>sort</button>
-        <button id="downlast" type="button" disabled>down last</button>
+        <div class="col-sm">
+          <button
+            id="next"
+            type="button"
+            disabled
+            class="btn btn-outline-primary btn-sm"
+          >
+            next
+          </button>
+        </div>
+        <div class="col-sm">
+          <button
+            id="previous"
+            type="button"
+            disabled
+            class="btn btn-outline-primary btn-sm"
+          >
+            previous
+          </button>
+        </div>
+        <div class="col-sm">
+          <button
+            id="up"
+            type="button"
+            disabled
+            class="btn btn-outline-primary btn-sm"
+          >
+            up
+          </button>
+        </div>
+        <div class="col-sm">
+          <button
+            id="down"
+            type="button"
+            disabled
+            class="btn btn-outline-primary btn-sm"
+          >
+            down
+          </button>
+        </div>
       </div>
-      <div class="record">
-        <label class="datalabel" for="id">ID</label>
-        <input class="elem" id="id" type="number" max="99999">
-        <label class="datalabel" for="parent">Parent ID</label>
-        <input class="elem" id="parent" type="number" max="9999">
-        <label class="datalabel" for="created">Created</label>
-        <input class="elem" id="created" type="datetime-local">
-        <label class="datalabel" for="priority">Priority</label>
-        <input class="elem" id="priority" type="number" max="5">
-        <label class="datalabel" for="description">Description</label>
-        <input class="elem" id="description" type="text" maxlength="200">
-        <label class="datalabel" for="due">Due</label>
-        <input class="elem" id="due" type="datetime-local">
+      <div class="row">
+        <div class="col-sm">
+          <button
+            id="archive"
+            type="button"
+            disabled
+            class="btn btn-outline-primary btn-sm"
+          >
+            archive
+          </button>
+        </div>
+        <div class="col-sm">
+          <button
+            id="last"
+            type="button"
+            disabled
+            class="btn btn-outline-primary btn-sm"
+          >
+            last
+          </button>
+        </div>
+        <div class="col-sm">
+          <button
+            id="sort"
+            type="button"
+            disabled
+            class="btn btn-outline-primary btn-sm"
+          >
+            sort
+          </button>
+        </div>
+        <div class="col-sm">
+          <button
+            id="downlast"
+            type="button"
+            disabled
+            class="btn btn-outline-primary btn-sm"
+          >
+            down last
+          </button>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-3">
+          <label class="col-form-label form-control-sm" for="id">ID</label>
+        </div>
+        <div class="col-sm">
+          <input class="form-control form-control-sm" id="id" type="number" max="99999">
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-3">
+          <label class="col-form-label form-control-sm" for="parent">Parent ID</label>
+        </div>
+        <div class="col-sm">
+          <input class="form-control form-control-sm" id="parent" type="number" max="9999">
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-3">
+          <label class="col-form-label form-control-sm" for="created">Created</label>
+        </div>
+        <div class="col-sm">
+          <input class="form-control form-control-sm" id="created" type="datetime-local">
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-3">
+          <label class="col-form-label form-control-sm" for="priority">Priority</label>
+        </div>
+        <div class="col-sm">
+          <input class="form-control form-control-sm" id="priority" type="number" max="5">
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-3">
+          <label class="col-form-label form-control-sm" for="description">Description</label>
+        </div>
+        <div class="col-sm">
+          <input class="form-control form-control-sm" id="description" type="text" maxlength="200">
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-3">
+          <label class="col-form-label form-control-sm" for="due">Due</label>
+        </div>
+        <div class="col-sm">
+          <input class="form-control form-control-sm" id="due" type="datetime-local">
+        </div>
       </div>
       <div id="messages"></div>
     </div>

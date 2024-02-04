@@ -1,0 +1,21 @@
+@import url("bootstrap-reboot.css");
+@import url("bootstrap.css");
+/* @import url("bootstrap-grid.css"); */
+
+body {
+  max-width: 30rem;
+}
+
+button {
+  width: 5rem;
+}
+
+.container {
+  background-color: lavender;
+  display: flex;
+  flex-direction: column;
+  font:
+    0.875rem Helvetica,
+    Arial,
+    sans-serif;
+}

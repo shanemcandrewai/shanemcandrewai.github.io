@@ -173,10 +173,6 @@ export default class ModelController {
     return messages;
   }
 
-  setSelectFile(fileName) {
-    this.setCache('selectfile', fileName);
-  }
-
   setUploadInput(loadVal) {
     this.setCache('load', loadVal);
   }
