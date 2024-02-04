@@ -339,7 +339,7 @@ suite('MainView', () => {
     mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
     mainview.controlView.insertListener();
     mainview.controlView.upListener();
-    chai.assert.equal(mainview.controls.get('messages').get('elemID').innerText, '2: bbb\n');
+    chai.assert.equal(mainview.controls.get('messages').get('elemID').innerText, '#\tDescription\n2\tbbb');
   });
   test('archive single log', () => {
     mainview.controlView.newListener();
@@ -412,6 +412,6 @@ suite('MainView', () => {
     mainview.controls.get('priority').get('elemID').value = '';
     mainview.controls.get('description').get('elemID').value = '';
     mainview.controls.get('due').get('elemID').value = '';
-    mainview.controls.get('messages').get('elemID').innerText = '';
+    mainview.controls.get('messages').get('elemID').innerHTML = '';
   });
 });

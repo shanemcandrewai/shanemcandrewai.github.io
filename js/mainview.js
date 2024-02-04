@@ -64,7 +64,7 @@ export default class MainView {
         ['event', 'change'],
         ['elemProp', 'value']])],
       ['messages', new Map([
-        ['elemProp', 'innerText']])],
+        ['elemProp', 'innerHTML']])],
     ],
   );
 

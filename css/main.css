@@ -1,8 +1,16 @@
 @import url("bootstrap-reboot.css");
 @import url("bootstrap.css");
 
-button {
+.btn-sm {
+  border-color: blue;
+  color: blue;
   width: 4rem;
+}
+
+.btn:disabled {
+  border-color: blue;
+  color: blue;
+  opacity: 0.35;
 }
 
 .container {
@@ -13,5 +21,4 @@ button {
     0.875rem Helvetica,
     Arial,
     sans-serif;
-  /* max-width: 30rem; */
 }

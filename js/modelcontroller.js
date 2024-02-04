@@ -113,9 +113,22 @@ export default class ModelController {
           if (children.size) {
             this.setCache('down', false);
             this.setCache('archive', true);
+            displayMessages += '<table class="table">';
+            displayMessages += '<thead>';
+            displayMessages += '<tr>';
+            displayMessages += '<th scope="col">#</th>';
+            displayMessages += '<th scope="col">Description</th>';
+            displayMessages += '</tr>';
+            displayMessages += '</thead>';
+            displayMessages += '<tbody>';
             for (const [childID, childRec] of children) {
-              displayMessages += `${childID}: ${childRec.get('description')}\n`;
+              displayMessages += '<tr>';
+              displayMessages += `<th scope="row">${childID}</th>`;
+              displayMessages += `<td>${childRec.get('description')}</td>`;
+              displayMessages += '</tr>';
             }
+            displayMessages += '</tbody>';
+            displayMessages += '</table>';
           } else this.setCache('down', true);
           this.setCache('messages', displayMessages);
         } else if (elemRec.has('type')) {

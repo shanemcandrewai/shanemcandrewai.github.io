@@ -51,7 +51,7 @@ export default class ControlView {
     const dbSorted = new Map();
     for (const key of keys) dbSorted.set(key, this.modelController.db.getRec(key));
     this.modelController.db = new Json(dbSorted);
-    this.controls.get('messages').set('innerText', '');
+    this.controls.get('messages').set('innerHTML', '');
     try {
       const messages = await this.storage.save(
         this.modelController.db,
@@ -59,10 +59,10 @@ export default class ControlView {
         this.controls.get('codetokenInput').get('cache'),
       );
       if (messages instanceof Map && messages.has('display')) {
-        this.controls.get('messages').set('innerText', messages.getDisplay());
+        this.controls.get('messages').set('innerHTML', messages.getDisplay());
       }
     } catch (readFileError) {
-      this.controls.get('messages').set('innerText', readFileError);
+      this.controls.get('messages').set('innerHTML', readFileError);
     }
   };
 
@@ -201,8 +201,8 @@ export default class ControlView {
       if (properties.get('write')) {
         if (properties.get('elemProp') === 'disabled') {
           properties.get('elemID').disabled = properties.get('cache');
-        } else if (properties.get('elemProp') === 'innerText') {
-          properties.get('elemID').innerText = properties.get('cache');
+        } else if (properties.get('elemProp') === 'innerHTML') {
+          properties.get('elemID').innerHTML = properties.get('cache');
         } else if (properties.get('elemProp') === 'value') {
           properties.get('elemID').value = properties.get('cache');
         }
@@ -248,8 +248,8 @@ export default class ControlView {
       }
       if (elemRec.get('elemProp') === 'disabled') {
         elemRec.set('cache', elemRec.get('elemID').disabled);
-      } else if (elemRec.get('elemProp') === 'innerText') {
-        elemRec.set('cache', elemRec.get('elemID').innerText);
+      } else if (elemRec.get('elemProp') === 'innerHTML') {
+        elemRec.set('cache', elemRec.get('elemID').innerHTML);
       } else if (elemRec.get('elemProp') === 'value') {
         elemRec.set('cache', elemRec.get('elemID').value);
       }
