@@ -196,13 +196,32 @@ export default class ControlView {
     this.writeCache();
   };
 
+  rowListener = (evt) => {
+    const viewParent = evt.currentTarget.firstElementChild.innerText;
+    this.modelController.db2view(viewParent);
+    this.writeCache();
+  };
+
   writeCache() {
     for (const properties of this.controls.values()) {
       if (properties.get('write')) {
         if (properties.get('elemProp') === 'disabled') {
           properties.get('elemID').disabled = properties.get('cache');
-        } else if (properties.get('elemProp') === 'innerHTML') {
-          properties.get('elemID').innerHTML = properties.get('cache');
+        } else if (properties.get('elemProp') === 'table') {
+          const messageTable = document.getElementById('messageTable');
+          if (messageTable) properties.get('elemID').removeChild(messageTable);
+          if (properties.get('cache')) {
+            properties.get('elemID').appendChild(properties.get('cache'));
+            for (const [row, props] of this.controls) {
+              if (row.slice(0, 3) === 'row') {
+                const elemID = document.getElementById(row);
+                if (elemID) {
+                  props.set('elemID', elemID);
+                  elemID.addEventListener('click', this.rowListener);
+                }
+              }
+            }
+          }
         } else if (properties.get('elemProp') === 'value') {
           properties.get('elemID').value = properties.get('cache');
         }

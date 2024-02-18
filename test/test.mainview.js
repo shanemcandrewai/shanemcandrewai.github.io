@@ -405,6 +405,64 @@ suite('MainView', () => {
     chai.assert.equal(mainview.controlView.modelController.db.getRec(3), undefined);
     chai.assert.equal(mainview.controlView.modelController.db.getRec(4).get('description'), 'log2');
   });
+  test('load db.json, 3 description is empty', async () => {
+    const dbmap = await import('./dbmap.js');
+    mainview.controlView.modelController.db = new Json();
+    const strObj = JSON.stringify(
+      dbmap.default,
+      mainview.controlView.modelController.db.mapEncoder,
+    );
+    mainview.controlView.modelController.db.readText(strObj);
+    mainview.controlView.modelController.db2view();
+    mainview.controlView.writeCache();
+    chai.assert.equal(mainview.controls.get('row_3').get('cache'), '');
+    chai.assert.equal(mainview.controls.get('row_4').get('elemID').children.item(1).innerText, 'Tr arr schip');
+  });
+  test('load db.json, next, previous is enabled', async () => {
+    const dbmap = await import('./dbmap.js');
+    mainview.controlView.modelController.db = new Json();
+    const strObj = JSON.stringify(
+      dbmap.default,
+      mainview.controlView.modelController.db.mapEncoder,
+    );
+    mainview.controlView.modelController.db.readText(strObj);
+    mainview.controlView.modelController.db2view();
+    mainview.controlView.nextprevListener({ target: { id: 'next' } });
+    chai.assert.equal(mainview.controls.get('previous').get('elemID').disabled, false);
+  });
+  test('load db.json, next, next, click on child 12, check id', async () => {
+    const dbmap = await import('./dbmap.js');
+    mainview.controlView.modelController.db = new Json();
+    const strObj = JSON.stringify(
+      dbmap.default,
+      mainview.controlView.modelController.db.mapEncoder,
+    );
+    mainview.controlView.modelController.db.readText(strObj);
+    mainview.controlView.modelController.db2view();
+    mainview.controlView.nextprevListener({ target: { id: 'next' } });
+    mainview.controlView.nextprevListener({ target: { id: 'next' } });
+    mainview.controlView.rowListener({ currentTarget: { firstElementChild: { innerText: '12' } } });
+    chai.assert.equal(mainview.controls.get('id').get('elemID').value, 12);
+  });
+  test('load db.json, next, next, click on child 12, update text, confirm', async () => {
+    const dbmap = await import('./dbmap.js');
+    mainview.controlView.modelController.db = new Json();
+    const strObj = JSON.stringify(
+      dbmap.default,
+      mainview.controlView.modelController.db.mapEncoder,
+    );
+    mainview.controlView.modelController.db.readText(strObj);
+    mainview.controlView.modelController.db2view();
+    mainview.controlView.nextprevListener({ target: { id: 'next' } });
+    mainview.controlView.nextprevListener({ target: { id: 'next' } });
+    mainview.controlView.rowListener({ currentTarget: { firstElementChild: { innerText: '12' } } });
+    mainview.controls.get('description').get('elemID').value = 'test updated';
+    mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
+    mainview.controlView.updateListener();
+    mainview.controlView.downListener();
+    mainview.controlView.upListener();
+    chai.assert.equal(mainview.controls.get('description').get('elemID').value, 'test updated');
+  });
   teardown('teardown', () => {
     mainview.controls.get('id').get('elemID').value = '';
     mainview.controls.get('parent').get('elemID').value = '';

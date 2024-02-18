@@ -4,7 +4,10 @@ import UtcConv from './utcconv.js';
 
 export default class ModelController {
   setCache(property, value) {
-    if (this.controls.get(property).get('cache') !== value) {
+    if (!this.controls.get(property)) {
+      this.controls.set(property, new Map([['cache', value]]));
+      this.controls.get(property).set('write', true);
+    } else if (this.controls.get(property).get('cache') !== value) {
       this.controls.get(property).set('cache', value);
       this.controls.get(property).set('write', true);
     }
@@ -102,39 +105,56 @@ export default class ModelController {
     if (id !== undefined) idDB = id;
     else if (this.controls.get('id').get('cache')) idDB = this.controls.get('id').get('cache');
     let recDB = this.db.getRec(idDB);
-    if (!recDB) { [idDB, recDB] = this.db.getMap()[Symbol.iterator]().next().value; }
+    if (!recDB) {
+      [idDB, recDB] = this.db.getMap()[Symbol.iterator]().next().value;
+    }
     if (idDB) {
       this.setCache('id', idDB);
-      const classMessages = new Messages();
-      let displayMessages = classMessages.getDisplay();
       for (const [elemName, elemRec] of this.controls) {
         if (elemName === 'id') {
           const children = this.db.getChildren(Number(idDB));
           if (children.size) {
+            const messTable = document.createElement('table');
             this.setCache('down', false);
             this.setCache('archive', true);
-            displayMessages += '<table class="table">';
-            displayMessages += '<thead>';
-            displayMessages += '<tr>';
-            displayMessages += '<th scope="col">#</th>';
-            displayMessages += '<th scope="col">Description</th>';
-            displayMessages += '</tr>';
-            displayMessages += '</thead>';
-            displayMessages += '<tbody>';
+            messTable.setAttribute('id', 'messageTable');
+            messTable.setAttribute('class', 'table table-hover');
+            const messHead = messTable.createTHead();
+            const messHeadRow = messHead.insertRow();
+            const messHeadth1 = document.createElement('th');
+            messHeadth1.setAttribute('scope', 'col');
+            messHeadth1.innerHTML = '#';
+            messHeadRow.appendChild(messHeadth1);
+            const messHeadth2 = messHeadth1.cloneNode(true);
+            messHeadth2.innerHTML = 'Description';
+            messHeadRow.appendChild(messHeadth2);
+            const messBody = messTable.createTBody();
             for (const [childID, childRec] of children) {
-              displayMessages += '<tr>';
-              displayMessages += `<th scope="row">${childID}</th>`;
-              displayMessages += `<td>${childRec.get('description')}</td>`;
-              displayMessages += '</tr>';
+              const messBodyRow = messBody.insertRow();
+              messBodyRow.setAttribute('id', `row_${childID}`);
+              const messBodyth = document.createElement('th');
+              messBodyth.setAttribute('scope', 'row');
+              messBodyth.innerHTML = `${childID}`;
+              messBodyRow.appendChild(messBodyth);
+              const cell = messBodyRow.insertCell();
+              let cellText;
+              if (childRec.has('description')) {
+                cellText = document.createTextNode(`${childRec.get('description')}`);
+                this.setCache(`row_${childID}`, `${childRec.get('description')}`);
+              } else {
+                cellText = document.createTextNode('');
+                this.setCache(`row_${childID}`, '');
+              }
+              cell.appendChild(cellText);
             }
-            displayMessages += '</tbody>';
-            displayMessages += '</table>';
-          } else this.setCache('down', true);
-          this.setCache('messages', displayMessages);
+            this.setCache('messages', messTable);
+          } else {
+            this.setCache('messages', null);
+            this.setCache('down', true);
+          }
         } else if (elemRec.has('type')) {
           const valueDB = recDB.get(elemName);
-          if (elemName === 'messages') this.setCache(elemName, displayMessages);
-          else if (valueDB === undefined) this.setCache(elemName, '');
+          if (valueDB === undefined) this.setCache(elemName, '');
           else if (elemRec.get('type') === 'datetime-local' && valueDB) {
             const utc = UtcConv.getLocalDateTime(valueDB);
             this.setCache(elemName, utc);
