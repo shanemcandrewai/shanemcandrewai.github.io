@@ -39,6 +39,9 @@ export default class MainView {
       ['archive', new Map([
         ['event', 'click'],
         ['elemProp', 'disabled']])],
+      ['swap', new Map([
+        ['event', 'click'],
+        ['elemProp', 'disabled']])],
       ['id', new Map([
         ['type', Number],
         ['event', 'keyup'],

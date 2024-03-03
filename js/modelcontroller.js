@@ -162,6 +162,8 @@ export default class ModelController {
           if (elemName === 'parent') {
             if (this.db.hasID(valueDB)) this.setCache('up', false);
             else this.setCache('up', true);
+            if (this.db.hasID(Number(elemRec.get('cache'))) && this.db.hasID(id) && id !== Number(elemRec.get('cache'))) this.setCache('swap', false);
+            else this.setCache('swap', true);
           }
         }
       }
@@ -191,7 +193,9 @@ export default class ModelController {
     this.setCache('save', false);
   }
 
-  postData() {
+  postData(targetID, targetValue) {
+    this.setCache(targetID, targetValue);
+
     const messages = new Messages();
     const id = this.controls.get('id').get('cache');
 
@@ -201,6 +205,16 @@ export default class ModelController {
       this.setCache('update', false);
     } else if (!this.controls.get('update').get('cache')) {
       this.setCache('update', true);
+    }
+
+    if (targetID === 'parent') {
+      if (!targetValue || this.db.hasID(targetValue)) this.setCache('up', false);
+      else this.setCache('up', true);
+    }
+    if (targetID === 'parent' || targetID === 'id') {
+      const parent = this.controls.get('parent').get('cache');
+      if (this.db.hasID(parent) && this.db.hasID(id) && id !== Number(parent)) this.setCache('swap', false);
+      else this.setCache('swap', true);
     }
 
     return messages;
@@ -226,16 +240,6 @@ export default class ModelController {
   setNew(idVal, createdVal) {
     this.setCache('id', idVal);
     this.setCache('created', createdVal);
-  }
-
-  setParent(parent) {
-    this.setCache('parent', parent);
-    if (!parent || this.db.hasID(parent)) this.setCache('up', false);
-    else this.setCache('up', true);
-  }
-
-  setData(id, value) {
-    this.setCache(id, value);
   }
 
   postNextprev(id) {

@@ -205,11 +205,11 @@ suite('MainView', () => {
     mainview.controlView.newListener();
     mainview.controls.get('parent').get('elemID').value = 1;
     mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.parentListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
+    mainview.controlView.dataListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
     mainview.controlView.insertListener();
     chai.assert.equal(mainview.controlView.modelController.db.getRec(2).get('parent'), 1);
     mainview.controls.get('parent').get('elemID').value = '';
-    mainview.controlView.parentListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
+    mainview.controlView.dataListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
     mainview.controlView.updateListener();
     chai.assert.equal(mainview.controlView.modelController.db.getRec(2).get('parent'), undefined);
   });
@@ -229,13 +229,13 @@ suite('MainView', () => {
     mainview.controls.get('parent').get('elemID').value = '1';
     mainview.controls.get('description').get('elemID').value = 'bbb';
     mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.parentListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
+    mainview.controlView.dataListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
     mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
     mainview.controlView.insertListener();
     mainview.controls.get('id').get('elemID').value = 3;
     mainview.controls.get('description').get('elemID').value = 'ccc';
     mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.parentListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
+    mainview.controlView.dataListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
     mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
     mainview.controlView.insertListener();
     mainview.controls.get('id').get('elemID').value = 1;
@@ -255,14 +255,14 @@ suite('MainView', () => {
     mainview.controls.get('parent').get('elemID').value = 1;
     mainview.controls.get('description').get('elemID').value = 'bbb';
     mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.parentListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
+    mainview.controlView.dataListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
     mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
     mainview.controlView.insertListener();
     mainview.controls.get('id').get('elemID').value = 3;
     mainview.controls.get('parent').get('elemID').value = '2';
     mainview.controls.get('description').get('elemID').value = 'ccc';
     mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.parentListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
+    mainview.controlView.dataListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
     mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
     mainview.controlView.insertListener();
     mainview.controls.get('id').get('elemID').value = 2;
@@ -281,7 +281,7 @@ suite('MainView', () => {
     mainview.controls.get('parent').get('elemID').value = 1;
     mainview.controls.get('description').get('elemID').value = 'bbb';
     mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.parentListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
+    mainview.controlView.dataListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
     mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
     mainview.controlView.insertListener();
     chai.assert.equal(mainview.controls.get('up').get('elemID').disabled, false);
@@ -296,14 +296,14 @@ suite('MainView', () => {
     mainview.controls.get('parent').get('elemID').value = 1;
     mainview.controls.get('description').get('elemID').value = 'bbb';
     mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.parentListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
+    mainview.controlView.dataListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
     mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
     mainview.controlView.insertListener();
     mainview.controls.get('id').get('elemID').value = 3;
     mainview.controls.get('parent').get('elemID').value = 4;
     mainview.controls.get('description').get('elemID').value = 'ccc';
     mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.parentListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
+    mainview.controlView.dataListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
     mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
     chai.assert.equal(mainview.controls.get('insert').get('elemID').disabled, true);
   });
@@ -335,7 +335,7 @@ suite('MainView', () => {
     mainview.controls.get('parent').get('elemID').value = 1;
     mainview.controls.get('description').get('elemID').value = 'bbb';
     mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.parentListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
+    mainview.controlView.dataListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
     mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
     mainview.controlView.insertListener();
     mainview.controlView.upListener();
@@ -345,7 +345,7 @@ suite('MainView', () => {
     mainview.controlView.newListener();
     mainview.controls.get('description').get('elemID').value = 'log';
     mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.parentListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
+    mainview.controlView.dataListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
     mainview.controlView.dataListener({ target: { id: 'priority', value: mainview.controls.get('priority').get('elemID').value } });
     mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
     mainview.controlView.dataListener({ target: { id: 'due', value: mainview.controls.get('due').get('elemID').value } });
@@ -358,7 +358,7 @@ suite('MainView', () => {
     mainview.controls.get('parent').get('elemID').value = 1;
     mainview.controls.get('description').get('elemID').value = 'log1';
     mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.parentListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
+    mainview.controlView.dataListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
     mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
     mainview.controlView.insertListener();
     mainview.controlView.archiveListener();
@@ -374,7 +374,7 @@ suite('MainView', () => {
     mainview.controlView.newListener();
     mainview.controls.get('description').get('elemID').value = 'log';
     mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.parentListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
+    mainview.controlView.dataListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
     mainview.controlView.dataListener({ target: { id: 'priority', value: mainview.controls.get('priority').get('elemID').value } });
     mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
     mainview.controlView.dataListener({ target: { id: 'due', value: mainview.controls.get('due').get('elemID').value } });
@@ -387,7 +387,7 @@ suite('MainView', () => {
     mainview.controls.get('parent').get('elemID').value = 1;
     mainview.controls.get('description').get('elemID').value = 'log1';
     mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.parentListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
+    mainview.controlView.dataListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
     mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
     mainview.controlView.insertListener();
     mainview.controlView.newListener();
@@ -462,6 +462,52 @@ suite('MainView', () => {
     mainview.controlView.downListener();
     mainview.controlView.upListener();
     chai.assert.equal(mainview.controls.get('description').get('elemID').value, 'test updated');
+  });
+  test('load db.json, swap 11 and 1', async () => {
+    const dbmap = await import('./dbmap.js');
+    mainview.controlView.modelController.db = new Json();
+    const strObj = JSON.stringify(
+      dbmap.default,
+      mainview.controlView.modelController.db.mapEncoder,
+    );
+    mainview.controlView.modelController.db.readText(strObj);
+    mainview.controlView.modelController.db2view();
+    mainview.controlView.writeCache();
+    mainview.controls.get('parent').get('elemID').value = 11;
+    mainview.controlView.dataListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
+    mainview.controlView.swapListener();
+    chai.assert.equal(Number(mainview.controls.get('id').get('elemID').value), 11);
+  });
+  test('load db.json, down, swap 2 and 1', async () => {
+    const dbmap = await import('./dbmap.js');
+    mainview.controlView.modelController.db = new Json();
+    const strObj = JSON.stringify(
+      dbmap.default,
+      mainview.controlView.modelController.db.mapEncoder,
+    );
+    mainview.controlView.modelController.db.readText(strObj);
+    mainview.controlView.modelController.db2view();
+    mainview.controlView.writeCache();
+    mainview.controlView.downListener();
+    mainview.controlView.swapListener();
+    mainview.controlView.upListener();
+    chai.assert.equal(Number(mainview.controls.get('id').get('elemID').value), 2);
+  });
+  test('load db.json, click 4, swap, up check parent', async () => {
+    const dbmap = await import('./dbmap.js');
+    mainview.controlView.modelController.db = new Json();
+    const strObj = JSON.stringify(
+      dbmap.default,
+      mainview.controlView.modelController.db.mapEncoder,
+    );
+    mainview.controlView.modelController.db.readText(strObj);
+    mainview.controlView.modelController.db2view();
+    mainview.controlView.writeCache();
+    mainview.controlView.rowListener({ currentTarget: { firstElementChild: { innerText: '4' } } });
+    mainview.controlView.swapListener();
+    mainview.controlView.upListener();
+    chai.assert.equal(Number(mainview.controls.get('parent').get('elemID').value), '');
+    chai.assert.equal(mainview.controls.get('save').get('elemID').disabled, false);
   });
   teardown('teardown', () => {
     mainview.controls.get('id').get('elemID').value = '';

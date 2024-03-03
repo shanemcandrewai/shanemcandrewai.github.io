@@ -114,7 +114,6 @@ export default class ControlView {
         && ((viewParent && this.modelController.db.getRec(key).get('parent') === Number(viewParent))
         || (!viewParent && !this.modelController.db.getRec(key).get('parent')))) {
           this.modelController.db2view(key);
-          this.writeCache();
           break;
         }
       }
@@ -183,16 +182,28 @@ export default class ControlView {
     this.writeCache();
   };
 
-  dataListener = (evt) => {
-    this.modelController.setData(evt.target.id, evt.target.value);
-    this.modelController.postData();
-    this.writeCache();
+  swapListener = () => {
+    const viewID = Number(this.controls.get('id').get('cache'));
+    const viewParent = Number(this.controls.get('parent').get('cache'));
+    if (viewID && viewID !== viewParent) {
+      const viewIDRec = this.modelController.db.getRec(viewID);
+      const viewParentRec = this.modelController.db.getRec(viewParent);
+      const dbmap = this.modelController.db.getMap();
+      for (const rec of dbmap.values()) {
+        if (rec.get('parent') === viewID) rec.set('parent', viewParent);
+        else if (rec.get('parent') === viewParent) rec.set('parent', viewID);
+      }
+      this.modelController.db.db.db.set(viewParent, viewIDRec);
+      this.modelController.db.db.db.set(viewID, viewParentRec);
+
+      this.modelController.db2view(viewParent);
+      this.modelController.postView2db();
+      this.writeCache();
+    }
   };
 
-  parentListener = (evt) => {
-    const viewParent = evt.target.value;
-    this.modelController.setParent(viewParent);
-    this.modelController.postData();
+  dataListener = (evt) => {
+    this.modelController.postData(evt.target.id, evt.target.value);
     this.writeCache();
   };
 
@@ -245,8 +256,9 @@ export default class ControlView {
       ['up', this.upListener],
       ['down', this.downListener],
       ['archive', this.archiveListener],
+      ['swap', this.swapListener],
       ['id', this.dataListener],
-      ['parent', this.parentListener],
+      ['parent', this.dataListener],
       ['created', this.dataListener],
       ['priority', this.dataListener],
       ['description', this.dataListener],
