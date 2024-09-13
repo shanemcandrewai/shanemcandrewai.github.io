@@ -1,62 +1,420 @@
-import ModelController from './modelcontroller.js';
 import Json from './json.js';
 import Xlsx from './xlsx.js';
 import Local from './local.js';
 import Dropbox from './dropbox.js';
-import UtcConv from './utcconv.js';
 import Messages from './messages.js';
+import Db from './db.js';
 
 export default class ControlView {
-  uploadinputListener = (evt) => {
-    const file = evt.target.files[0];
+  static maxRows = 9;
+
+  uploadInputChange = (event) => {
+    const file = event.target.files[0];
     this.storage = new Local(file);
-    const dbMap = this.modelController.db.getMap();
-    if (file.name.split('.').pop() === 'xlsx') this.modelController.db = new Xlsx(dbMap);
-    else this.modelController.db = new Json(dbMap);
-    if (!dbMap.size) this.loadListener();
-    else this.modelController.setUploadInput(false);
+    const dbMap = this.db.getMap();
+    if (file.name.split('.').pop() === 'xlsx') this.db = new Xlsx(dbMap);
+    else {
+      this.db = new Json(dbMap);
+    }
+    if (!dbMap.size) this.loadClick();
+    else this.setCache('load', 'disabled', false);
     this.writeCache();
   };
 
-  codetokenInputListener = (evt) => {
-    this.modelController.setCodeToken(evt.target.value);
+  codeTokenInputChange = (event) => {
+    this.setCache('codeTokenInput', 'value', event.target.value);
     this.storage = new Dropbox();
-    this.modelController.db = new Json(this.modelController.db.getMap());
-    if (!this.modelController.db.size()) this.loadListener();
+    const dbMap = this.db.getMap();
+    this.db = new Json(dbMap);
+    if (!dbMap.size) this.loadClick();
+    else this.setCache('load', 'disabled', false);
     this.writeCache();
   };
 
-  loadListener = async () => {
-    this.modelController.setLoad(true, '');
+  loadClick = async () => {
+    // this.setLoad(true);
     this.writeCache();
-    let messages;
+    const messages = new Map();
     try {
-      messages = await this.storage.load(
-        this.modelController.db,
+      messages.set('load', await this.storage.load(
+        this.db,
         'db.json',
-        this.controls.get('codetokenInput').get('cache'),
-      );
-      this.modelController.db2view();
+        this.controls.get('codeTokenInput').get('properties').get('value').get('cache'),
+      ));
+      this.db2view();
     } catch (readFileError) {
       messages.set('readFileError', readFileError);
     }
-    this.modelController.postLoad();
+    this.postLoad();
     this.writeCache();
   };
 
-  saveListener = async () => {
-    this.modelController.setSave(true);
+  getAncestor = (selectNumber, level) => {
+    if (this.controls.get(`key_${selectNumber}`).has('ancestors')) {
+      if (this.controls.get(`key_${selectNumber}`).get('ancestors').has(level)) {
+        return this.controls.get(`key_${selectNumber}`).get('ancestors').get(level);
+      }
+    }
+    return new Map([['container', this.db.getMap()]]);
+  };
+
+  getAncestorContainer = (selectNumber, level) => this.getAncestor(selectNumber, level).get('container');
+
+  getAncestorValue = (selectNumber, level, key) => {
+    const container = this.getAncestor(selectNumber, level).get('container');
+    if (container instanceof Map) return this.getAncestor(selectNumber, level).get('container').get(key);
+    if (container instanceof Array) return this.getAncestor(selectNumber, level).get('container')[key];
+    return undefined;
+  };
+
+  static getContainerCount = (container) => {
+    if (container instanceof Map) return container.size;
+    if (container instanceof Array) return container.length;
+    return undefined;
+  };
+
+  db2view = (selectNums = Array.from(Array(ControlView.maxRows + 1).keys())) => {
+    const entries = this.db.getMap().entries();
+    let currentSelect = 0;
+    while (this.controls.has(`key_${currentSelect}`)) {
+      const entry = entries.next();
+      if (!entry.done) {
+        if (selectNums.includes(currentSelect)) {
+          const [nextKey, nextValue] = entry.value;
+          this.setCacheSelect(currentSelect, 0, nextKey, nextValue);
+        }
+      } else break;
+      currentSelect += 1;
+    }
+  };
+
+  keyKeyup = (event) => {
+    const selectNumber = event.target.id.slice(4);
+    const level = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
+    const parent = this.getAncestorContainer(selectNumber, level);
+    const oldKey = this.controls.get(event.target.id).get('properties').get('value').get('cache');
+    if (parent instanceof Map) {
+      if (parent.has(event.target.value)) {
+        this.controls.get(event.target.id).get('elemID').classList.add('text-bg-danger');
+        return;
+      }
+    } else if (parent instanceof Array) {
+      if (parent.includes(event.target.value)) {
+        this.controls.get(event.target.id).get('elemID').classList.add('text-bg-danger');
+        return;
+      }
+    }
+    this.controls.get(event.target.id).get('elemID').classList.remove('text-bg-danger');
+    this.controls.get(event.target.id).get('properties').get('value').set('cache', event.target.value);
+    const value = this.controls.get(`value_${selectNumber}`).get('properties').get('value').get('cache');
+    this.db.setRec(event.target.value, value, parent);
+    this.db.deleteRec(oldKey, parent);
+    if (!this.controls.get(`key_${Number(selectNumber) + 1}`).get('properties').get('value').get('cache')) {
+      this.setCache(`level_${Number(selectNumber) + 1}`, 'value', level);
+      if (this.controls.get(`key_${selectNumber}`).has('ancestors')) {
+        this.controls.get(`key_${Number(selectNumber) + 1}`).set(
+          'ancestors',
+          this.controls.get(`key_${selectNumber}`).get('ancestors'),
+        );
+      }
+    }
+  };
+
+  valueKeyup = (event) => {
+    const selectNumber = event.target.id.slice(6);
+    const level = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
+    this.controls.get(event.target.id).get('properties').get('value').set('cache', event.target.value);
+    const key = this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache');
+    const ancestors = this.controls.get(`key_${selectNumber}`).get('ancestors');
+    const parent = this.getAncestorContainer(selectNumber, level);
+    if (parent instanceof Map) this.db.setRec(key, event.target.value, parent);
+    else if (Array.isArray(parent)) {
+      parent[Number(key)] = event.target.value;
+      if (!this.controls.get(`key_${Number(selectNumber) + 1}`).get('properties').get('value').get('cache')) {
+        this.setCache(`level_${Number(selectNumber) + 1}`, 'value', level);
+        if (this.controls.get(`key_${selectNumber}`).has('ancestors')) {
+          this.setCache(`key_${Number(selectNumber) + 1}`, 'value', parent.length);
+          this.controls.get(`key_${Number(selectNumber) + 1}`).set('ancestors', ancestors);
+        }
+      }
+    }
+  };
+
+  setCacheSelect = (selectNumber, level, key, value) => {
+    this.setCache(`level_${selectNumber}`, 'value', level);
+    this.setCache(`key_${selectNumber}`, 'value', key);
+    if (typeof value === 'string' || typeof value === 'number') {
+      this.setCache(`value_${selectNumber}`, 'value', value);
+      this.setCache(`value_${selectNumber}`, 'readOnly', false);
+    } else if (value instanceof Map) {
+      this.setCache(`value_${selectNumber}`, 'value', '<>');
+      this.setCache(`value_${selectNumber}`, 'readOnly', true);
+    } else if (value instanceof Array) {
+      this.setCache(`value_${selectNumber}`, 'value', '[]');
+      this.setCache(`value_${selectNumber}`, 'readOnly', true);
+    } else if (value instanceof Object) {
+      this.setCache(`value_${selectNumber}`, 'value', '{}');
+      this.setCache(`value_${selectNumber}`, 'readOnly', true);
+    } else if (value === undefined) {
+      this.setCache(`value_${selectNumber}`, 'value', '');
+      this.setCache(`value_${selectNumber}`, 'readOnly', false);
+    }
+  };
+
+  setCache = (elemName, propName, value) => {
+    if (this.controls.get(elemName).get('properties').get(propName).get('cache') !== value) {
+      this.controls.get(elemName).get('properties').get(propName).set('cache', value);
+      this.controls.get(elemName).get('properties').get(propName).set('write', true);
+    }
+    if (this.writeCacheImmediately) {
+      this.writeCache();
+    }
+  };
+
+  writeCache = () => {
+    for (const elemRec of this.controls.values()) {
+      for (const [propName, propRec] of elemRec.get('properties')) {
+        if (propRec.get('write')) {
+          elemRec.get('elemID')[propName] = propRec.get('cache');
+          propRec.set('write', false);
+        }
+      }
+    }
+  };
+
+  genericListener = (event) => {
+    if (event.target.id === 'codeTokenInput' && event.target.value.slice(0, 1) === 't') return;
+    const targetID = this.controls.get(event.target.id);
+    const elemType = targetID.get('elemID').type;
+
+    if ((event.type === 'click' && (elemType === 'radio' || elemType === 'checkbox'))) {
+      this.controls.get(event.target.id).get('properties').get('checked').set('cache', event.target.checked);
+    }
+
+    const eventType = targetID.get('events').get(event.type);
+    if (eventType.has('listener')) eventType.get('listener')(event);
+
+    for (const [recalcElemName, recalcPropName] of eventType.get('recalculate')) {
+      const calculatorFunc = this.controls.get(recalcElemName).get('properties').get(recalcPropName).get('calculator');
+      if (this[calculatorFunc]) calculatorFunc(event);
+    }
     this.writeCache();
-    const keys = new Uint32Array([...this.modelController.db.getMap().keys()]).sort();
-    const dbSorted = new Map();
-    for (const key of keys) dbSorted.set(key, this.modelController.db.getRec(key));
-    this.modelController.db = new Json(dbSorted);
+  };
+
+  mapClick = () => {
+    let selectNumber = 0;
+    while (this.controls.has(`select_${selectNumber + 1}`)) {
+      if (this.controls.get(`select_${selectNumber}`).get('properties').get('checked').get('cache')) {
+        const level = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
+        const nextLevel = level + 1;
+        const key = this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache');
+        const value = this.controls.get(`value_${selectNumber}`).get('properties').get('value').get('cache');
+        this.setCache(`value_${selectNumber}`, 'value', '<>');
+        this.setCache(`value_${selectNumber}`, 'readOnly', true);
+        this.setCache(`level_${selectNumber + 1}`, 'value', nextLevel);
+        this.db.setRec(key, new Map(), this.getAncestorContainer(selectNumber, level));
+        let ancestorCopy;
+        if (this.controls.get(`key_${selectNumber}`).has('ancestors')) {
+          ancestorCopy = this.controls.get(`key_${selectNumber}`).get('ancestors');
+        } else ancestorCopy = new Map();
+        ancestorCopy.set(nextLevel, new Map());
+        ancestorCopy.get(nextLevel).set('key', key);
+        ancestorCopy.get(nextLevel).set('container', this.getAncestorContainer(selectNumber, level).get(key));
+        this.controls.get(`key_${selectNumber + 1}`).set('ancestors', ancestorCopy);
+        this.setCache(`key_${selectNumber + 1}`, 'value', value);
+        this.setCache(`key_${selectNumber + 1}`, 'readOnly', false);
+        this.setCache(`level_${selectNumber + 1}`, 'value', nextLevel);
+      }
+      selectNumber += 1;
+    }
+  };
+
+  arrayClick = () => {
+    let selectNumber = 0;
+    while (this.controls.has(`select_${selectNumber + 1}`)) {
+      if (this.controls.get(`select_${selectNumber}`).get('properties').get('checked').get('cache')) {
+        const level = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
+        const key = this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache');
+        const nextLevel = level + 1;
+        const nextKey = '0';
+        const value = this.controls.get(`value_${selectNumber}`).get('properties').get('value').get('cache');
+        this.setCache(`value_${selectNumber}`, 'value', '[]');
+        this.setCache(`value_${selectNumber}`, 'readOnly', true);
+        this.setCache(`level_${selectNumber + 1}`, 'value', nextLevel);
+        this.setCache(`key_${selectNumber + 1}`, 'value', nextKey);
+        this.db.setRec(key, [], this.getAncestorContainer(selectNumber, level));
+        let ancestorCopy;
+        if (this.controls.get(`key_${selectNumber}`).get('properties').has('ancestors')) ancestorCopy = new Map(this.controls.get(`key_${selectNumber}`).get('ancestors'));
+        else ancestorCopy = new Map();
+        ancestorCopy.set(nextLevel, new Map());
+        ancestorCopy.get(nextLevel).set('key', nextKey);
+        ancestorCopy.get(nextLevel).set('container', this.getAncestorContainer(selectNumber, level).get(key));
+        this.controls.get(`key_${selectNumber + 1}`).set('ancestors', ancestorCopy);
+        this.setCache(`value_${selectNumber + 1}`, 'value', value);
+        this.setCache(`key_${selectNumber + 1}`, 'readOnly', true);
+        this.setCache(`level_${selectNumber + 1}`, 'value', nextLevel);
+      }
+      selectNumber += 1;
+    }
+  };
+
+  deleteClick = () => {
+    let selectNumber = 0;
+    while (this.controls.has(`select_${selectNumber}`)) {
+      if (this.controls.get(`select_${selectNumber}`).get('properties').get('checked').get('cache')) {
+        const key = this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache');
+        const level = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
+        const parent = this.getAncestorContainer(selectNumber, level);
+        this.db.deleteRec(key, parent);
+        this.setCache(`key_${selectNumber}`, 'value', '');
+        this.setCache(`value_${selectNumber}`, 'value', '');
+        this.setCache(`select_${selectNumber}`, 'checked', false);
+      }
+      selectNumber += 1;
+    }
+    this.db2view();
+  };
+
+  valueClick = (event) => {
+    const selectNumber = Number(event.target.id.slice(6));
+    const level = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
+    const key = this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache');
+    const value = this.getAncestorValue(selectNumber, level, key);
+    if (typeof value !== 'string' && value !== undefined) {
+      const selectNext = selectNumber + 1;
+      if (this.controls.has(`level_${selectNext}`)) {
+        const levelNext = this.controls.get(`level_${selectNext}`).get('properties').get('value').get('cache');
+        if (levelNext === level + 1) this.collapse(event);
+        else this.expand(event);
+      }
+    }
+  };
+
+  expand = (event) => {
+    const selectNumber = Number(event.target.id.slice(6));
+    const key = this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache');
+    const level = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
+    const value = this.getAncestorValue(selectNumber, level, key);
+    let innerSize;
+    if (value instanceof Map) innerSize = value.size;
+    else if (value instanceof Array) innerSize = value.length;
+    let maxCopyRow = ControlView.maxRows - innerSize;
+    // shift down rows leaving gap for expanded map
+    while (maxCopyRow) {
+      let ancestors;
+      if (this.controls.get(`key_${maxCopyRow}`).has('ancestors')) ancestors = new Map(this.controls.get(`key_${maxCopyRow}`).get('ancestors'));
+      const levelCopy = this.controls.get(`level_${maxCopyRow}`).get('properties').get('value').get('cache');
+      const keyCopy = this.controls.get(`key_${maxCopyRow}`).get('properties').get('value').get('cache');
+      const valueCopy = this.getAncestorValue(maxCopyRow, levelCopy, keyCopy);
+      const setRow = maxCopyRow + innerSize;
+      if (setRow <= ControlView.maxRows && setRow > selectNumber + innerSize) {
+        if (ancestors !== undefined) this.controls.get(`key_${setRow}`).set('ancestors', ancestors);
+        this.setCacheSelect(setRow, levelCopy, keyCopy, valueCopy);
+      }
+      maxCopyRow -= 1;
+    }
+    this.insertExpanded(selectNumber, key, value);
+  };
+
+  insertExpanded = (selectNumber, selectKey, selectValue) => {
+    const level = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
+    const nextLevel = level + 1;
+    let nextSelectNumber = selectNumber + 1;
+
+    let ancestorsInner = new Map(); // key without ancestors
+    if (this.controls.get(`key_${selectNumber}`).has('ancestors')) {
+      ancestorsInner = this.controls.get(`key_${selectNumber}`).get('ancestors');
+    }
+
+    ancestorsInner.set(nextLevel, new Map());
+    ancestorsInner.get(nextLevel).set('key', selectKey);
+    ancestorsInner.get(nextLevel).set('container', selectValue);
+
+    let values = selectValue; // selectValue instanceof Map
+    if (selectValue instanceof Array) {
+      values = selectValue.entries();
+    }
+    for (const [key, val] of values) {
+      if (nextSelectNumber <= ControlView.maxRows) {
+        this.controls.get(`key_${nextSelectNumber}`).set('ancestors', ancestorsInner);
+        this.setCacheSelect(nextSelectNumber, nextLevel, key, val);
+      }
+      nextSelectNumber += 1;
+    }
+  };
+
+  collapse = (event) => {
+    const selectNumber = Number(event.target.id.slice(6));
+    let key = this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache');
+    let level = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
+    if (selectNumber === ControlView.maxRows - 1) {
+      this.fillGap(selectNumber);
+      return;
+    }
+    const innerContainer = this.getAncestorContainer(selectNumber, level).get(key);
+    const containerSize = ControlView.getContainerCount(innerContainer);
+    let maxCopyFrom = selectNumber + 1 + containerSize;
+    if (maxCopyFrom > ControlView.maxRows) {
+      this.fillGap(maxCopyFrom - containerSize - 1);
+    } else {
+      let setRow;
+      while (maxCopyFrom <= ControlView.maxRows) {
+        setRow = maxCopyFrom - containerSize;
+        level = this.controls.get(`level_${maxCopyFrom}`).get('properties').get('value').get('cache');
+        key = this.controls.get(`key_${maxCopyFrom}`).get('properties').get('value').get('cache');
+        const valueCopy = this.getAncestorValue(maxCopyFrom, level, key);
+        const maxCopyFromKey = this.controls.get(`key_${maxCopyFrom}`);
+        const setRowKey = this.controls.get(`key_${setRow}`);
+        if (maxCopyFromKey.has('ancestors')) setRowKey.set('ancestors', maxCopyFromKey.get('ancestors'));
+        else setRowKey.delete('ancestors');
+        this.setCacheSelect(setRow, level, key, valueCopy);
+        maxCopyFrom += 1;
+      }
+      this.fillGap(setRow);
+    }
+  };
+
+  fillGap = (selectNumber, levelp) => {
+    let level = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
+    if (levelp !== undefined) level = levelp;
+
+    const selectKey = this.controls.get(`key_${selectNumber}`);
+    let key = selectKey.get('properties').get('value').get('cache');
+    if (levelp === 0) key = this.getAncestor(selectNumber, level + 1).get('key');
+    const parentEntries = this.getAncestor(selectNumber, level).get('container').entries();
+    let parentEntry = parentEntries.next();
+    while (!parentEntry.done && parentEntry.value[0] !== key) {
+      parentEntry = parentEntries.next();
+    }
+    let fillRow = selectNumber + 1;
+    while (fillRow <= ControlView.maxRows) {
+      parentEntry = parentEntries.next();
+      if (!parentEntry.done) {
+        const [nextKey, nextValue] = parentEntry.value;
+        const fillRowKey = this.controls.get(`key_${fillRow}`);
+        if (selectKey.has('ancestors')) fillRowKey.set('ancestors', selectKey.get('ancestors'));
+        else fillRowKey.delete('ancestors');
+        this.setCacheSelect(fillRow, level, nextKey, nextValue);
+      } else if (level && fillRow !== ControlView.maxRows) {
+        this.fillGap(fillRow - 1, level - 1);
+      }
+      fillRow += 1;
+    }
+  };
+
+  saveClick = async () => {
+    // this.setSave(true);
+    // this.writeCache();
+    // const keys = new Uint32Array([...this.db.getMap().keys()]).sort();
+    // const dbSorted = new Map();
+    // for (const key of keys) dbSorted.set(key, this.db.getRec(key));
+    // this.db = new Json(dbSorted);
     this.controls.get('messages').set('innerHTML', '');
     try {
       const messages = await this.storage.save(
-        this.modelController.db,
+        new Json(this.db.getMap()),
         'db.json',
-        this.controls.get('codetokenInput').get('cache'),
+        this.controls.get('codeTokenInput').get('properties').get('value').get('cache'),
       );
       if (messages instanceof Map && messages.has('display')) {
         this.controls.get('messages').set('innerHTML', messages.getDisplay());
@@ -66,225 +424,190 @@ export default class ControlView {
     }
   };
 
-  newListener = () => {
-    const keys = new Uint32Array([...this.modelController.db.getMap().keys()]).sort();
-    const nextNum = keys.find((id, ind, arr) => (arr[ind + 1] - id) !== 1) + 1 || 1;
-    this.modelController.setNew(nextNum, UtcConv.getLocalDateTime());
-    this.modelController.postNew();
-    this.modelController.postNextprev(nextNum);
-    this.writeCache();
+  postLoad = () => {
+    this.setCache('insert', 'disabled', true);
+    this.setCache('update', 'disabled', true);
+    this.setCache('delete', 'disabled', false);
   };
 
-  insertListener = () => {
-    this.modelController.view2db(this.modelController.db);
-    this.modelController.postView2db();
-    this.writeCache();
-  };
-
-  updateListener = () => {
-    this.modelController.view2db(this.modelController.db);
-    this.modelController.postView2db();
-    this.writeCache();
-  };
-
-  deleteListener = () => {
-    const viewID = this.controls.get('id').get('cache');
-    if (viewID) {
-      const viewParent = this.modelController.db.getRec(viewID).get('parent');
-      this.modelController.db.deleteRec(viewID);
-      for (const [dbID, dbRec] of this.modelController.db.getMap()) {
-        if (dbRec.get('parent') === Number(viewID)) {
-          this.modelController.db.setRec(dbID, 'parent', viewParent);
-        }
-      }
-      this.modelController.postNew();
-      this.writeCache();
-    }
-  };
-
-  nextprevListener = (evt) => {
-    const viewID = this.controls.get('id').get('cache');
-    if (viewID) {
-      const viewParent = this.controls.get('parent').get('cache');
-      const keys = new Uint32Array([...this.modelController.db.getMap().keys()]).sort();
-      if (evt.target.id === 'previous') keys.reverse();
-      for (const key of keys) {
-        if (((evt.target.id === 'next' && key > Number(viewID))
-        || (evt.target.id === 'previous' && key < Number(viewID)))
-        && ((viewParent && this.modelController.db.getRec(key).get('parent') === Number(viewParent))
-        || (!viewParent && !this.modelController.db.getRec(key).get('parent')))) {
-          this.modelController.db2view(key);
-          break;
-        }
-      }
-      this.modelController.postNextprev();
-      this.writeCache();
-    }
-  };
-
-  upListener = () => {
-    const viewParent = Number(this.controls.get('parent').get('cache'));
-    this.modelController.db2view(viewParent);
-    this.modelController.postNextprev();
-    this.writeCache();
-  };
-
-  downListener = () => {
-    const viewID = Number(this.controls.get('id').get('cache'));
-    for (const [dbID, dbRec] of this.modelController.db.getMap()) {
-      if (dbRec.get('parent') === viewID) {
-        this.modelController.db2view(dbID);
-        break;
-      }
-    }
-    this.writeCache();
-  };
-
-  archiveListener = () => {
-    let ancestors = new Map();
-    const arcFromID = Number(this.controls.get('id').get('cache'));
-    let currID = arcFromID;
-    while (currID) {
-      const currRec = this.modelController.db.getRec(currID);
-      ancestors.set(currID, currRec);
-      const parentID = currRec.get('parent');
-      if (!this.modelController.db.getChildren(currID).size) {
-        this.modelController.db.deleteRec(currID);
-      }
-      currID = parentID;
-    }
-    ancestors = new Map([...ancestors].reverse());
-    const keys = new Uint32Array([...this.modelController.db.getMap().keys()]).sort();
-    let nextArcNum;
-    if (this.modelController.db.hasID(100000)) {
-      nextArcNum = keys.find((id, ind, arr) => (id > 99999 && ((arr[ind + 1] - id) !== 1))) + 1;
-    } else nextArcNum = 100000;
-    let previousArcNum;
-    for (const ancestorRec of ancestors.values()) {
-      const currRec = new Map([...ancestorRec]);
-      currRec.set('id', nextArcNum);
-      if (previousArcNum) currRec.set('parent', previousArcNum);
-      else currRec.set('parent', 2);
-      const siblings = this.modelController.db.getChildren(currRec.get('parent'));
-      let duplicateFound;
-      for (const [elemID, elemRec] of siblings) {
-        if (elemRec.get('description') === currRec.get('description')) {
-          duplicateFound = elemID;
-        }
-      }
-      if (!duplicateFound) {
-        this.modelController.rec2db(currRec);
-        previousArcNum = nextArcNum;
-        nextArcNum += 1;
-      } else previousArcNum = duplicateFound;
-    }
-    this.modelController.db2view(previousArcNum);
-    this.writeCache();
-  };
-
-  swapListener = () => {
-    const viewID = Number(this.controls.get('id').get('cache'));
-    const viewParent = Number(this.controls.get('parent').get('cache'));
-    if (viewID && viewID !== viewParent) {
-      const viewIDRec = this.modelController.db.getRec(viewID);
-      const viewParentRec = this.modelController.db.getRec(viewParent);
-      const dbmap = this.modelController.db.getMap();
-      for (const rec of dbmap.values()) {
-        if (rec.get('parent') === viewID) rec.set('parent', viewParent);
-        else if (rec.get('parent') === viewParent) rec.set('parent', viewID);
-      }
-      this.modelController.db.db.db.set(viewParent, viewIDRec);
-      this.modelController.db.db.db.set(viewID, viewParentRec);
-
-      this.modelController.db2view(viewParent);
-      this.modelController.postView2db();
-      this.writeCache();
-    }
-  };
-
-  dataListener = (evt) => {
-    this.modelController.postData(evt.target.id, evt.target.value);
-    this.writeCache();
-  };
-
-  rowListener = (evt) => {
-    const viewParent = evt.currentTarget.firstElementChild.innerText;
-    this.modelController.db2view(viewParent);
-    this.writeCache();
-  };
-
-  writeCache() {
-    for (const properties of this.controls.values()) {
-      if (properties.get('write')) {
-        if (properties.get('elemProp') === 'disabled') {
-          properties.get('elemID').disabled = properties.get('cache');
-        } else if (properties.get('elemProp') === 'table') {
-          const messageTable = document.getElementById('messageTable');
-          if (messageTable) properties.get('elemID').removeChild(messageTable);
-          if (properties.get('cache')) {
-            properties.get('elemID').appendChild(properties.get('cache'));
-            for (const [row, props] of this.controls) {
-              if (row.slice(0, 3) === 'row') {
-                const elemID = document.getElementById(row);
-                if (elemID) {
-                  props.set('elemID', elemID);
-                  elemID.addEventListener('click', this.rowListener);
-                }
-              }
-            }
-          }
-        } else if (properties.get('elemProp') === 'value') {
-          properties.get('elemID').value = properties.get('cache');
-        }
-        properties.set('write', false);
-      }
-    }
+  setUploadInput(loadVal) {
+    this.setCache('load', 'disabled', loadVal);
   }
 
-  callbacks = new Map(
-    [
-      ['uploadinput', this.uploadinputListener],
-      ['load', this.loadListener],
-      ['save', this.saveListener],
-      ['codetokenInput', this.codetokenInputListener],
-      ['insert', this.insertListener],
-      ['update', this.updateListener],
-      ['delete', this.deleteListener],
-      ['new', this.newListener],
-      ['next', this.nextprevListener],
-      ['previous', this.nextprevListener],
-      ['up', this.upListener],
-      ['down', this.downListener],
-      ['archive', this.archiveListener],
-      ['swap', this.swapListener],
-      ['id', this.dataListener],
-      ['parent', this.dataListener],
-      ['created', this.dataListener],
-      ['priority', this.dataListener],
-      ['description', this.dataListener],
-      ['due', this.dataListener],
-    ],
-  );
+  setCodeToken(code) {
+    this.setCache('codeTokenInput', 'value', code);
+  }
 
-  constructor(controls) {
-    this.controls = controls;
-    this.messages = new Messages();
-    this.modelController = new ModelController(controls);
+  setLoad(loadVal) {
+    this.setCache('load', 'disabled', loadVal);
+    // this.setCache('messages', 'disabled', messagesVal);
+  }
 
-    for (const [elem, elemRec] of controls) {
-      const elemID = document.getElementById(elem);
-      elemRec.set('elemID', elemID);
-      if (elemRec.has('event')) {
-        elemID.addEventListener(elemRec.get('event'), this.callbacks.get(elem));
+  setSave(saveVal) {
+    this.setCache('save', 'disabled', saveVal);
+  }
+
+  butRadCheck = (element, properties, events) => {
+    if ((element.type === 'button')) {
+      if (!properties.has('disabled')) properties.set('disabled', new Map());
+      if (this[`${element.id}Disabled`] && (!properties.get('disabled').has('calculator'))) {
+        properties.get('disabled').set('calculator', `${element.id}Disabled`);
       }
-      if (elemRec.get('elemProp') === 'disabled') {
-        elemRec.set('cache', elemRec.get('elemID').disabled);
-      } else if (elemRec.get('elemProp') === 'innerHTML') {
-        elemRec.set('cache', elemRec.get('elemID').innerHTML);
-      } else if (elemRec.get('elemProp') === 'value') {
-        elemRec.set('cache', elemRec.get('elemID').value);
+    } else if (element.type === 'radio' || element.type === 'checkbox') {
+      if (!properties.has('checked')) properties.set('checked', new Map());
+      if (this[`${element.id}Checked`] && !properties.get('checked').has('calculator')) {
+        properties.get('checked').set('calculator', `${element.id}Checked`);
       }
-      elemRec.set('write', false);
+      if (!properties.has('disabled')) properties.set('disabled', new Map());
+      if (this[`${element.id}Disabled`] && !properties.get('disabled').has('calculator')) {
+        properties.get('disabled').set('calculator', `${element.id}Disabled`);
+      }
     }
+
+    if (!events.has('click')) events.set('click', new Map());
+    if (!events.get('click').has('recalculate')) events.get('click').set('recalculate', new Map());
+
+    if (!events.get('click').has('listener')) {
+      if (element.type === 'checkbox' && element.id.slice(0, 6) === 'select' && this.selectClick) {
+        events.get('click').set('listener', 'selectClick');
+      } else if (this[`${element.id}Click`]) events.get('click').set('listener', `${element.id}Click`);
+    }
+  };
+
+  filePassText = (element, properties, events) => {
+    if (!properties.has('value')) properties.set('value', new Map());
+    if (this[`${element.id}Value`] && !properties.get('value').has('calculator')) {
+      properties.get('value').set('calculator', `${element.id}Value`);
+    }
+    if (!properties.has('disabled')) properties.set('disabled', new Map());
+    if (this[`${element.id}Disabled`] && !properties.get('disabled').has('calculator')) {
+      properties.get('disabled').set('calculator', `${element.id}Disabled`);
+    }
+    if (!properties.has('readOnly')) properties.set('readOnly', new Map());
+    if (this[`${element.id}Readonly`] && !properties.get('readOnly').has('calculator')) {
+      properties.get('readOnly').set('calculator', `${element.id}Readonly`);
+    }
+
+    if ((element.type === 'file' || element.type === 'password')) {
+      if (!events.has('change')) events.set('change', new Map());
+      if (!events.get('change').has('recalculate')) events.get('change').set('recalculate', new Map());
+      if (this[`${element.id}Change`] && !events.get('change').has('listener')) {
+        events.get('change').set('listener', `${element.id}Change`);
+      }
+    } else if (element.type === 'text') {
+      if (!events.has('keyup')) events.set('keyup', new Map());
+      if (!events.get('keyup').has('recalculate')) events.get('keyup').set('recalculate', new Map());
+      if (!events.get('keyup').has('listener')) {
+        if (this[`${element.id}Keyup`]) {
+          events.get('keyup').set('listener', `${element.id}Keyup`);
+        } else if (this.keyKeyup && element.id.slice(0, 3) === 'key') {
+          events.get('keyup').set('listener', 'keyKeyup');
+        } else if (this.valueKeyup && element.id.slice(0, 5) === 'value') {
+          events.get('keyup').set('listener', 'valueKeyup');
+        }
+      }
+      if (!events.has('click')) events.set('click', new Map());
+      if (!events.get('click').has('recalculate')) events.get('click').set('recalculate', new Map());
+      if (!events.get('click').has('listener')) {
+        if (this[`${element.id}Click`]) {
+          events.get('click').set('listener', `${element.id}Click`);
+        } else if (this.keyClick && element.id.slice(0, 3) === 'key') {
+          events.get('click').set('listener', 'keyClick');
+        } else if (this.valueClick && element.id.slice(0, 5) === 'value') {
+          events.get('click').set('listener', 'valueClick');
+        }
+      }
+    }
+  };
+
+  calcListAddEvent = (element) => {
+    const elemID = document.getElementById(element.id);
+    const elemRec = this.controls.get(element.id);
+    elemRec.set('elemID', elemID);
+    for (const [propName, propRec] of elemRec.get('properties')) {
+      if (propName in elemID) {
+        if (element.type === 'checkbox' && propName === 'checked' && element.id.slice(0, 6) === 'select') {
+          propRec.set('cache', false);
+          propRec.set('write', true);
+        } else if (propName === 'value') {
+          if (element.id.slice(0, 5) === 'level') {
+            propRec.set('cache', 0);
+            propRec.set('write', true);
+          } else if (element.id.slice(0, 3) === 'key' || element.id.slice(0, 5) === 'value') {
+            propRec.set('cache', '');
+            propRec.set('write', true);
+          }
+        } else {
+          propRec.set('cache', elemID[propName]);
+          propRec.set('write', false);
+        }
+      }
+      const calculatorFunc = this[propRec.get('calculator')];
+      if (calculatorFunc) propRec.set('calculator', calculatorFunc);
+    }
+    for (const [eventName, eventRec] of elemRec.get('events')) {
+      const listenerFunc = this[eventRec.get('listener')];
+      if (listenerFunc) eventRec.set('listener', listenerFunc);
+      elemID.addEventListener(eventName, this.genericListener);
+    }
+  };
+
+  initElem = (element) => {
+    const hasElement = this.controls.has(element.id);
+    if (!hasElement) this.controls.set(element.id, new Map());
+    const elemRec = this.controls.get(element.id);
+
+    const hasProperties = elemRec.has('properties');
+    if (!hasProperties) elemRec.set('properties', new Map());
+    const properties = elemRec.get('properties');
+
+    const hasEvents = elemRec.has('events');
+    if (!hasEvents) elemRec.set('events', new Map());
+    const events = elemRec.get('events');
+
+    if (element.type === 'button' || element.type === 'radio' || element.type === 'checkbox') {
+      this.butRadCheck(element, properties, events);
+    } else if ((element.type === 'file' || element.type === 'password' || element.type === 'text')) {
+      this.filePassText(element, properties, events);
+    }
+    this.calcListAddEvent(element);
+  };
+
+  static multiplySelectRows = (max) => {
+    let selectNumber = 1;
+    while (selectNumber <= max) {
+      const prevRowElem = document.getElementById(`row_${selectNumber - 1}`);
+      const rowElem = document.getElementById(`row_${selectNumber}`);
+      if (!rowElem) {
+        const newRow = prevRowElem.cloneNode(true);
+        newRow.id = `row_${selectNumber}`;
+        newRow.children[0].children[0].id = `select_${selectNumber}`;
+        newRow.children[1].children[0].id = `level_${selectNumber}`;
+        newRow.children[2].children[0].id = `key_${selectNumber}`;
+        newRow.children[2].children[0].placeholder = `key_${selectNumber}`;
+        newRow.children[3].children[0].id = `value_${selectNumber}`;
+        newRow.children[3].children[0].placeholder = `value_${selectNumber}`;
+        prevRowElem.insertAdjacentElement('afterend', newRow);
+      }
+      selectNumber += 1;
+    }
+  };
+
+  constructor(controls, writeCacheImmediately) {
+    this.writeCacheImmediately = writeCacheImmediately || false;
+    this.controls = controls;
+    this.db = new Db();
+    this.messages = new Messages();
+    ControlView.multiplySelectRows(ControlView.maxRows);
+
+    this.controls.set('messages', new Map());
+    this.controls.get('messages').set('properties', new Map());
+    this.controls.get('messages').set('events', new Map());
+
+    for (const element of document.querySelectorAll('button, input')) this.initElem(element);
+    const sorted = [...this.controls.entries()].sort();
+    this.controls.clear();
+    sorted.map((entry) => this.controls.set(entry[0], entry[1]));
+    this.writeCache();
   }
 }

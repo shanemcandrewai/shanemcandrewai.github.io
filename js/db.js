@@ -1,27 +1,25 @@
 export default class Db {
-  getRec(id) {
-    if (id) return this.db.get(Number(id));
-    return undefined;
+  getRec(key, parentRec) {
+    if (parentRec) return parentRec.get(key);
+    return this.db.get(key);
   }
 
-  setRec(id, field, val) {
-    if (id && field) {
-      if (typeof val === 'number' || val || val === undefined) {
-        const dbRec = this.db.get(Number(id));
-        if (dbRec !== undefined) {
-          if (val === undefined) {
-            dbRec.delete(field);
-          } else {
-            dbRec.set(field, val);
-          }
-        } else this.db.set(Number(id), new Map([[field, val]]));
-      }
-    }
+  setRec(key, value, parentRec) {
+    if (parentRec instanceof Map) {
+      parentRec.set(key, value);
+    } else if (parentRec instanceof Array) {
+      parentRec.push(key);
+    } else this.db.set(key, value);
+  }
+
+  deleteRec(key, parentRec) {
+    if (parentRec) parentRec.delete(key);
+    else this.db.delete(key);
   }
 
   getMap() { return this.db; }
 
-  hasID(id) { return this.db.has(Number(id)); }
+  hasID(id) { return this.db.has(id); }
 
   getChildren(id) {
     const children = new Map();
@@ -32,8 +30,6 @@ export default class Db {
   }
 
   size() { return this.db.size; }
-
-  deleteRec(id) { this.db.delete(Number(id)); }
 
   deleteField(id, elemName) {
     this.db.get(Number(id)).delete(elemName);

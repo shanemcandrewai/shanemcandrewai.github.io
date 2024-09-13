@@ -36,8 +36,10 @@ export default class Json {
   readText(text) {
     const fileObj = JSON.parse(text, Json.mapDecoder);
     for (const [key, rec] of fileObj) {
-      for (const [label, value] of rec) {
-        if (typeof value !== 'number' && !value) rec.delete(label);
+      if (rec instanceof Map) {
+        for (const [label, value] of rec) {
+          if (typeof value !== 'number' && !value) rec.delete(label);
+        }
       }
       if (rec) this.db.db.set(key, rec);
     }
@@ -46,7 +48,7 @@ export default class Json {
 
   getRec(id) { return this.db.getRec(id); }
 
-  setRec(id, field, val) { this.db.setRec(id, field, val); }
+  setRec(key, value, parentRec) { this.db.setRec(key, value, parentRec); }
 
   getMap() { return this.db.getMap(); }
 

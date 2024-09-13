@@ -1,75 +1,38 @@
 import ControlView from './controlview.js';
 
 export default class MainView {
-  controls = new Map(
-    [
-      ['uploadinput', new Map([
-        ['event', 'change']])],
-      ['codetokenInput', new Map()],
-      ['load', new Map([
-        ['event', 'click'],
-        ['elemProp', 'disabled']])],
-      ['save', new Map([
-        ['event', 'click'],
-        ['elemProp', 'disabled']])],
-      ['insert', new Map([
-        ['event', 'click'],
-        ['elemProp', 'disabled']])],
-      ['update', new Map([
-        ['event', 'click'],
-        ['elemProp', 'disabled']])],
-      ['delete', new Map([
-        ['event', 'click'],
-        ['elemProp', 'disabled']])],
-      ['new', new Map([
-        ['event', 'click'],
-        ['elemProp', 'disabled']])],
-      ['next', new Map([
-        ['event', 'click'],
-        ['elemProp', 'disabled']])],
-      ['previous', new Map([
-        ['event', 'click'],
-        ['elemProp', 'disabled']])],
-      ['up', new Map([
-        ['event', 'click'],
-        ['elemProp', 'disabled']])],
-      ['down', new Map([
-        ['event', 'click'],
-        ['elemProp', 'disabled']])],
-      ['archive', new Map([
-        ['event', 'click'],
-        ['elemProp', 'disabled']])],
-      ['swap', new Map([
-        ['event', 'click'],
-        ['elemProp', 'disabled']])],
-      ['id', new Map([
-        ['type', Number],
-        ['event', 'keyup'],
-        ['elemProp', 'value']])],
-      ['parent', new Map([
-        ['type', Number],
-        ['event', 'keyup'],
-        ['elemProp', 'value']])],
-      ['created', new Map([
-        ['type', 'datetime-local'],
-        ['event', 'change'],
-        ['elemProp', 'value']])],
-      ['priority', new Map([
-        ['type', Number],
-        ['event', 'keyup'],
-        ['elemProp', 'value']])],
-      ['description', new Map([
-        ['type', String],
-        ['event', 'keyup'],
-        ['elemProp', 'value']])],
-      ['due', new Map([
-        ['type', 'datetime-local'],
-        ['event', 'change'],
-        ['elemProp', 'value']])],
-      ['messages', new Map([
-        ['elemProp', 'table']])],
-    ],
-  );
+  controlsObj = {
+    key_0: {
+      events: {
+        keyup: {
+          recalculate: {
+            map: 'disabled',
+          },
+        },
+      },
+    },
+    value_0: {
+      events: {
+        keyup: {
+          recalculate: {
+            update: 'disabled',
+          },
+        },
+      },
+    },
+  };
 
-  controlView = new ControlView(this.controls);
+  static nestedObj2Map = (obj, map = new Map()) => {
+    for (const [k, v] of Object.entries(obj)) {
+      if (typeof (v) === 'object' && v !== null) {
+        map.set(k, MainView.nestedObj2Map(v));
+      } else map.set(k, v);
+    }
+    return map;
+  };
+
+  constructor(writeCacheImmediately) {
+    this.controls = MainView.nestedObj2Map(this.controlsObj);
+    this.controlView = new ControlView(this.controls, writeCacheImmediately || false);
+  }
 }

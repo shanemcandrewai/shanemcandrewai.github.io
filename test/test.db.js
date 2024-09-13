@@ -7,12 +7,12 @@ const db = new Db();
 suite('Db', () => {
   test('Set record', () => {
     db.db.clear();
-    db.setRec(1, 'created', '2023-10-01T09:08:46.606Z');
-    chai.assert.equal(db.db.get(1).get('created'), '2023-10-01T09:08:46.606Z');
+    db.setRec('created', '2023-10-01T09:08:46.606Z');
+    chai.assert.equal(db.db.get('created'), '2023-10-01T09:08:46.606Z');
   });
   test('Get record', () => {
     db.db.clear();
-    db.setRec(3, 'priority', 2);
-    chai.assert.equal(db.getRec(3).get('priority'), 2);
+    db.setRec('priority', 2);
+    chai.assert.equal(db.getRec('priority'), 2);
   });
 });

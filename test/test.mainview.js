@@ -3,519 +3,461 @@ import Json from '../js/json.js';
 
 let mainview;
 
-/* global suite, test, setup, teardown, chai */
+class testUtilities {
+  static setControlEvent = (id, propName, propValue, eventName) => {
+    if (propName in mainview.controls.get(id).get('elemID')) {
+      mainview.controls.get(id).get('elemID')[propName] = propValue;
+      const event = { target: { id }, type: eventName };
+      event.target[propName] = propValue;
+      mainview.controlView.genericListener(event);
+    }
+  };
+
+  static loadSampleJson = async (filename = 'dbmap.js') => {
+    mainview.controlView.db = new Json();
+    const dbmap = await import(`./${filename}`);
+    const strObj = JSON.stringify(
+      dbmap.default,
+      mainview.controlView.db.mapEncoder,
+    );
+    mainview.controlView.db.readText(strObj);
+    mainview.controlView.db2view();
+    mainview.controlView.postLoad();
+    mainview.controlView.writeCache();
+    return strObj;
+  };
+}
+
+/* global suite, test, setup, chai */
 
 suite('MainView', () => {
   setup('setup', () => {
-    mainview = new MainView();
+    let selectNumber = 0;
+    while (selectNumber <= 9) {
+      document.getElementById(`key_${selectNumber}`).removeAttribute('readOnly');
+      document.getElementById(`value_${selectNumber}`).removeAttribute('readOnly');
+      selectNumber += 1;
+    }
+    mainview = new MainView(true);
   });
-  test('instantiate controls', () => {
-    chai.assert.equal(mainview.controls.get('uploadinput').get('event'), 'change');
-    chai.assert.equal(mainview.controls.get('insert').get('elemID').disabled, true);
+  test('load small json, check display and db', async () => {
+    await testUtilities.loadSampleJson('dbmap.small.js');
+    chai.assert.equal(mainview.controls.get('key_0').get('properties').get('value').get('cache'), 'shopping');
+    chai.assert.equal(mainview.controls.get('value_0').get('properties').get('value').get('cache'), '[]');
+    chai.assert.equal(mainview.controls.get('key_1').get('properties').get('value').get('cache'), 'mk-sim');
+    chai.assert.equal(mainview.controls.get('value_1').get('properties').get('value').get('cache'), 'vk-sim');
+    chai.assert.equal(mainview.controls.get('key_2').get('properties').get('value').get('cache'), 'amap');
+    chai.assert.equal(mainview.controls.get('value_2').get('properties').get('value').get('cache'), '<>');
+
+    chai.assert.equal(mainview.controls.get('key_0').get('properties').has('ancestors'), false);
+
+    chai.assert.equal(mainview.controlView.db.getRec('shopping')[0], 'bread');
+    chai.assert.equal(mainview.controlView.db.getRec('shopping')[1], 'cheese');
+    chai.assert.equal(mainview.controlView.db.getRec('mk-sim'), 'vk-sim');
+    chai.assert.equal(mainview.controlView.db.getRec('amap').get('arr1')[0], 'e0');
+
+    mainview.controlView.genericListener({ target: { id: 'value_0', type: 'text' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('key_1').get('properties').get('value').get('cache'), '0');
+    chai.assert.equal(mainview.controls.get('value_1').get('properties').get('value').get('cache'), 'bread');
+    chai.assert.equal(mainview.controls.get('value_1').get('properties').get('readOnly').get('cache'), false);
+    chai.assert.equal(mainview.controls.get('key_2').get('properties').get('value').get('cache'), '1');
+    chai.assert.equal(mainview.controls.get('value_2').get('properties').get('value').get('cache'), 'cheese');
+    chai.assert.equal(mainview.controls.get('value_4').get('properties').get('value').get('cache'), '<>');
+    chai.assert.equal(mainview.controls.get('value_4').get('properties').get('readOnly').get('cache'), true);
+
+    mainview.controlView.genericListener({ target: { id: 'value_0', type: 'text' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('key_1').get('properties').get('value').get('cache'), 'mk-sim');
+    chai.assert.equal(mainview.controls.get('value_3').get('properties').get('value').get('cache'), '');
+    mainview.controlView.genericListener({ target: { id: 'value_0', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_1', type: 'text' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('key_1').get('properties').get('value').get('cache'), '0');
   });
-  test('instantiate read inputs', () => {
-    chai.assert.equal(mainview.controls.get('new').get('cache'), false);
-    chai.assert.equal(mainview.controls.get('insert').get('cache'), true);
-    chai.assert.equal(mainview.controls.get('id').get('cache'), '');
+  test('1 array, enter aa', () => {
+    testUtilities.setControlEvent('key_0', 'value', 'm1', 'keyup');
+    testUtilities.setControlEvent('select_0', 'checked', true, 'click');
+    mainview.controlView.genericListener({ target: { id: 'array', type: 'text' }, type: 'click' });
+    testUtilities.setControlEvent('value_1', 'value', 'v2', 'keyup');
+    chai.assert.equal(mainview.controlView.db.getRec('m1')[0], 'v2');
   });
-  test('instantiate data', () => {
-    chai.assert.equal(mainview.controls.get('priority').get('type'), Number);
+  test('map m1, map m2, m3', () => {
+    testUtilities.setControlEvent('key_0', 'value', 'm1', 'keyup');
+    testUtilities.setControlEvent('select_0', 'checked', true, 'click');
+    mainview.controlView.genericListener({ target: { id: 'map', type: 'text' }, type: 'click' });
+    testUtilities.setControlEvent('select_0', 'checked', false, 'click');
+    testUtilities.setControlEvent('key_1', 'value', 'm2', 'keyup');
+    testUtilities.setControlEvent('select_1', 'checked', true, 'click');
+    mainview.controlView.genericListener({ target: { id: 'map', type: 'text' }, type: 'click' });
+    testUtilities.setControlEvent('key_2', 'value', 'm3', 'keyup');
+    testUtilities.setControlEvent('value_2', 'value', 'v2', 'keyup');
+    chai.assert.equal(mainview.controlView.db.getRec('m1').get('m2').get('m3'), 'v2');
   });
-  test('insert priority 0', () => {
-    mainview.controlView.modelController.db = new Json();
-    mainview.controls.get('id').get('elemID').value = 1;
-    mainview.controls.get('priority').get('elemID').value = 0;
-    mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'priority', value: mainview.controls.get('priority').get('elemID').value } });
-    mainview.controlView.insertListener();
-    chai.assert.equal(mainview.controlView.modelController.db.getRec(1).get('priority'), 0);
+  test('map dd, map dd, dd no red', () => {
+    testUtilities.setControlEvent('key_0', 'value', 'dd', 'keyup');
+    testUtilities.setControlEvent('select_0', 'checked', true, 'click');
+    mainview.controlView.genericListener({ target: { id: 'map', type: 'text' }, type: 'click' });
+    testUtilities.setControlEvent('select_0', 'checked', false, 'click');
+    testUtilities.setControlEvent('key_1', 'value', 'dd', 'keyup');
+    testUtilities.setControlEvent('select_1', 'checked', true, 'click');
+    mainview.controlView.genericListener({ target: { id: 'map', type: 'text' }, type: 'click' });
+    testUtilities.setControlEvent('key_2', 'value', 'dd', 'keyup');
+    testUtilities.setControlEvent('value_2', 'value', 'ddd', 'keyup');
+    chai.assert.equal(mainview.controls.get('key_2').get('elemID').classList.contains('text-bg-danger'), false);
+    chai.assert.equal(mainview.controlView.db.getRec('dd').get('dd').get('dd'), 'ddd');
   });
-  test('Insert button disabled if no data values', () => {
-    mainview.controlView.modelController.db = new Json();
-    mainview.controls.get('id').get('elemID').value = 5;
-    mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    const insert = mainview.controls.get('insert').get('elemID');
-    chai.assert.equal(insert.disabled, true);
+  test('load json, click 7, 7, 8', async () => {
+    await testUtilities.loadSampleJson();
+    mainview.controlView.genericListener({ target: { id: 'value_6', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_6', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_7', type: 'text' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('key_7').has('ancestors'), false);
+    chai.assert.equal(mainview.controls.get('key_8').get('properties').get('value').get('cache'), 'parent');
+  });
+  test('load json, click 2, 2, 2, 2', async () => {
+    await testUtilities.loadSampleJson();
+    mainview.controlView.genericListener({ target: { id: 'value_1', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_1', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_1', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_1', type: 'text' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('key_7').has('ancestors'), false);
+    chai.assert.equal(mainview.controls.get('key_2').get('properties').get('value').get('cache'), '3');
+    chai.assert.equal(mainview.controls.get('key_9').get('properties').get('value').get('cache'), '10');
+  });
+  test('load json, click 3, 6, 3', async () => {
+    await testUtilities.loadSampleJson();
+    mainview.controlView.genericListener({ target: { id: 'value_2', type: 'text' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('key_3').get('ancestors').get(1).get('key'), 3);
+    mainview.controlView.genericListener({ target: { id: 'value_7', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_2', type: 'text' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('key_7').has('ancestors'), true);
+    chai.assert.equal(mainview.controls.get('key_5').get('properties').get('value').get('cache'), '6');
+    chai.assert.equal(mainview.controls.get('key_9').get('properties').get('value').get('cache'), '8');
+  });
+  test('load json, click 1, 1, 2', async () => {
+    await testUtilities.loadSampleJson();
+    mainview.controlView.genericListener({ target: { id: 'value_0', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_0', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_1', type: 'text' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('key_2').get('properties').get('value').get('cache'), 'parent');
+  });
+  test('enter key_0, duplicate key_1 verify one in db', () => {
+    testUtilities.setControlEvent('key_0', 'value', 'ddd', 'keyup');
+    testUtilities.setControlEvent('value_0', 'value', '1', 'keyup');
+    testUtilities.setControlEvent('key_1', 'value', 'ddd', 'keyup');
+    testUtilities.setControlEvent('value_1', 'value', '2', 'keyup');
+    testUtilities.setControlEvent('select_0', 'checked', true, 'click');
+    chai.assert.equal(mainview.controlView.db.db.size, 2);
+    chai.assert.equal(mainview.controlView.db.db.get('ddd'), 1);
+  });
+  test('enter key_0, select_0, Array, key_1 = 0 and readonly, enter value_1, key_2 = 0', () => {
+    testUtilities.setControlEvent('key_0', 'value', 'numbered list', 'keyup');
+    testUtilities.setControlEvent('select_0', 'checked', true, 'click');
+    mainview.controlView.genericListener({ target: { id: 'array', type: 'button' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('key_1').get('properties').get('value').get('cache'), '0');
+    chai.assert.equal(mainview.controls.get('key_1').get('properties').get('readOnly').get('cache'), true);
+    testUtilities.setControlEvent('value_1', 'value', 'dd', 'keyup');
+    chai.assert.equal(mainview.controls.get('key_2').get('properties').get('value').get('cache'), '1');
+  });
+  test('enter key_0, select_0, Map, key_1 is not readonly', () => {
+    testUtilities.setControlEvent('key_0', 'value', '1', 'keyup');
+    testUtilities.setControlEvent('select_0', 'checked', true, 'click');
+    mainview.controlView.genericListener({ target: { id: 'map', type: 'button' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('key_1').get('properties').get('readOnly').get('cache'), false);
+  });
+  test('enter key_0, select_0, Map, enter key_1, key_2 writable at level 2', () => {
+    testUtilities.setControlEvent('key_0', 'value', '1', 'keyup');
+    testUtilities.setControlEvent('select_0', 'checked', true, 'click');
+    mainview.controlView.genericListener({ target: { id: 'map', type: 'button' }, type: 'click' });
+    testUtilities.setControlEvent('key_1', 'value', '2', 'keyup');
+    chai.assert.equal(mainview.controls.get('key_2').get('properties').get('readOnly').get('cache'), false);
+    chai.assert.equal(mainview.controls.get('level_2').get('properties').get('value').get('cache'), 1);
+  });
+  test('enter key_0, select_0, Map, enter key_1, key_2 = key_1 not red', () => {
+    testUtilities.setControlEvent('key_0', 'value', 'dd', 'keyup');
+    testUtilities.setControlEvent('select_0', 'checked', true, 'click');
+    mainview.controlView.genericListener({ target: { id: 'map', type: 'button' }, type: 'click' });
+    testUtilities.setControlEvent('key_1', 'value', 'ddd', 'keyup');
+    testUtilities.setControlEvent('key_2', 'value', 'dd', 'keyup');
+    chai.assert.equal(mainview.controls.get('key_2').get('elemID').classList.contains('text-bg-danger'), false);
+  });
+  test('check events and element property', () => {
+    chai.assert.equal(mainview.controls.get('uploadInput').get('events').keys().next().value, 'change');
+  });
+  test('check default cache values', () => {
+    chai.assert.equal(mainview.controls.get('map').get('properties').get('disabled').get('cache'), false);
+    chai.assert.equal(mainview.controls.get('value_0').get('properties').get('value').get('cache'), '');
+  });
+  test('check element type', () => {
+    chai.assert.equal(mainview.controls.get('value_0').get('elemID').type, 'text');
+  });
+  test('insert id : 1', () => {
+    chai.assert.equal(mainview.controls.get('value_0').get('properties').get('readOnly').get('cache'), false);
+    mainview.controlView.db = new Json();
+    testUtilities.setControlEvent('key_0', 'value', 'id', 'keyup');
+    chai.assert.equal(mainview.controls.get('value_0').get('properties').get('readOnly').get('cache'), false);
+    chai.assert.equal(mainview.controlView.db.getRec('id'), '');
+    chai.assert.equal(mainview.controlView.db.getRec('idxxx'), undefined);
+    testUtilities.setControlEvent('value_0', 'value', 1, 'keyup');
+    chai.assert.equal(mainview.controlView.db.getRec('id'), 1);
+  });
+  test('duplicate keys cannot be inserted in db', () => {
+    mainview.controlView.db = new Json();
+    testUtilities.setControlEvent('key_0', 'value', 'id', 'keyup');
+    testUtilities.setControlEvent('value_0', 'value', '1', 'keyup');
+    chai.assert.equal(mainview.controls.get('key_1').has('ancestors'), false);
+    testUtilities.setControlEvent('key_1', 'value', 'id', 'keyup');
+    testUtilities.setControlEvent('value_1', 'value', '2', 'keyup');
+    chai.assert.equal(mainview.controls.get('key_1').get('elemID').classList.contains('text-bg-danger'), true);
+    chai.assert.equal(mainview.controlView.db.getRec('id'), '1');
+  });
+  test('insert id : { priority : 0 }', () => {
+    mainview.controlView.db = new Json();
+    testUtilities.setControlEvent('key_0', 'value', 'id', 'keyup');
+    chai.assert.equal(mainview.controlView.db.getRec('id') === '', true);
+    chai.assert.equal(typeof mainview.controlView.db.getRec('id') === 'string', true);
+    chai.assert.equal(mainview.controls.get('key_0').has('ancestors'), false);
+    testUtilities.setControlEvent('select_0', 'checked', true, 'click');
+    chai.assert.equal(mainview.controls.get('key_0').has('ancestors'), false);
+    mainview.controlView.genericListener({ target: { id: 'map', type: 'button' }, type: 'click' });
+    chai.assert.equal(mainview.controlView.db.getRec('id') instanceof Map, true);
+    chai.assert.equal(mainview.controlView.db.getRec('id').size, 0);
+    chai.assert.equal(mainview.controlView.db.getRec('id')
+      === mainview.controlView.db.db.db.get('id'), true);
+    chai.assert.equal(mainview.controls.get('key_1').get('ancestors').size, 1);
+    chai.assert.equal(mainview.controls.get('key_1').get('ancestors').get(1).get('key'), 'id');
+    chai.assert.equal(mainview.controls.get('key_1').get('ancestors').get(1).get('container').size, 0);
+    chai.assert.equal(mainview.controls.get('level_1').get('properties').get('value').get('cache'), 1);
+    chai.assert.equal(mainview.controls.get('value_0').get('properties').get('value').get('cache'), '<>');
+    chai.assert.equal(mainview.controls.get('value_0').get('properties').get('readOnly').get('cache'), true);
+    testUtilities.setControlEvent('key_1', 'value', 'priority', 'keyup');
+    chai.assert.equal(mainview.controls.get('key_1').get('ancestors') instanceof Map, true);
+    chai.assert.equal(mainview.controls.get('key_1').get('ancestors').size, 1);
+    chai.assert.equal(mainview.controls.get('key_1').get('ancestors').has(1), true);
+    chai.assert.equal(mainview.controls.get('key_1').get('ancestors').get(1).size, 2);
+    chai.assert.equal(mainview.controls.get('key_1').get('ancestors').get(1).get('key'), 'id');
+    chai.assert.equal(mainview.controls.get('key_1').get('ancestors').get(1).has('container'), true);
+    chai.assert.equal(mainview.controls.get('key_1').get('ancestors').get(1).get('container') instanceof Map, true);
+    chai.assert.equal(mainview.controls.get('key_1').get('ancestors').get(1).get('container')
+      .has('priority'), true);
+    chai.assert.equal(mainview.controlView.db.getRec('id').has('priority'), true);
+    chai.assert.equal(mainview.controlView.db.getRec('id').get('priority')
+      === mainview.controlView.db.db.db.get('id').get('priority'), true);
+    chai.assert.equal(mainview.controlView.db.getRec('id') instanceof Map, true);
+    chai.assert.equal(mainview.controlView.db.getRec('id').size, 1);
+    testUtilities.setControlEvent('value_1', 'value', '0', 'keyup');
+    chai.assert.equal(mainview.controlView.db.getRec('id').get('priority'), '0');
+  });
+  test('insert id : [ priority ]', () => {
+    mainview.controlView.db = new Json();
+    testUtilities.setControlEvent('key_0', 'value', 'id', 'keyup');
+    testUtilities.setControlEvent('select_0', 'checked', true, 'click');
+    mainview.controlView.genericListener({ target: { id: 'array', type: 'button' }, type: 'click' });
+    chai.assert.equal(mainview.controlView.db.getRec('id') instanceof Array, true);
+    chai.assert.equal(mainview.controlView.db.getRec('id').length, 0);
+    chai.assert.equal(mainview.controlView.db.getRec('id')
+      === mainview.controlView.db.db.db.get('id'), true);
+    chai.assert.equal(mainview.controls.get('key_1').get('ancestors').size, 1);
+    chai.assert.equal(mainview.controls.get('key_1').get('ancestors').get(1).get('key'), '0');
+    chai.assert.equal(mainview.controls.get('key_1').get('ancestors').get(1).get('container').length, 0);
+    chai.assert.equal(mainview.controls.get('level_1').get('properties').get('value').get('cache'), 1);
+    chai.assert.equal(mainview.controls.get('value_0').get('properties').get('value').get('cache'), '[]');
+    chai.assert.equal(mainview.controls.get('value_0').get('properties').get('readOnly').get('cache'), true);
+    testUtilities.setControlEvent('key_1', 'value', 'priority', 'keyup');
+    chai.assert.equal(mainview.controls.get('key_1').get('ancestors') instanceof Map, true);
+    chai.assert.equal(mainview.controls.get('key_1').get('ancestors').size, 1);
+    chai.assert.equal(mainview.controls.get('key_1').get('ancestors').has(1), true);
+    chai.assert.equal(mainview.controls.get('key_1').get('ancestors').get(1).size, 2);
+    chai.assert.equal(mainview.controls.get('key_1').get('ancestors').get(1).get('key'), '0');
+    chai.assert.equal(mainview.controls.get('key_1').get('ancestors').get(1).has('container'), true);
+    chai.assert.equal(mainview.controls.get('key_1').get('ancestors').get(1).get('container') instanceof Array, true);
+    chai.assert.equal(mainview.controls.get('key_1').get('ancestors').get(1).get('container')
+      .includes('priority'), true);
+    chai.assert.equal(mainview.controlView.db.getRec('id').includes('priority'), true);
+    chai.assert.equal(mainview.controlView.db.getRec('id').priority
+      === mainview.controlView.db.db.db.get('id').priority, true);
+    chai.assert.equal(mainview.controlView.db.getRec('id') instanceof Array, true);
+    chai.assert.equal(mainview.controlView.db.getRec('id').length, 1);
+    testUtilities.setControlEvent('value_1', 'value', 'priority', 'keyup');
+    chai.assert.equal(mainview.controlView.db.getRec('id')[0], 'priority');
+  });
+  test('check select rows are reset', () => {
+    chai.assert.equal(mainview.controls.get('select_0').get('properties').get('checked').get('cache'), false);
+    chai.assert.equal(mainview.controls.get('select_1').get('properties').get('checked').get('cache'), false);
+    chai.assert.equal(mainview.controls.get('level_0').get('properties').get('value').get('cache'), 0);
+    chai.assert.equal(mainview.controls.get('level_1').get('properties').get('value').get('cache'), 0);
+    chai.assert.equal(mainview.controls.get('key_0').get('properties').get('value').get('cache'), '');
+    chai.assert.equal(mainview.controls.get('key_1').get('properties').get('value').get('cache'), '');
+    chai.assert.equal(mainview.controls.get('key_3').get('properties').get('value').get('cache'), '');
+    chai.assert.equal(mainview.controls.get('value_0').get('properties').get('value').get('cache'), '');
+    chai.assert.equal(mainview.controls.get('value_0').get('properties').get('readOnly').get('cache'), false);
+    chai.assert.equal(mainview.controls.get('value_1').get('properties').get('value').get('cache'), '');
+    chai.assert.equal(mainview.controls.get('value_1').get('properties').get('readOnly').get('cache'), false);
   });
   test('load db.json', async () => {
-    const dbmap = await import('./dbmap.js');
-    mainview.controlView.modelController.db = new Json();
-    const strObj = JSON.stringify(
-      dbmap.default,
-      mainview.controlView.modelController.db.mapEncoder,
-    );
-    mainview.controlView.modelController.db.readText(strObj);
-    const desc = mainview.controlView.modelController.db.getRec(2).get('description');
+    await testUtilities.loadSampleJson();
+    const desc = mainview.controlView.db.getRec(2).get('description');
     chai.assert.equal(desc, 'Change tr');
+    chai.assert.equal(mainview.controls.get('key_1').get('properties').get('value').get('cache'), 2);
+    chai.assert.equal(mainview.controls.get('key_2').get('properties').get('value').get('cache'), 3);
   });
   test('compare db.json with stringified DB', async () => {
-    const dbmap = await import('./dbmap.js');
-    mainview.controlView.modelController.db = new Json();
-    const strObj = JSON.stringify(
-      dbmap.default,
-      mainview.controlView.modelController.db.mapEncoder,
-    );
-    mainview.controlView.modelController.db.readText(strObj);
+    const strObj = await testUtilities.loadSampleJson();
     const strWithoutEmpty = strObj.slice(0, 315) + strObj.slice(334);
-    const stringifiedDb = mainview.controlView.modelController.db.getString(null);
+    const stringifiedDb = mainview.controlView.db.getString(null);
     chai.assert.equal(strWithoutEmpty, stringifiedDb);
   });
-  test('compare db.json and stringified DB with deleted record', async () => {
-    const dbmap = await import('./dbmap.js');
-    mainview.controlView.modelController.db = new Json();
-    const strObj = JSON.stringify(
-      dbmap.default,
-      mainview.controlView.modelController.db.mapEncoder,
-    );
-    mainview.controlView.modelController.db.readText(strObj);
+  test('compare db.json and stringified DB with record3 deleted', async () => {
+    const strObj = await testUtilities.loadSampleJson();
     const strWithoutRecord3 = strObj.slice(0, 234) + strObj.slice(338);
-    mainview.controls.get('id').get('elemID').value = 3;
-    mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.deleteListener();
-    const stringifiedDb = mainview.controlView.modelController.db.getString(null);
+    testUtilities.setControlEvent('select_2', 'checked', true, 'click');
+    mainview.controlView.genericListener({ target: { id: 'delete', type: 'button' }, type: 'click' });
+    const stringifiedDb = mainview.controlView.db.getString(null);
     chai.assert.equal(strWithoutRecord3, stringifiedDb);
   });
-  test('message property not saved in file', async () => {
-    const dbmap = await import('./dbmap.js');
-    mainview.controlView.modelController.db = new Json();
-    const strObj = JSON.stringify(
-      dbmap.default,
-      mainview.controlView.modelController.db.mapEncoder,
-    );
-    mainview.controlView.modelController.db.readText(strObj);
-    const strWithoutEmpty = strObj.slice(0, 315) + strObj.slice(334);
-    mainview.controls.get('description').get('elemID').value = 'Log updated';
-    mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
-    mainview.controlView.updateListener();
-    mainview.controls.get('description').get('elemID').value = 'Log';
-    mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
-    mainview.controlView.updateListener();
-    const stringifiedDb = mainview.controlView.modelController.db.getString(null);
-    chai.assert.equal(strWithoutEmpty, stringifiedDb);
-  });
   test('load file with priority 0', async () => {
-    const dbmap = await import('./dbmap.js');
-    mainview.controlView.modelController.db = new Json();
-    const strObj = JSON.stringify(
-      dbmap.default,
-      mainview.controlView.modelController.db.mapEncoder,
-    );
-    mainview.controlView.modelController.db.readText(strObj);
-    chai.assert.equal(mainview.controlView.modelController.db.getRec(11).get('priority'), 0);
+    await testUtilities.loadSampleJson();
+    chai.assert.equal(mainview.controlView.db.getRec(11).get('priority'), 0);
   });
   test('empty string in file is not inserted into db', async () => {
-    const dbmap = await import('./dbmap.js');
-    mainview.controlView.modelController.db = new Json();
-    const strObj = JSON.stringify(
-      dbmap.default,
-      mainview.controlView.modelController.db.mapEncoder,
-    );
-    mainview.controlView.modelController.db.readText(strObj);
-    chai.assert.equal(mainview.controlView.modelController.db.getRec(3).get('description'), undefined);
+    await testUtilities.loadSampleJson();
+    chai.assert.equal(mainview.controlView.db.getRec(3).get('description'), undefined);
   });
-  test('insert and update buttons are disabled after loading file', async () => {
-    const dbmap = await import('./dbmap.js');
-    mainview.controlView.modelController.db = new Json();
-    const strObj = JSON.stringify(
-      dbmap.default,
-      mainview.controlView.modelController.db.mapEncoder,
-    );
-    mainview.controlView.modelController.db.readText(strObj);
-    mainview.controlView.modelController.db2view();
-    mainview.controlView.modelController.postLoad();
-    mainview.controlView.writeCache();
-    chai.assert.equal(mainview.controls.get('insert').get('elemID').disabled, true);
+  test('message property not saved in file, click row 0', async () => {
+    const strObj = await testUtilities.loadSampleJson();
+    const strWithoutEmpty = strObj.slice(0, 315) + strObj.slice(334);
+    mainview.controlView.genericListener({ target: { id: 'value_0', type: 'text' }, type: 'click' });
+
+    chai.assert.equal(mainview.controls.get('key_1').get('ancestors') instanceof Map, true);
+    chai.assert.equal(mainview.controls.get('key_1').get('ancestors').size, 1);
+    chai.assert.equal(mainview.controls.get('key_1').get('ancestors').has(1), true);
+    chai.assert.equal(mainview.controls.get('key_1').get('ancestors').get(1).size, 2);
+    chai.assert.equal(mainview.controls.get('key_1').get('ancestors').get(1).get('key'), '1');
+    chai.assert.equal(mainview.controls.get('key_1').get('ancestors').get(1).has('container'), true);
+    chai.assert.equal(mainview.controls.get('key_1').get('ancestors').get(1).get('container') instanceof Map, true);
+    chai.assert.equal(mainview.controls.get('key_1').get('ancestors').get(1).get('container')
+      .has('description'), true);
+    chai.assert.equal(mainview.controlView.db.getRec(1).has('description'), true);
+    chai.assert.equal(mainview.controlView.db.getRec(1).get('description')
+      === mainview.controlView.db.db.db.get(1).get('description'), true);
+    chai.assert.equal(mainview.controlView.db.getRec(1) instanceof Map, true);
+    chai.assert.equal(mainview.controlView.db.getRec(1).size, 2);
+    chai.assert.equal(mainview.controls.get('value_2').get('properties').get('value').get('cache'), 'Log');
+
+    testUtilities.setControlEvent('value_2', 'value', 'Log updated', 'keyup');
+    chai.assert.equal(mainview.controlView.db.getRec(1).get('description'), 'Log updated');
+    testUtilities.setControlEvent('value_2', 'value', 'Log', 'keyup');
+    const stringifiedDb = mainview.controlView.db.getString(null);
+    chai.assert.equal(strWithoutEmpty, stringifiedDb);
+  });
+  test('message property not saved in file, click row 2', async () => {
+    const strObj = await testUtilities.loadSampleJson();
+    const strWithoutEmpty = strObj.slice(0, 315) + strObj.slice(334);
+    mainview.controlView.genericListener({ target: { id: 'value_2', type: 'text' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('key_1').get('properties').get('value').get('cache'), 2);
+    chai.assert.equal(mainview.controls.get('value_4').get('properties').get('value').get('cache'), '2023-10-31T06:56:00.000Z');
+    testUtilities.setControlEvent('value_4', 'value', 'Log updated', 'keyup');
+    chai.assert.equal(mainview.controlView.db.getRec(3).get('created'), 'Log updated');
+    testUtilities.setControlEvent('value_4', 'value', '2023-10-31T06:56:00.000Z', 'keyup');
+    const stringifiedDb = mainview.controlView.db.getString(null);
+    chai.assert.equal(strWithoutEmpty, stringifiedDb);
+  });
+  test('click map 3, then map 4', async () => {
+    await testUtilities.loadSampleJson();
+    mainview.controlView.genericListener({ target: { id: 'value_2', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_5', type: 'text' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('key_4').get('properties').get('value').get('cache'), 'created');
+    chai.assert.equal(mainview.controls.get('key_5').get('properties').get('value').get('cache'), 4);
+    chai.assert.equal(mainview.controls.get('key_2').has('ancestors'), false);
+    chai.assert.equal(mainview.controls.get('key_3').get('ancestors').get(1).get('key'), 3);
+  });
+  test('load Json, click map 3, then again to callapse', async () => {
+    await testUtilities.loadSampleJson();
+    mainview.controlView.genericListener({ target: { id: 'value_2', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_2', type: 'text' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('key_3').get('properties').get('value').get('cache'), 4);
+    chai.assert.equal(mainview.controls.get('key_4').get('properties').get('value').get('cache'), 5);
+    chai.assert.equal(mainview.controls.get('key_8').get('properties').get('value').get('cache'), 9);
+  });
+  test('load Json, click values 7, 6, 6', async () => {
+    await testUtilities.loadSampleJson();
+    mainview.controlView.genericListener({ target: { id: 'value_6', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_5', type: 'text' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('key_9').get('ancestors') instanceof Map, true);
+    chai.assert.equal(mainview.controls.get('key_9').get('ancestors').size, 1);
+    chai.assert.equal(mainview.controls.get('key_9').get('ancestors').has(1), true);
+    chai.assert.equal(mainview.controls.get('key_9').get('ancestors').get(1).size, 2);
+    chai.assert.equal(mainview.controls.get('key_9').get('ancestors').get(1).get('key'), 7);
+    chai.assert.equal(mainview.controls.get('key_9').get('ancestors').get(1).get('container') === mainview.controlView.db.db.db.get(7), true);
+    chai.assert.equal(mainview.controls.get('key_9').get('ancestors').get(1).get('container')
+      .has('description'), true);
+    mainview.controlView.genericListener({ target: { id: 'value_5', type: 'text' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('key_7').get('ancestors') instanceof Map, true);
+    chai.assert.equal(mainview.controls.get('key_7').get('ancestors').size, 1);
+    chai.assert.equal(mainview.controls.get('key_7').get('ancestors').has(1), true);
+    chai.assert.equal(mainview.controls.get('key_7').get('ancestors').get(1).size, 2);
+    chai.assert.equal(mainview.controls.get('key_7').get('ancestors').get(1).get('key'), 7);
+    chai.assert.equal(mainview.controls.get('key_7').get('ancestors').get(1).get('container') === mainview.controlView.db.db.db.get(7), true);
+    chai.assert.equal(mainview.controls.get('key_7').get('ancestors').get(1).get('container')
+      .has('description'), true);
+    chai.assert.equal(mainview.controls.get('level_8').get('properties').get('value').get('cache'), 1);
+    chai.assert.equal(mainview.controls.get('key_8').get('properties').get('value').get('cache'), 'created');
+    chai.assert.equal(mainview.controls.get('value_8').get('properties').get('value').get('cache'), '2023-10-31T07:33:00.000Z');
+    chai.assert.equal(mainview.controls.get('level_9').get('properties').get('value').get('cache'), 1);
+    chai.assert.equal(mainview.controls.get('value_9').get('properties').get('value').get('cache'), 'Button NEW');
+  });
+  test('load Json, click values 6, 5, 5, 6', async () => {
+    await testUtilities.loadSampleJson();
+    mainview.controlView.genericListener({ target: { id: 'value_5', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_4', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_4', type: 'text' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('value_7').get('properties').get('value').get('cache'), 'wl plan');
+    chai.assert.equal(mainview.controls.get('key_8').get('properties').get('value').get('cache'), 7);
+    chai.assert.equal(mainview.controls.get('value_8').get('properties').get('value').get('cache'), '<>');
+    chai.assert.equal(mainview.controls.get('value_9').get('properties').get('value').get('cache'), '<>');
+    mainview.controlView.genericListener({ target: { id: 'value_5', type: 'text' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('level_8').get('properties').get('value').get('cache'), 0);
+  });
+  test('load Json, click values 7, 7', async () => {
+    await testUtilities.loadSampleJson();
+    mainview.controlView.genericListener({ target: { id: 'value_6', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_6', type: 'text' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('key_7').get('properties').get('value').get('cache'), 8);
+  });
+  test('load Json, click values 2, 5, 2, 5, 2, 5', async () => {
+    await testUtilities.loadSampleJson();
+    mainview.controlView.genericListener({ target: { id: 'value_1', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_7', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_1', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_4', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_1', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_7', type: 'text' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('key_8').get('properties').get('value').get('cache'), 'parent');
+  });
+  test('load Json, click values 7, 6, 7', async () => {
+    await testUtilities.loadSampleJson();
+    mainview.controlView.genericListener({ target: { id: 'value_6', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_5', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_8', type: 'text' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('key_9').get('properties').get('value').get('cache'), 8);
+  });
+  test('load Json, insert and update buttons are disabled', async () => {
+    await testUtilities.loadSampleJson();
     chai.assert.equal(mainview.controls.get('update').get('elemID').disabled, true);
-  });
-  test('correct enablement of previous and next button after 2 new', async () => {
-    mainview.controlView.newListener();
-    mainview.controlView.insertListener();
-    mainview.controlView.newListener();
-    chai.assert.equal(mainview.controls.get('previous').get('elemID').disabled, false);
-    chai.assert.equal(mainview.controls.get('next').get('elemID').disabled, true);
+    chai.assert.equal(mainview.controls.get('insert').get('elemID').disabled, true);
   });
   test('record with description can be inserted', () => {
-    mainview.controls.get('id').get('elemID').value = 1;
-    mainview.controls.get('description').get('elemID').value = 'aaa';
-    mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
-    mainview.controlView.insertListener();
-    chai.assert.equal(mainview.controlView.modelController.db.getRec(1).get('description'), 'aaa');
+    testUtilities.setControlEvent('key_0', 'value', '1', 'keyup');
+    testUtilities.setControlEvent('select_0', 'checked', true, 'click');
+    mainview.controlView.genericListener({ target: { id: 'map', type: 'text' }, type: 'click' });
+    testUtilities.setControlEvent('key_1', 'value', 'description', 'keyup');
+    testUtilities.setControlEvent('value_1', 'value', 'aaa', 'keyup');
+    chai.assert.equal(mainview.controlView.db.getRec('1').get('description'), 'aaa');
   });
-  test('records flagged can update disable insert button', () => {
-    mainview.controls.get('id').get('elemID').value = 1;
-    mainview.controls.get('description').get('elemID').value = 'aaa';
-    mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
-    mainview.controlView.insertListener();
-    mainview.controls.get('description').get('elemID').value = 'bbb';
-    mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
-    chai.assert.equal(mainview.controls.get('update').get('elemID').disabled, false);
-    chai.assert.equal(mainview.controls.get('insert').get('elemID').disabled, true);
-  });
-  test('update button disabled after update', () => {
-    mainview.controlView.newListener();
-    mainview.controlView.insertListener();
-    mainview.controls.get('description').get('elemID').value = 'aaa';
-    mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
-    mainview.controlView.updateListener();
-    chai.assert.equal(mainview.controls.get('update').get('elemID').disabled, true);
-    chai.assert.equal(mainview.controls.get('insert').get('elemID').disabled, true);
-  });
-  test('empty string descriptions can flag records canUpdate', () => {
-    mainview.controls.get('id').get('elemID').value = 1;
-    mainview.controls.get('description').get('elemID').value = 'aaa';
-    mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
-    mainview.controlView.insertListener();
-    mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
-    chai.assert.equal(mainview.controls.get('update').get('elemID').disabled, false);
-  });
-  test('zero numeric fields can flag records canUpdate', () => {
-    mainview.controls.get('id').get('elemID').value = 1;
-    mainview.controls.get('priority').get('elemID').value = 2;
-    mainview.controls.get('description').get('elemID').value = 'aaa';
-    mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
-    mainview.controlView.insertListener();
-    mainview.controls.get('priority').get('elemID').value = 0;
-    mainview.controlView.dataListener({ target: { id: 'priority', value: mainview.controls.get('priority').get('elemID').value } });
-    chai.assert.equal(mainview.controls.get('update').get('elemID').disabled, false);
-  });
-  test('next and previous buttons correctly enabled after loading file', async () => {
-    const dbmap = await import('./dbmap.js');
-    mainview.controlView.modelController.db = new Json();
-    const strObj = JSON.stringify(
-      dbmap.default,
-      mainview.controlView.modelController.db.mapEncoder,
-    );
-    mainview.controlView.modelController.db.readText(strObj);
-    mainview.controlView.modelController.db2view();
-    mainview.controlView.modelController.postLoad();
-    mainview.controlView.writeCache();
-    chai.assert.equal(mainview.controls.get('previous').get('elemID').disabled, true);
-    chai.assert.equal(mainview.controls.get('next').get('elemID').disabled, false);
-  });
-  test('children can be unlinked from parents', () => {
-    mainview.controls.get('id').get('elemID').value = 1;
-    mainview.controls.get('description').get('elemID').value = 'aaa';
-    mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
-    mainview.controlView.insertListener();
-    mainview.controlView.newListener();
-    mainview.controls.get('parent').get('elemID').value = 1;
-    mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
-    mainview.controlView.insertListener();
-    chai.assert.equal(mainview.controlView.modelController.db.getRec(2).get('parent'), 1);
-    mainview.controls.get('parent').get('elemID').value = '';
-    mainview.controlView.dataListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
-    mainview.controlView.updateListener();
-    chai.assert.equal(mainview.controlView.modelController.db.getRec(2).get('parent'), undefined);
-  });
-  test('insert button enabled after adding description after new button', () => {
-    mainview.controlView.newListener();
-    mainview.controls.get('description').get('elemID').value = 'aaa';
-    mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
-    chai.assert.equal(mainview.controls.get('insert').get('elemID').value, false);
-  });
-  test('can delete records with children', () => {
-    mainview.controls.get('id').get('elemID').value = 1;
-    mainview.controls.get('description').get('elemID').value = 'aaa';
-    mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
-    mainview.controlView.insertListener();
-    mainview.controls.get('id').get('elemID').value = 2;
-    mainview.controls.get('parent').get('elemID').value = '1';
-    mainview.controls.get('description').get('elemID').value = 'bbb';
-    mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
-    mainview.controlView.insertListener();
-    mainview.controls.get('id').get('elemID').value = 3;
-    mainview.controls.get('description').get('elemID').value = 'ccc';
-    mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
-    mainview.controlView.insertListener();
-    mainview.controls.get('id').get('elemID').value = 1;
-    mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.deleteListener();
-    chai.assert.equal(mainview.controlView.modelController.db.getRec(1), undefined);
-    chai.assert.equal(mainview.controlView.modelController.db.getRec(2).get('parent'), undefined);
-    chai.assert.equal(mainview.controlView.modelController.db.getRec(3).get('description'), 'ccc');
-  });
-  test('can delete records with children and inherit parents parent', () => {
-    mainview.controls.get('id').get('elemID').value = 1;
-    mainview.controls.get('description').get('elemID').value = 'aaa';
-    mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
-    mainview.controlView.insertListener();
-    mainview.controls.get('id').get('elemID').value = 2;
-    mainview.controls.get('parent').get('elemID').value = 1;
-    mainview.controls.get('description').get('elemID').value = 'bbb';
-    mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
-    mainview.controlView.insertListener();
-    mainview.controls.get('id').get('elemID').value = 3;
-    mainview.controls.get('parent').get('elemID').value = '2';
-    mainview.controls.get('description').get('elemID').value = 'ccc';
-    mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
-    mainview.controlView.insertListener();
-    mainview.controls.get('id').get('elemID').value = 2;
-    mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.deleteListener();
-    chai.assert.equal(mainview.controlView.modelController.db.getRec(2), undefined);
-    chai.assert.equal(mainview.controlView.modelController.db.getRec(3).get('parent'), 1);
-  });
-  test('up button must be enabled in child', () => {
-    mainview.controls.get('id').get('elemID').value = 1;
-    mainview.controls.get('description').get('elemID').value = 'aaa';
-    mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
-    mainview.controlView.insertListener();
-    mainview.controls.get('id').get('elemID').value = 2;
-    mainview.controls.get('parent').get('elemID').value = 1;
-    mainview.controls.get('description').get('elemID').value = 'bbb';
-    mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
-    mainview.controlView.insertListener();
-    chai.assert.equal(mainview.controls.get('up').get('elemID').disabled, false);
-  });
-  test('parent field value must be existing ID', () => {
-    mainview.controls.get('id').get('elemID').value = 1;
-    mainview.controls.get('description').get('elemID').value = 'aaa';
-    mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
-    mainview.controlView.insertListener();
-    mainview.controls.get('id').get('elemID').value = 2;
-    mainview.controls.get('parent').get('elemID').value = 1;
-    mainview.controls.get('description').get('elemID').value = 'bbb';
-    mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
-    mainview.controlView.insertListener();
-    mainview.controls.get('id').get('elemID').value = 3;
-    mainview.controls.get('parent').get('elemID').value = 4;
-    mainview.controls.get('description').get('elemID').value = 'ccc';
-    mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
-    chai.assert.equal(mainview.controls.get('insert').get('elemID').disabled, true);
-  });
-  test('new button fill first gap in IDs', () => {
-    mainview.controls.get('id').get('elemID').value = 1;
-    mainview.controls.get('description').get('elemID').value = 'aaa';
-    mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
-    mainview.controlView.insertListener();
-    mainview.controls.get('id').get('elemID').value = 2;
-    mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.insertListener();
-    mainview.controls.get('id').get('elemID').value = 4;
-    mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.insertListener();
-    mainview.controls.get('id').get('elemID').value = 5;
-    mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.insertListener();
-    mainview.controlView.newListener();
-    chai.assert.equal(mainview.controls.get('id').get('elemID').value, 3);
-  });
-  test('messages contains child', () => {
-    mainview.controls.get('id').get('elemID').value = 1;
-    mainview.controls.get('description').get('elemID').value = 'aaa';
-    mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
-    mainview.controlView.insertListener();
-    mainview.controlView.newListener();
-    mainview.controls.get('parent').get('elemID').value = 1;
-    mainview.controls.get('description').get('elemID').value = 'bbb';
-    mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
-    mainview.controlView.insertListener();
-    mainview.controlView.upListener();
-    chai.assert.equal(mainview.controls.get('messages').get('elemID').innerText, '#\tDescription\n2\tbbb');
-  });
-  test('archive single log', () => {
-    mainview.controlView.newListener();
-    mainview.controls.get('description').get('elemID').value = 'log';
-    mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'priority', value: mainview.controls.get('priority').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'due', value: mainview.controls.get('due').get('elemID').value } });
-    mainview.controlView.insertListener();
-    mainview.controlView.newListener();
-    mainview.controls.get('description').get('elemID').value = 'archive';
-    mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
-    mainview.controlView.insertListener();
-    mainview.controlView.newListener();
-    mainview.controls.get('parent').get('elemID').value = 1;
-    mainview.controls.get('description').get('elemID').value = 'log1';
-    mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
-    mainview.controlView.insertListener();
-    mainview.controlView.archiveListener();
-    mainview.controlView.upListener();
-    chai.assert.equal(mainview.controls.get('id').get('elemID').value, 100000);
-    chai.assert.equal(mainview.controls.get('description').get('elemID').value, 'log');
-    mainview.controlView.downListener();
-    chai.assert.equal(mainview.controls.get('id').get('elemID').value, 100001);
-    chai.assert.equal(mainview.controls.get('description').get('elemID').value, 'log1');
-    chai.assert.equal(mainview.controlView.modelController.db.getRec(3), undefined);
-  });
-  test('archive 2 logs', () => {
-    mainview.controlView.newListener();
-    mainview.controls.get('description').get('elemID').value = 'log';
-    mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'priority', value: mainview.controls.get('priority').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'due', value: mainview.controls.get('due').get('elemID').value } });
-    mainview.controlView.insertListener();
-    mainview.controlView.newListener();
-    mainview.controls.get('description').get('elemID').value = 'archive';
-    mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
-    mainview.controlView.insertListener();
-    mainview.controlView.newListener();
-    mainview.controls.get('parent').get('elemID').value = 1;
-    mainview.controls.get('description').get('elemID').value = 'log1';
-    mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
-    mainview.controlView.insertListener();
-    mainview.controlView.newListener();
-    mainview.controls.get('description').get('elemID').value = 'log2';
-    mainview.controlView.dataListener({ target: { id: 'id', value: mainview.controls.get('id').get('elemID').value } });
-    mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
-    mainview.controlView.insertListener();
-    mainview.controlView.nextprevListener({ target: { id: 'previous' } });
-    mainview.controlView.archiveListener();
-    chai.assert.equal(mainview.controls.get('id').get('elemID').value, 100001);
-    chai.assert.equal(mainview.controls.get('description').get('elemID').value, 'log1');
-    mainview.controlView.upListener();
-    chai.assert.equal(mainview.controls.get('id').get('elemID').value, 100000);
-    chai.assert.equal(mainview.controls.get('description').get('elemID').value, 'log');
-    chai.assert.equal(mainview.controlView.modelController.db.getRec(3), undefined);
-    chai.assert.equal(mainview.controlView.modelController.db.getRec(4).get('description'), 'log2');
-  });
-  test('load db.json, 3 description is empty', async () => {
-    const dbmap = await import('./dbmap.js');
-    mainview.controlView.modelController.db = new Json();
-    const strObj = JSON.stringify(
-      dbmap.default,
-      mainview.controlView.modelController.db.mapEncoder,
-    );
-    mainview.controlView.modelController.db.readText(strObj);
-    mainview.controlView.modelController.db2view();
-    mainview.controlView.writeCache();
-    chai.assert.equal(mainview.controls.get('row_3').get('cache'), '');
-    chai.assert.equal(mainview.controls.get('row_4').get('elemID').children.item(1).innerText, 'Tr arr schip');
-  });
-  test('load db.json, next, previous is enabled', async () => {
-    const dbmap = await import('./dbmap.js');
-    mainview.controlView.modelController.db = new Json();
-    const strObj = JSON.stringify(
-      dbmap.default,
-      mainview.controlView.modelController.db.mapEncoder,
-    );
-    mainview.controlView.modelController.db.readText(strObj);
-    mainview.controlView.modelController.db2view();
-    mainview.controlView.nextprevListener({ target: { id: 'next' } });
-    chai.assert.equal(mainview.controls.get('previous').get('elemID').disabled, false);
-  });
-  test('load db.json, next, next, click on child 12, check id', async () => {
-    const dbmap = await import('./dbmap.js');
-    mainview.controlView.modelController.db = new Json();
-    const strObj = JSON.stringify(
-      dbmap.default,
-      mainview.controlView.modelController.db.mapEncoder,
-    );
-    mainview.controlView.modelController.db.readText(strObj);
-    mainview.controlView.modelController.db2view();
-    mainview.controlView.nextprevListener({ target: { id: 'next' } });
-    mainview.controlView.nextprevListener({ target: { id: 'next' } });
-    mainview.controlView.rowListener({ currentTarget: { firstElementChild: { innerText: '12' } } });
-    chai.assert.equal(mainview.controls.get('id').get('elemID').value, 12);
-  });
-  test('load db.json, next, next, click on child 12, update text, confirm', async () => {
-    const dbmap = await import('./dbmap.js');
-    mainview.controlView.modelController.db = new Json();
-    const strObj = JSON.stringify(
-      dbmap.default,
-      mainview.controlView.modelController.db.mapEncoder,
-    );
-    mainview.controlView.modelController.db.readText(strObj);
-    mainview.controlView.modelController.db2view();
-    mainview.controlView.nextprevListener({ target: { id: 'next' } });
-    mainview.controlView.nextprevListener({ target: { id: 'next' } });
-    mainview.controlView.rowListener({ currentTarget: { firstElementChild: { innerText: '12' } } });
-    mainview.controls.get('description').get('elemID').value = 'test updated';
-    mainview.controlView.dataListener({ target: { id: 'description', value: mainview.controls.get('description').get('elemID').value } });
-    mainview.controlView.updateListener();
-    mainview.controlView.downListener();
-    mainview.controlView.upListener();
-    chai.assert.equal(mainview.controls.get('description').get('elemID').value, 'test updated');
-  });
-  test('load db.json, swap 11 and 1', async () => {
-    const dbmap = await import('./dbmap.js');
-    mainview.controlView.modelController.db = new Json();
-    const strObj = JSON.stringify(
-      dbmap.default,
-      mainview.controlView.modelController.db.mapEncoder,
-    );
-    mainview.controlView.modelController.db.readText(strObj);
-    mainview.controlView.modelController.db2view();
-    mainview.controlView.writeCache();
-    mainview.controls.get('parent').get('elemID').value = 11;
-    mainview.controlView.dataListener({ target: { id: 'parent', value: mainview.controls.get('parent').get('elemID').value } });
-    mainview.controlView.swapListener();
-    chai.assert.equal(Number(mainview.controls.get('id').get('elemID').value), 11);
-  });
-  test('load db.json, down, swap 2 and 1', async () => {
-    const dbmap = await import('./dbmap.js');
-    mainview.controlView.modelController.db = new Json();
-    const strObj = JSON.stringify(
-      dbmap.default,
-      mainview.controlView.modelController.db.mapEncoder,
-    );
-    mainview.controlView.modelController.db.readText(strObj);
-    mainview.controlView.modelController.db2view();
-    mainview.controlView.writeCache();
-    mainview.controlView.downListener();
-    mainview.controlView.swapListener();
-    mainview.controlView.upListener();
-    chai.assert.equal(Number(mainview.controls.get('id').get('elemID').value), 2);
-  });
-  test('load db.json, click 4, swap, up check parent', async () => {
-    const dbmap = await import('./dbmap.js');
-    mainview.controlView.modelController.db = new Json();
-    const strObj = JSON.stringify(
-      dbmap.default,
-      mainview.controlView.modelController.db.mapEncoder,
-    );
-    mainview.controlView.modelController.db.readText(strObj);
-    mainview.controlView.modelController.db2view();
-    mainview.controlView.writeCache();
-    mainview.controlView.rowListener({ currentTarget: { firstElementChild: { innerText: '4' } } });
-    mainview.controlView.swapListener();
-    mainview.controlView.upListener();
-    chai.assert.equal(Number(mainview.controls.get('parent').get('elemID').value), '');
-    chai.assert.equal(mainview.controls.get('save').get('elemID').disabled, false);
-  });
-  teardown('teardown', () => {
-    mainview.controls.get('id').get('elemID').value = '';
-    mainview.controls.get('parent').get('elemID').value = '';
-    mainview.controls.get('created').get('elemID').value = '';
-    mainview.controls.get('priority').get('elemID').value = '';
-    mainview.controls.get('description').get('elemID').value = '';
-    mainview.controls.get('due').get('elemID').value = '';
-    mainview.controls.get('messages').get('elemID').innerHTML = '';
+  test('changed key replaces old key in db', () => {
+    testUtilities.setControlEvent('key_0', 'value', 'id', 'keyup');
+    testUtilities.setControlEvent('value_0', 'value', '1', 'keyup');
+    chai.assert.equal(mainview.controlView.db.getRec('id'), '1');
+    testUtilities.setControlEvent('key_0', 'value', 'id2', 'keyup');
+    chai.assert.equal(mainview.controlView.db.getRec('id'), undefined);
+    chai.assert.equal(mainview.controlView.db.getRec('id2'), '1');
   });
 });

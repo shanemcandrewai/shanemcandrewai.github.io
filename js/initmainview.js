@@ -1,10 +1,10 @@
 import MainView from './mainview.js';
 
 const mainview = new MainView();
-const codeElem = document.getElementById('codetokenInput');
+const codeElem = document.getElementById('codeTokenInput');
 
-const codetokenInputListener = async (evt) => {
-  if (evt.target.value.substring(0, 1) === 't') await import('../test/test.all.js');
-  else mainview.controlView.codetokenInputListener(evt);
+const codeTokenInputChange = async (event) => {
+  if (event.target.value.slice(0, 1) === 't') await import('../test/test.all.js');
+  else mainview.controlView.codeTokenInputChange(event);
 };
-codeElem.addEventListener('change', codetokenInputListener);
+codeElem.addEventListener('change', codeTokenInputChange);

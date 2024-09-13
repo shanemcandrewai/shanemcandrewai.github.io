@@ -11,216 +11,200 @@
   <body>
     <div id="mocha"></div>
     <div class="container row-gap-1">
-      <div class="row">
+      <div class="container row-gap-2">
+        <div class="row">
+          <div class="col">
+            <input
+              type="file"
+              id="uploadInput"
+              class="form-control form-control-sm">
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-3">
+            <label class="col-form-label form-control-sm" for="codeTokenInput"
+              >Authorization</label
+            >
+          </div>
+          <div class="col">
+            <input
+              type="password"
+              id="codeTokenInput"
+              class="form-control form-control-sm">
+          </div>
+          <div class="col">
+            <button
+              type="button"
+              id="load"
+              class="btn btn-outline-primary btn-sm"
+            >
+              load
+            </button>
+          </div>
+          <div class="col">
+            <button
+              type="button"
+              id="save"
+              class="btn btn-outline-primary btn-sm"
+            >
+              save
+            </button>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <button
+              type="button"
+              id="map"
+              class="btn btn-outline-primary btn-sm"
+            >
+              map
+            </button>
+          </div>
+          <div class="col">
+            <button
+              type="button"
+              id="array"
+              class="btn btn-outline-primary btn-sm"
+            >
+              array
+            </button>
+          </div>
+          <div class="col">
+            <button
+              type="button"
+              id="update"
+              class="btn btn-outline-primary btn-sm"
+              disabled
+            >
+              update
+            </button>
+          </div>
+          <div class="col">
+            <button
+              type="button"
+              id="delete"
+              class="btn btn-outline-primary btn-sm"
+              disabled
+            >
+              delete
+            </button>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <button
+              type="button"
+              id="next"
+              class="btn btn-outline-primary btn-sm"
+              disabled
+            >
+              next
+            </button>
+          </div>
+          <div class="col">
+            <button
+              type="button"
+              id="previous"
+              class="btn btn-outline-primary btn-sm"
+              disabled
+            >
+              previous
+            </button>
+          </div>
+          <div class="col">
+            <button
+              type="button"
+              id="up"
+              class="btn btn-outline-primary btn-sm"
+              disabled
+            >
+              up
+            </button>
+          </div>
+          <div class="col">
+            <button
+              type="button"
+              id="down"
+              class="btn btn-outline-primary btn-sm"
+              disabled
+            >
+              down
+            </button>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <button
+              type="button"
+              id="archive"
+              class="btn btn-outline-primary btn-sm"
+              disabled
+            >
+              archive
+            </button>
+          </div>
+          <div class="col">
+            <button
+              type="button"
+              id="insert"
+              class="btn btn-outline-primary btn-sm"
+              disabled
+            >
+              insert
+            </button>
+          </div>
+          <div class="col">
+            <button
+              type="button"
+              id="child"
+              class="btn btn-outline-primary btn-sm"
+              disabled
+            >
+              child
+            </button>
+          </div>
+          <div class="col">
+            <button
+              type="button"
+              id="swap"
+              class="btn btn-outline-primary btn-sm"
+              disabled
+            >
+              swap
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="row" id="row_0">
+        <div class="col-1">
+          <input type="checkbox" id="select_0" class="form-check-input">
+        </div>
+        <div class="col-1">
+          <input
+            type="text"
+            id="level_0"
+            size="3"
+            value="0"
+            class="form-control form-control-sm"
+            disabled
+          >
+        </div>
         <div class="col">
           <input
+            type="text"
+            id="key_0"
             class="form-control form-control-sm"
-            id="uploadinput"
-            type="file"
-          >
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-3">
-          <label class="col-form-label form-control-sm" for="codetokenInput"
-            >Authorization</label
-          >
+            placeholder="key_0"
+            maxlength="200">
         </div>
         <div class="col">
           <input
+            type="text"
+            id="value_0"
             class="form-control form-control-sm"
-            id="codetokenInput"
-            type="password"
-          >
-        </div>
-        <div class="col">
-          <button
-            id="load"
-            type="button"
-            disabled
-            class="btn btn-outline-primary btn-sm"
-          >
-            load
-          </button>
-        </div>
-        <div class="col">
-          <button
-            id="save"
-            type="button"
-            disabled
-            class="btn btn-outline-primary btn-sm"
-          >
-            save
-          </button>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col">
-          <button id="new" type="button" class="btn btn-outline-primary btn-sm">
-            new
-          </button>
-        </div>
-        <div class="col">
-          <button
-            id="insert"
-            type="button"
-            class="btn btn-outline-primary btn-sm"
-            disabled
-          >
-            insert
-          </button>
-        </div>
-        <div class="col">
-          <button
-            id="update"
-            type="button"
-            class="btn btn-outline-primary btn-sm"
-            disabled
-          >
-            update
-          </button>
-        </div>
-        <div class="col">
-          <button
-            id="delete"
-            type="button"
-            class="btn btn-outline-primary btn-sm"
-            disabled
-          >
-            delete
-          </button>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col">
-          <button
-            id="next"
-            type="button"
-            disabled
-            class="btn btn-outline-primary btn-sm"
-          >
-            next
-          </button>
-        </div>
-        <div class="col">
-          <button
-            id="previous"
-            type="button"
-            disabled
-            class="btn btn-outline-primary btn-sm"
-          >
-            previous
-          </button>
-        </div>
-        <div class="col">
-          <button
-            id="up"
-            type="button"
-            disabled
-            class="btn btn-outline-primary btn-sm"
-          >
-            up
-          </button>
-        </div>
-        <div class="col">
-          <button
-            id="down"
-            type="button"
-            disabled
-            class="btn btn-outline-primary btn-sm"
-          >
-            down
-          </button>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col">
-          <button
-            id="archive"
-            type="button"
-            disabled
-            class="btn btn-outline-primary btn-sm"
-          >
-            archive
-          </button>
-        </div>
-        <div class="col">
-          <button
-            id="last"
-            type="button"
-            disabled
-            class="btn btn-outline-primary btn-sm"
-          >
-            last
-          </button>
-        </div>
-        <div class="col">
-          <button
-            id="sort"
-            type="button"
-            disabled
-            class="btn btn-outline-primary btn-sm"
-          >
-            sort
-          </button>
-        </div>
-        <div class="col">
-          <button
-            id="swap"
-            type="button"
-            disabled
-            class="btn btn-outline-primary btn-sm"
-          >
-            swap
-          </button>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-3">
-          <label class="col-form-label form-control-sm" for="id">ID</label>
-        </div>
-        <div class="col">
-          <input class="form-control form-control-sm" id="id" type="number" max="99999">
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-3">
-          <label class="col-form-label form-control-sm" for="parent">Parent ID</label>
-        </div>
-        <div class="col">
-          <input class="form-control form-control-sm" id="parent" type="number" max="9999">
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-3">
-          <label class="col-form-label form-control-sm" for="created">Created</label>
-        </div>
-        <div class="col">
-          <input class="form-control form-control-sm" id="created" type="datetime-local">
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-3">
-          <label class="col-form-label form-control-sm" for="priority">Priority</label>
-        </div>
-        <div class="col">
-          <input class="form-control form-control-sm" id="priority" type="number" max="5">
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-3">
-          <label class="col-form-label form-control-sm" for="description">Description</label>
-        </div>
-        <div class="col">
-          <input class="form-control form-control-sm" id="description" type="text" maxlength="200">
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-3">
-          <label class="col-form-label form-control-sm" for="due">Due</label>
-        </div>
-        <div class="col">
-          <input class="form-control form-control-sm" id="due" type="datetime-local">
+            placeholder="value_0"
+            maxlength="200">
         </div>
       </div>
       <div id="messages"></div>
