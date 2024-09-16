@@ -4,7 +4,7 @@ export default class MainView {
   controlsObj = {
     key_0: {
       events: {
-        keyup: {
+        input: {
           recalculate: {
             map: 'disabled',
           },
@@ -13,7 +13,7 @@ export default class MainView {
     },
     value_0: {
       events: {
-        keyup: {
+        input: {
           recalculate: {
             update: 'disabled',
           },

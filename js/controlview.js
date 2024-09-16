@@ -88,9 +88,10 @@ export default class ControlView {
     }
   };
 
-  keyKeyup = (event) => {
+  keyInput = (event) => {
     const selectNumber = event.target.id.slice(4);
     const level = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
+    const value = this.controls.get(`value_${selectNumber}`).get('properties').get('value').get('cache');
     const parent = this.getAncestorContainer(selectNumber, level);
     const oldKey = this.controls.get(event.target.id).get('properties').get('value').get('cache');
     if (parent instanceof Map) {
@@ -104,11 +105,11 @@ export default class ControlView {
         return;
       }
     }
-    this.controls.get(event.target.id).get('elemID').classList.remove('text-bg-danger');
+
     this.controls.get(event.target.id).get('properties').get('value').set('cache', event.target.value);
-    const value = this.controls.get(`value_${selectNumber}`).get('properties').get('value').get('cache');
-    this.db.setRec(event.target.value, value, parent);
     this.db.deleteRec(oldKey, parent);
+    this.db.setRec(event.target.value, value, parent);
+    this.controls.get(event.target.id).get('elemID').classList.remove('text-bg-danger');
     if (!this.controls.get(`key_${Number(selectNumber) + 1}`).get('properties').get('value').get('cache')) {
       this.setCache(`level_${Number(selectNumber) + 1}`, 'value', level);
       if (this.controls.get(`key_${selectNumber}`).has('ancestors')) {
@@ -120,7 +121,7 @@ export default class ControlView {
     }
   };
 
-  valueKeyup = (event) => {
+  valueInput = (event) => {
     const selectNumber = event.target.id.slice(6);
     const level = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
     this.controls.get(event.target.id).get('properties').get('value').set('cache', event.target.value);
@@ -199,6 +200,26 @@ export default class ControlView {
       if (this[calculatorFunc]) calculatorFunc(event);
     }
     this.writeCache();
+  };
+
+  downClick = () => {
+    let selectNumber = 0;
+    while (this.controls.has(`select_${selectNumber + 1}`)) {
+      const level = this.controls.get(`level_${selectNumber + 1}`).get('properties').get('value').get('cache');
+      const key = this.controls.get(`key_${selectNumber + 1}`).get('properties').get('value').get('cache');
+      const keyRO = this.controls.get(`key_${selectNumber + 1}`).get('properties').get('readOnly').get('cache');
+      const value = this.controls.get(`value_${selectNumber + 1}`).get('properties').get('value').get('cache');
+      const valueRO = this.controls.get(`value_${selectNumber + 1}`).get('properties').get('readOnly').get('cache');
+      this.setCache(`level_${selectNumber}`, 'value', level);
+      this.setCache(`key_${selectNumber}`, 'value', key);
+      this.setCache(`key_${selectNumber}`, 'readOnly', keyRO);
+      this.setCache(`value_${selectNumber}`, 'value', value);
+      this.setCache(`value_${selectNumber}`, 'readOnly', valueRO);
+      const ancestors = this.controls.get(`key_${selectNumber + 1}`).get('ancestors');
+      if (ancestors) this.controls.get(`key_${selectNumber}`).set('ancestors', ancestors);
+      selectNumber += 1;
+    }
+    this.fillGap(selectNumber - 1, true);
   };
 
   mapClick = () => {
@@ -353,28 +374,30 @@ export default class ControlView {
     }
     const innerContainer = this.getAncestorContainer(selectNumber, level).get(key);
     const containerSize = ControlView.getContainerCount(innerContainer);
-    let maxCopyFrom = selectNumber + 1 + containerSize;
+    const maxCopyFrom = selectNumber + 1 + containerSize;
     if (maxCopyFrom > ControlView.maxRows) {
       this.fillGap(maxCopyFrom - containerSize - 1);
     } else {
       let setRow;
-      while (maxCopyFrom <= ControlView.maxRows) {
-        setRow = maxCopyFrom - containerSize;
-        level = this.controls.get(`level_${maxCopyFrom}`).get('properties').get('value').get('cache');
-        key = this.controls.get(`key_${maxCopyFrom}`).get('properties').get('value').get('cache');
-        const valueCopy = this.getAncestorValue(maxCopyFrom, level, key);
-        const maxCopyFromKey = this.controls.get(`key_${maxCopyFrom}`);
+      for (const fromRow of Array.from(
+        { length: (ControlView.maxRows - maxCopyFrom + 1) },
+        (_, i) => maxCopyFrom + i,
+      )) {
+        setRow = fromRow - containerSize;
+        level = this.controls.get(`level_${fromRow}`).get('properties').get('value').get('cache');
+        key = this.controls.get(`key_${fromRow}`).get('properties').get('value').get('cache');
+        const valueCopy = this.getAncestorValue(fromRow, level, key);
+        const maxCopyFromKey = this.controls.get(`key_${fromRow}`);
         const setRowKey = this.controls.get(`key_${setRow}`);
         if (maxCopyFromKey.has('ancestors')) setRowKey.set('ancestors', maxCopyFromKey.get('ancestors'));
         else setRowKey.delete('ancestors');
         this.setCacheSelect(setRow, level, key, valueCopy);
-        maxCopyFrom += 1;
       }
       this.fillGap(setRow);
     }
   };
 
-  fillGap = (selectNumber, levelp) => {
+  fillGap = (selectNumber, ignoreMax, levelp) => {
     let level = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
     if (levelp !== undefined) level = levelp;
 
@@ -395,8 +418,8 @@ export default class ControlView {
         if (selectKey.has('ancestors')) fillRowKey.set('ancestors', selectKey.get('ancestors'));
         else fillRowKey.delete('ancestors');
         this.setCacheSelect(fillRow, level, nextKey, nextValue);
-      } else if (level && fillRow !== ControlView.maxRows) {
-        this.fillGap(fillRow - 1, level - 1);
+      } else if (level && (fillRow !== ControlView.maxRows || ignoreMax)) {
+        this.fillGap(fillRow - 1, false, level - 1);
       }
       fillRow += 1;
     }
@@ -495,15 +518,15 @@ export default class ControlView {
         events.get('change').set('listener', `${element.id}Change`);
       }
     } else if (element.type === 'text') {
-      if (!events.has('keyup')) events.set('keyup', new Map());
-      if (!events.get('keyup').has('recalculate')) events.get('keyup').set('recalculate', new Map());
-      if (!events.get('keyup').has('listener')) {
-        if (this[`${element.id}Keyup`]) {
-          events.get('keyup').set('listener', `${element.id}Keyup`);
-        } else if (this.keyKeyup && element.id.slice(0, 3) === 'key') {
-          events.get('keyup').set('listener', 'keyKeyup');
-        } else if (this.valueKeyup && element.id.slice(0, 5) === 'value') {
-          events.get('keyup').set('listener', 'valueKeyup');
+      if (!events.has('input')) events.set('input', new Map());
+      if (!events.get('input').has('recalculate')) events.get('input').set('recalculate', new Map());
+      if (!events.get('input').has('listener')) {
+        if (this[`${element.id}Input`]) {
+          events.get('input').set('listener', `${element.id}Input`);
+        } else if (this.keyInput && element.id.slice(0, 3) === 'key') {
+          events.get('input').set('listener', 'keyInput');
+        } else if (this.valueInput && element.id.slice(0, 5) === 'value') {
+          events.get('input').set('listener', 'valueInput');
         }
       }
       if (!events.has('click')) events.set('click', new Map());
@@ -574,8 +597,7 @@ export default class ControlView {
   };
 
   static multiplySelectRows = (max) => {
-    let selectNumber = 1;
-    while (selectNumber <= max) {
+    for (const selectNumber of Array.from({ length: max }, (_, i) => 1 + i)) {
       const prevRowElem = document.getElementById(`row_${selectNumber - 1}`);
       const rowElem = document.getElementById(`row_${selectNumber}`);
       if (!rowElem) {
@@ -589,7 +611,6 @@ export default class ControlView {
         newRow.children[3].children[0].placeholder = `value_${selectNumber}`;
         prevRowElem.insertAdjacentElement('afterend', newRow);
       }
-      selectNumber += 1;
     }
   };
 

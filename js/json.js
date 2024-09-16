@@ -58,7 +58,7 @@ export default class Json {
 
   size() { return this.db.size(); }
 
-  deleteRec(id) { this.db.deleteRec(id); }
+  deleteRec(id, parentRec) { this.db.deleteRec(id, parentRec); }
 
   deleteField(id, elemName) { this.db.deleteField(id, elemName); }
 
