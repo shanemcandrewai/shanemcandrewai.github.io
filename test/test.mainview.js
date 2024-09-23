@@ -18,17 +18,62 @@ suite('MainView', () => {
     mainview = new MainView(true);
     testUtilities = new TestUtilities(mainview);
   });
-  test('test db file expand down button, check row 9', async () => {
-    await testUtilities.loadSampleJson('dbmap.js');
+  test('load file expand 2, down 2 times, up', async () => {
+    await testUtilities.loadSampleJson();
+    mainview.controlView.genericListener({ target: { id: 'value_1', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'down', type: 'button' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'down', type: 'button' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'up', type: 'button' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('level_0').get('properties').get('value').get('cache'), '0');
+    chai.assert.equal(mainview.controls.get('key_0').get('properties').get('value').get('cache'), '2');
+    chai.assert.equal(mainview.controls.get('value_0').get('properties').get('value').get('cache'), '<>');
+    mainview.controlView.genericListener({ target: { id: 'up', type: 'button' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('level_0').get('properties').get('value').get('cache'), '0');
+    chai.assert.equal(mainview.controls.get('key_0').get('properties').get('value').get('cache'), '1');
+    chai.assert.equal(mainview.controls.get('value_0').get('properties').get('value').get('cache'), '<>');
+  });
+  test('load small file up', async () => {
+    await testUtilities.loadSampleJson('small.js');
+    mainview.controlView.genericListener({ target: { id: 'up', type: 'button' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('level_0').get('properties').get('value').get('cache'), '0');
+    chai.assert.equal(mainview.controls.get('key_0').get('properties').get('value').get('cache'), 'shopping');
+    chai.assert.equal(mainview.controls.get('value_0').get('properties').get('value').get('cache'), '[]');
+    chai.assert.equal(mainview.controls.get('key_1').get('properties').get('value').get('cache'), 'mk-sim');
+    chai.assert.equal(mainview.controls.get('value_1').get('properties').get('value').get('cache'), 'vk-sim');
+    chai.assert.equal(mainview.controls.get('level_9').get('properties').get('value').get('cache'), '0');
+    chai.assert.equal(mainview.controls.get('key_9').get('properties').get('value').get('cache'), '');
+    chai.assert.equal(mainview.controls.get('value_9').get('properties').get('value').get('cache'), '');
+  });
+  test('load small file 3 ,2, 0, 0', async () => {
+    await testUtilities.loadSampleJson('small.js');
+    mainview.controlView.genericListener({ target: { id: 'value_3', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_2', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_0', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_0', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'down', type: 'button' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('level_7').get('properties').get('value').get('cache'), '0');
+    chai.assert.equal(mainview.controls.get('key_7').get('properties').get('value').get('cache'), '');
+    chai.assert.equal(mainview.controls.get('value_7').get('properties').get('value').get('cache'), '');
+    chai.assert.equal(mainview.controls.get('level_9').get('properties').get('value').get('cache'), '0');
+    chai.assert.equal(mainview.controls.get('key_9').get('properties').get('value').get('cache'), '');
+    chai.assert.equal(mainview.controls.get('value_9').get('properties').get('value').get('cache'), '');
+  });
+  test('load db file expand down button, check row 9, up', async () => {
+    await testUtilities.loadSampleJson('wlorig.js');
     mainview.controlView.genericListener({ target: { id: 'value_2', type: 'text' }, type: 'click' });
     mainview.controlView.genericListener({ target: { id: 'value_1', type: 'text' }, type: 'click' });
     mainview.controlView.genericListener({ target: { id: 'value_0', type: 'text' }, type: 'click' });
     mainview.controlView.genericListener({ target: { id: 'down', type: 'button' }, type: 'click' });
     chai.assert.equal(mainview.controls.get('key_9').get('properties').get('value').get('cache'), '4');
     chai.assert.equal(mainview.controls.get('value_9').get('properties').get('value').get('cache'), '<>');
+    mainview.controlView.genericListener({ target: { id: 'up', type: 'button' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('key_9').get('properties').get('value').get('cache'), 'created');
+    chai.assert.equal(mainview.controls.get('value_9').get('properties').get('value').get('cache'), '2023-10-31T06:56:00.000Z');
+    chai.assert.equal(mainview.controls.get('key_0').get('properties').get('value').get('cache'), '1');
+    chai.assert.equal(mainview.controls.get('value_0').get('properties').get('value').get('cache'), '<>');
   });
-  test('test db file down button', async () => {
-    await testUtilities.loadSampleJson('dbmap.js');
+  test('load db file down button', async () => {
+    await testUtilities.loadSampleJson('wlorig.js');
     mainview.controlView.genericListener({ target: { id: 'value_2', type: 'text' }, type: 'click' });
     mainview.controlView.genericListener({ target: { id: 'down', type: 'button' }, type: 'click' });
     chai.assert.equal(mainview.controls.get('key_0').get('properties').get('value').get('cache'), '2');
@@ -37,8 +82,8 @@ suite('MainView', () => {
     chai.assert.equal(mainview.controls.get('value_2').get('properties').get('value').get('cache'), '1');
     chai.assert.equal(mainview.controls.get('key_9').get('properties').get('value').get('cache'), '9');
   });
-  test('test small file down button', async () => {
-    await testUtilities.loadSampleJson('dbmap.small.js');
+  test('load small file down button', async () => {
+    await testUtilities.loadSampleJson('small.js');
     mainview.controlView.genericListener({ target: { id: 'value_2', type: 'text' }, type: 'click' });
     mainview.controlView.genericListener({ target: { id: 'down', type: 'button' }, type: 'click' });
     chai.assert.equal(mainview.controls.get('key_0').get('properties').get('value').get('cache'), 'mk-sim');
@@ -47,7 +92,7 @@ suite('MainView', () => {
     chai.assert.equal(mainview.controls.get('value_2').get('properties').get('value').get('cache'), 'mv0');
   });
   test('load small json, check display and db', async () => {
-    await testUtilities.loadSampleJson('dbmap.small.js');
+    await testUtilities.loadSampleJson('small.js');
     chai.assert.equal(mainview.controls.get('key_0').get('properties').get('value').get('cache'), 'shopping');
     chai.assert.equal(mainview.controls.get('value_0').get('properties').get('value').get('cache'), '[]');
     chai.assert.equal(mainview.controls.get('key_1').get('properties').get('value').get('cache'), 'mk-sim');
@@ -73,7 +118,7 @@ suite('MainView', () => {
 
     mainview.controlView.genericListener({ target: { id: 'value_0', type: 'text' }, type: 'click' });
     chai.assert.equal(mainview.controls.get('key_1').get('properties').get('value').get('cache'), 'mk-sim');
-    chai.assert.equal(mainview.controls.get('value_3').get('properties').get('value').get('cache'), '');
+    chai.assert.equal(mainview.controls.get('value_4').get('properties').get('value').get('cache'), '');
     mainview.controlView.genericListener({ target: { id: 'value_0', type: 'text' }, type: 'click' });
     mainview.controlView.genericListener({ target: { id: 'value_1', type: 'text' }, type: 'click' });
     chai.assert.equal(mainview.controls.get('key_1').get('properties').get('value').get('cache'), '0');
@@ -298,20 +343,20 @@ suite('MainView', () => {
     chai.assert.equal(mainview.controls.get('value_1').get('properties').get('value').get('cache'), '');
     chai.assert.equal(mainview.controls.get('value_1').get('properties').get('readOnly').get('cache'), false);
   });
-  test('load db.json', async () => {
+  test('load wlorig.json', async () => {
     await testUtilities.loadSampleJson();
     const desc = mainview.controlView.db.getRec(2).get('description');
     chai.assert.equal(desc, 'Change tr');
     chai.assert.equal(mainview.controls.get('key_1').get('properties').get('value').get('cache'), 2);
     chai.assert.equal(mainview.controls.get('key_2').get('properties').get('value').get('cache'), 3);
   });
-  test('compare db.json with stringified DB', async () => {
+  test('compare wlorig.json with stringified DB', async () => {
     const strObj = await testUtilities.loadSampleJson();
     const strWithoutEmpty = strObj.slice(0, 315) + strObj.slice(334);
     const stringifiedDb = mainview.controlView.db.getString(null);
     chai.assert.equal(strWithoutEmpty, stringifiedDb);
   });
-  test('compare db.json and stringified DB with record3 deleted', async () => {
+  test('compare wlorig.json and stringified DB with record3 deleted', async () => {
     const strObj = await testUtilities.loadSampleJson();
     const strWithoutRecord3 = strObj.slice(0, 234) + strObj.slice(338);
     testUtilities.setControlEvent('select_2', 'checked', true, 'click');

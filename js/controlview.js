@@ -38,7 +38,7 @@ export default class ControlView {
     try {
       messages.set('load', await this.storage.load(
         this.db,
-        'db.json',
+        'wlorig.json',
         this.controls.get('codeTokenInput').get('properties').get('value').get('cache'),
       ));
       this.db2view();
@@ -141,9 +141,31 @@ export default class ControlView {
     }
   };
 
+  copySelect = (selectFrom, selectTo) => {
+    for (const elemType of ['level', 'key', 'value']) {
+      const propsFrom = this.controls.get(`${elemType}_${selectFrom}`).get('properties');
+      const propsTo = this.controls.get(`${elemType}_${selectTo}`).get('properties');
+      for (const [propName, propContainer] of propsFrom) {
+        if (propsTo.has(propName)) {
+          this.setCache(`${elemType}_${selectTo}`, propName, propContainer.get('cache'));
+        } else {
+          propsTo.set(propName, new Map());
+          propsTo.get(propName).set('cache', propContainer.get('cache'));
+          propsTo.get(propName).set('write', true);
+        }
+      }
+    }
+    const ancestorsFrom = this.controls.get(`key_${selectFrom}`).get('ancestors');
+    if (ancestorsFrom) this.controls.get(`key_${selectTo}`).set('ancestors', ancestorsFrom);
+    else this.controls.get(`key_${selectTo}`).delete('ancestors');
+  };
+
   setCacheSelect = (selectNumber, level, key, value) => {
     this.setCache(`level_${selectNumber}`, 'value', level);
     this.setCache(`key_${selectNumber}`, 'value', key);
+    if (this.getAncestor(selectNumber, level) instanceof Array) {
+      this.setCache(`key_${selectNumber}`, 'readOnly', true);
+    }
     if (typeof value === 'string' || typeof value === 'number') {
       this.setCache(`value_${selectNumber}`, 'value', value);
       this.setCache(`value_${selectNumber}`, 'readOnly', false);
@@ -205,21 +227,77 @@ export default class ControlView {
   downClick = () => {
     let selectNumber = 0;
     while (this.controls.has(`select_${selectNumber + 1}`)) {
-      const level = this.controls.get(`level_${selectNumber + 1}`).get('properties').get('value').get('cache');
-      const key = this.controls.get(`key_${selectNumber + 1}`).get('properties').get('value').get('cache');
-      const keyRO = this.controls.get(`key_${selectNumber + 1}`).get('properties').get('readOnly').get('cache');
-      const value = this.controls.get(`value_${selectNumber + 1}`).get('properties').get('value').get('cache');
-      const valueRO = this.controls.get(`value_${selectNumber + 1}`).get('properties').get('readOnly').get('cache');
-      this.setCache(`level_${selectNumber}`, 'value', level);
-      this.setCache(`key_${selectNumber}`, 'value', key);
-      this.setCache(`key_${selectNumber}`, 'readOnly', keyRO);
-      this.setCache(`value_${selectNumber}`, 'value', value);
-      this.setCache(`value_${selectNumber}`, 'readOnly', valueRO);
-      const ancestors = this.controls.get(`key_${selectNumber + 1}`).get('ancestors');
-      if (ancestors) this.controls.get(`key_${selectNumber}`).set('ancestors', ancestors);
+      this.copySelect(selectNumber + 1, selectNumber);
       selectNumber += 1;
     }
-    this.fillGap(selectNumber - 1, true);
+    const key = this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache');
+    const value = this.controls.get(`value_${selectNumber}`).get('properties').get('value').get('cache');
+    if (key !== '' || value !== '') {
+      const level = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
+      const previousEntry = this.getAdjacent(selectNumber - 1, level);
+      this.setCacheSelect(
+        selectNumber,
+        previousEntry.level,
+        previousEntry.key,
+        previousEntry.value,
+      );
+    }
+  };
+
+  upClick = () => {
+    const level = this.controls.get('level_0').get('properties').get('value').get('cache');
+    const previousEntry = this.getAdjacent(0, level, false);
+    if (previousEntry !== undefined) {
+      let selectNumber = ControlView.maxRows - 1;
+      while (selectNumber + 1) {
+        this.copySelect(selectNumber, selectNumber + 1);
+        selectNumber -= 1;
+      }
+      this.setCacheSelect(
+        selectNumber + 1,
+        previousEntry.level,
+        previousEntry.key,
+        previousEntry.value,
+      );
+    }
+  };
+
+  getAdjacent = (selectNumber, level, next = true) => {
+    const selectKey = this.controls.get(`key_${selectNumber}`);
+    const selectLevel = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
+    let key = selectKey.get('properties').get('value').get('cache');
+    if (!level && selectLevel && this.getAncestor(selectNumber, 1).has('key')) {
+      key = this.getAncestor(selectNumber, 1).get('key');
+      if (!next) {
+        return {
+          key,
+          level,
+          value: this.getAncestorValue(selectNumber, level, key),
+        };
+      }
+    }
+    const parentEntries = this.getAncestor(selectNumber, level).get('container').entries();
+    let parentEntry = parentEntries.next();
+    let adjacentEntry = key;
+    while (!parentEntry.done && parentEntry.value[0] !== key) {
+      [adjacentEntry] = parentEntry.value;
+      parentEntry = parentEntries.next();
+    }
+    if (next) {
+      parentEntry = parentEntries.next();
+      if (parentEntry.done) {
+        return this.getAdjacent(selectNumber, level - 1);
+      }
+      [adjacentEntry] = parentEntry.value;
+    } else if ((parentEntry.done || adjacentEntry === parentEntry.value[0])) {
+      if (level) return this.getAdjacent(selectNumber, level - 1, false);
+      if (!selectLevel) return undefined;
+    }
+    return {
+      key: adjacentEntry,
+      level,
+      value: this.getAncestorValue(selectNumber, level, adjacentEntry),
+    };
   };
 
   mapClick = () => {
@@ -322,15 +400,9 @@ export default class ControlView {
     let maxCopyRow = ControlView.maxRows - innerSize;
     // shift down rows leaving gap for expanded map
     while (maxCopyRow) {
-      let ancestors;
-      if (this.controls.get(`key_${maxCopyRow}`).has('ancestors')) ancestors = new Map(this.controls.get(`key_${maxCopyRow}`).get('ancestors'));
-      const levelCopy = this.controls.get(`level_${maxCopyRow}`).get('properties').get('value').get('cache');
-      const keyCopy = this.controls.get(`key_${maxCopyRow}`).get('properties').get('value').get('cache');
-      const valueCopy = this.getAncestorValue(maxCopyRow, levelCopy, keyCopy);
       const setRow = maxCopyRow + innerSize;
       if (setRow <= ControlView.maxRows && setRow > selectNumber + innerSize) {
-        if (ancestors !== undefined) this.controls.get(`key_${setRow}`).set('ancestors', ancestors);
-        this.setCacheSelect(setRow, levelCopy, keyCopy, valueCopy);
+        this.copySelect(maxCopyRow, setRow);
       }
       maxCopyRow -= 1;
     }
@@ -366,8 +438,8 @@ export default class ControlView {
 
   collapse = (event) => {
     const selectNumber = Number(event.target.id.slice(6));
-    let key = this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache');
-    let level = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
+    const key = this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache');
+    const level = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
     if (selectNumber === ControlView.maxRows - 1) {
       this.fillGap(selectNumber);
       return;
@@ -376,7 +448,7 @@ export default class ControlView {
     const containerSize = ControlView.getContainerCount(innerContainer);
     const maxCopyFrom = selectNumber + 1 + containerSize;
     if (maxCopyFrom > ControlView.maxRows) {
-      this.fillGap(maxCopyFrom - containerSize - 1);
+      this.fillGap(selectNumber);
     } else {
       let setRow;
       for (const fromRow of Array.from(
@@ -384,20 +456,13 @@ export default class ControlView {
         (_, i) => maxCopyFrom + i,
       )) {
         setRow = fromRow - containerSize;
-        level = this.controls.get(`level_${fromRow}`).get('properties').get('value').get('cache');
-        key = this.controls.get(`key_${fromRow}`).get('properties').get('value').get('cache');
-        const valueCopy = this.getAncestorValue(fromRow, level, key);
-        const maxCopyFromKey = this.controls.get(`key_${fromRow}`);
-        const setRowKey = this.controls.get(`key_${setRow}`);
-        if (maxCopyFromKey.has('ancestors')) setRowKey.set('ancestors', maxCopyFromKey.get('ancestors'));
-        else setRowKey.delete('ancestors');
-        this.setCacheSelect(setRow, level, key, valueCopy);
+        this.copySelect(fromRow, setRow);
       }
       this.fillGap(setRow);
     }
   };
 
-  fillGap = (selectNumber, ignoreMax, levelp) => {
+  fillGap = (selectNumber, levelp) => {
     let level = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
     if (levelp !== undefined) level = levelp;
 
@@ -412,15 +477,20 @@ export default class ControlView {
     let fillRow = selectNumber + 1;
     while (fillRow <= ControlView.maxRows) {
       parentEntry = parentEntries.next();
+      const fillRowKey = this.controls.get(`key_${fillRow}`);
       if (!parentEntry.done) {
         const [nextKey, nextValue] = parentEntry.value;
-        const fillRowKey = this.controls.get(`key_${fillRow}`);
         if (selectKey.has('ancestors')) fillRowKey.set('ancestors', selectKey.get('ancestors'));
         else fillRowKey.delete('ancestors');
         this.setCacheSelect(fillRow, level, nextKey, nextValue);
-      } else if (level && (fillRow !== ControlView.maxRows || ignoreMax)) {
-        this.fillGap(fillRow - 1, false, level - 1);
+      } else if (level && (fillRow !== ControlView.maxRows)) {
+        this.fillGap(fillRow - 1, level - 1);
+        return;
+      } else {
+        this.setCacheSelect(fillRow, 0, '', '');
+        fillRowKey.delete('ancestors');
       }
+
       fillRow += 1;
     }
   };
@@ -436,7 +506,7 @@ export default class ControlView {
     try {
       const messages = await this.storage.save(
         new Json(this.db.getMap()),
-        'db.json',
+        'wlorig.json',
         this.controls.get('codeTokenInput').get('properties').get('value').get('cache'),
       );
       if (messages instanceof Map && messages.has('display')) {

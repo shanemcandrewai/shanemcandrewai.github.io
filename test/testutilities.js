@@ -10,9 +10,9 @@ export default class TestUtilities {
     }
   };
 
-  loadSampleJson = async (filename = 'dbmap.js') => {
+  loadSampleJson = async (filename = 'wlorig.js') => {
     this.mainview.controlView.db = new Json();
-    const dbmap = await import(`./${filename}`);
+    const dbmap = await import(`./data/${filename}`);
     const strObj = JSON.stringify(
       dbmap.default,
       this.mainview.controlView.db.mapEncoder,
