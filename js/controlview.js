@@ -38,7 +38,7 @@ export default class ControlView {
     try {
       messages.set('load', await this.storage.load(
         this.db,
-        'wlorig.json',
+        'db.json',
         this.controls.get('codeTokenInput').get('properties').get('value').get('cache'),
       ));
       this.db2view();
@@ -506,7 +506,7 @@ export default class ControlView {
     try {
       const messages = await this.storage.save(
         new Json(this.db.getMap()),
-        'wlorig.json',
+        'db.json',
         this.controls.get('codeTokenInput').get('properties').get('value').get('cache'),
       );
       if (messages instanceof Map && messages.has('display')) {
