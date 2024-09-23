@@ -18,6 +18,15 @@ suite('MainView', () => {
     mainview = new MainView(true);
     testUtilities = new TestUtilities(mainview);
   });
+  test('load small file click value 4, 5, 4', async () => {
+    await testUtilities.loadSampleJson('small.js');
+    mainview.controlView.genericListener({ target: { id: 'value_3', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_4', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_3', type: 'text' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('level_4').get('properties').get('value').get('cache'), '0');
+    chai.assert.equal(mainview.controls.get('key_4').get('properties').get('value').get('cache'), '');
+    chai.assert.equal(mainview.controls.get('value_4').get('properties').get('value').get('cache'), '');
+  });
   test('load file expand 2, down 2 times, up', async () => {
     await testUtilities.loadSampleJson();
     mainview.controlView.genericListener({ target: { id: 'value_1', type: 'text' }, type: 'click' });

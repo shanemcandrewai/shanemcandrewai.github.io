@@ -234,7 +234,7 @@ export default class ControlView {
     const value = this.controls.get(`value_${selectNumber}`).get('properties').get('value').get('cache');
     if (key !== '' || value !== '') {
       const level = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
-      const previousEntry = this.getAdjacent(selectNumber - 1, level);
+      const previousEntry = this.getNext(selectNumber - 1, level);
       this.setCacheSelect(
         selectNumber,
         previousEntry.level,
@@ -246,7 +246,7 @@ export default class ControlView {
 
   upClick = () => {
     const level = this.controls.get('level_0').get('properties').get('value').get('cache');
-    const previousEntry = this.getAdjacent(0, level, false);
+    const previousEntry = this.getPrevious(0, level);
     if (previousEntry !== undefined) {
       let selectNumber = ControlView.maxRows - 1;
       while (selectNumber + 1) {
@@ -262,19 +262,12 @@ export default class ControlView {
     }
   };
 
-  getAdjacent = (selectNumber, level, next = true) => {
+  getNext = (selectNumber, level) => {
     const selectKey = this.controls.get(`key_${selectNumber}`);
     const selectLevel = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
     let key = selectKey.get('properties').get('value').get('cache');
     if (!level && selectLevel && this.getAncestor(selectNumber, 1).has('key')) {
       key = this.getAncestor(selectNumber, 1).get('key');
-      if (!next) {
-        return {
-          key,
-          level,
-          value: this.getAncestorValue(selectNumber, level, key),
-        };
-      }
     }
     const parentEntries = this.getAncestor(selectNumber, level).get('container').entries();
     let parentEntry = parentEntries.next();
@@ -283,14 +276,40 @@ export default class ControlView {
       [adjacentEntry] = parentEntry.value;
       parentEntry = parentEntries.next();
     }
-    if (next) {
-      parentEntry = parentEntries.next();
-      if (parentEntry.done) {
-        return this.getAdjacent(selectNumber, level - 1);
-      }
+    parentEntry = parentEntries.next();
+    if (parentEntry.done) {
+      return this.getNext(selectNumber, level - 1);
+    }
+    [adjacentEntry] = parentEntry.value;
+
+    return {
+      key: adjacentEntry,
+      level,
+      value: this.getAncestorValue(selectNumber, level, adjacentEntry),
+    };
+  };
+
+  getPrevious = (selectNumber, level) => {
+    const selectKey = this.controls.get(`key_${selectNumber}`);
+    const selectLevel = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
+    let key = selectKey.get('properties').get('value').get('cache');
+    if (!level && selectLevel && this.getAncestor(selectNumber, 1).has('key')) {
+      key = this.getAncestor(selectNumber, 1).get('key');
+      return {
+        key,
+        level,
+        value: this.getAncestorValue(selectNumber, level, key),
+      };
+    }
+    const parentEntries = this.getAncestor(selectNumber, level).get('container').entries();
+    let parentEntry = parentEntries.next();
+    let adjacentEntry = key;
+    while (!parentEntry.done && parentEntry.value[0] !== key) {
       [adjacentEntry] = parentEntry.value;
-    } else if ((parentEntry.done || adjacentEntry === parentEntry.value[0])) {
-      if (level) return this.getAdjacent(selectNumber, level - 1, false);
+      parentEntry = parentEntries.next();
+    }
+    if ((parentEntry.done || adjacentEntry === parentEntry.value[0])) {
+      if (level) return this.getPrevious(selectNumber, level - 1);
       if (!selectLevel) return undefined;
     }
     return {
@@ -436,16 +455,27 @@ export default class ControlView {
     }
   };
 
+  getInnerSize = (selectNumber) => {
+    const selectLevel = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
+    let count = 0;
+    while (selectNumber <= ControlView.maxRows - count - 1) {
+      if (selectLevel >= this.controls.get(`level_${selectNumber + count + 1}`).get('properties').get('value').get('cache')) {
+        break;
+      }
+      count += 1;
+    }
+    return count;
+  };
+
   collapse = (event) => {
     const selectNumber = Number(event.target.id.slice(6));
-    const key = this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache');
-    const level = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
     if (selectNumber === ControlView.maxRows - 1) {
       this.fillGap(selectNumber);
       return;
     }
-    const innerContainer = this.getAncestorContainer(selectNumber, level).get(key);
-    const containerSize = ControlView.getContainerCount(innerContainer);
+    // const innerContainer = this.getAncestorContainer(selectNumber, level).get(key);
+    // const containerSize = ControlView.getContainerCount(innerContainer);
+    const containerSize = this.getInnerSize(selectNumber);
     const maxCopyFrom = selectNumber + 1 + containerSize;
     if (maxCopyFrom > ControlView.maxRows) {
       this.fillGap(selectNumber);
