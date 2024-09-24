@@ -160,7 +160,7 @@ export default class ControlView {
     else this.controls.get(`key_${selectTo}`).delete('ancestors');
   };
 
-  setCacheSelect = (selectNumber, level, key, value) => {
+  setCacheSelect = (selectNumber = 0, level = 0, key = '', value = '') => {
     this.setCache(`level_${selectNumber}`, 'value', level);
     this.setCache(`key_${selectNumber}`, 'value', key);
     if (this.getAncestor(selectNumber, level) instanceof Array) {
@@ -235,12 +235,16 @@ export default class ControlView {
     if (key !== '' || value !== '') {
       const level = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
       const previousEntry = this.getNext(selectNumber - 1, level);
-      this.setCacheSelect(
-        selectNumber,
-        previousEntry.level,
-        previousEntry.key,
-        previousEntry.value,
-      );
+      if (previousEntry) {
+        this.setCacheSelect(
+          selectNumber,
+          previousEntry.level,
+          previousEntry.key,
+          previousEntry.value,
+        );
+      } else {
+        this.setCacheSelect(selectNumber);
+      }
     }
   };
 
@@ -278,6 +282,7 @@ export default class ControlView {
     }
     parentEntry = parentEntries.next();
     if (parentEntry.done) {
+      if (!level) return undefined;
       return this.getNext(selectNumber, level - 1);
     }
     [adjacentEntry] = parentEntry.value;
