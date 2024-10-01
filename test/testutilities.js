@@ -3,6 +3,9 @@ import Json from '../js/json.js';
 export default class TestUtilities {
   setControlEvent = (id, propName, propValue, eventName) => {
     if (propName in this.mainview.controls.get(id).get('elemID')) {
+      if (this.mainview.controls.get(id).get('elemID').type === 'text') {
+        this.mainview.controlView.genericListener({ target: { id, type: 'text' }, type: 'click' });
+      }
       this.mainview.controls.get(id).get('elemID')[propName] = propValue;
       const event = { target: { id }, type: eventName };
       event.target[propName] = propValue;
