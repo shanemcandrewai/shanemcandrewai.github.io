@@ -65,13 +65,13 @@ export default class ControlView {
   getAncestorValue = (selectNumber, level, key) => {
     const container = this.getAncestor(selectNumber, level).get('container');
     if (container instanceof Map) return this.getAncestor(selectNumber, level).get('container').get(key);
-    if (container instanceof Array) return this.getAncestor(selectNumber, level).get('container')[key];
+    if (Array.isArray(container)) return this.getAncestor(selectNumber, level).get('container')[key];
     return undefined;
   };
 
   static getContainerCount = (container) => {
     if (container instanceof Map) return container.size;
-    if (container instanceof Array) return container.length;
+    if (Array.isArray(container)) return container.length;
     return undefined;
   };
 
@@ -101,7 +101,7 @@ export default class ControlView {
         this.controls.get(event.target.id).get('elemID').classList.add('text-bg-danger');
         return;
       }
-    } else if (parent instanceof Array) {
+    } else if (Array.isArray(parent)) {
       if (parent.includes(event.target.value)) {
         this.controls.get(event.target.id).get('elemID').classList.add('text-bg-danger');
         return;
@@ -165,7 +165,7 @@ export default class ControlView {
   setCacheSelect = (selectNumber = 0, level = 0, key = '', value = '') => {
     this.setCache(`level_${selectNumber}`, 'value', level);
     this.setCache(`key_${selectNumber}`, 'value', key);
-    if (this.getAncestor(selectNumber, level) instanceof Array) {
+    if (Array.isArray(this.getAncestor(selectNumber, level))) {
       this.setCache(`key_${selectNumber}`, 'readOnly', true);
     }
     if (typeof value === 'string' || typeof value === 'number') {
@@ -174,7 +174,7 @@ export default class ControlView {
     } else if (value instanceof Map) {
       this.setCache(`value_${selectNumber}`, 'value', '<>');
       this.setCache(`value_${selectNumber}`, 'readOnly', true);
-    } else if (value instanceof Array) {
+    } else if (Array.isArray(value)) {
       this.setCache(`value_${selectNumber}`, 'value', '[]');
       this.setCache(`value_${selectNumber}`, 'readOnly', true);
     } else if (value instanceof Object) {
@@ -337,6 +337,31 @@ export default class ControlView {
   };
 
   insertClick = () => {
+    let selectNumber = ControlView.lastKeyClick;
+    let copyFrom = ControlView.maxRows - 1;
+    // shift down rows leaving gap for expanded map
+    while (copyFrom >= selectNumber) {
+      this.copySelect(copyFrom, copyFrom + 1);
+      copyFrom -= 1;
+    }
+    const selectLevel = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
+    const ancestor = this.getAncestorContainer(selectNumber, selectLevel);
+    this.setCache(`value_${selectNumber}`, 'value', '');
+    if (ancestor instanceof Map) this.db.setRec('', '', ancestor);
+    else {
+      let key = Number(this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache'));
+      this.db.setRec(key, '', ancestor);
+      selectNumber += 1;
+      while (selectNumber < ControlView.maxRows) {
+        const level = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
+        if (level === selectLevel) {
+          this.setCache(`key_${selectNumber}`, 'value', key + 1);
+          selectNumber += 1;
+          key += 1;
+        } else break;
+      }
+    } this.setCache(`key_${selectNumber}`, 'value', '');
+    this.writeCache();
   };
 
   mapClick = () => {
@@ -358,10 +383,12 @@ export default class ControlView {
     ancestorCopy.get(nextLevel).set('key', key);
     if (ancestor instanceof Map) ancestorCopy.get(nextLevel).set('container', ancestor.get(key));
     else ancestorCopy.get(nextLevel).set('container', ancestor[key]);
-    this.controls.get(`key_${selectNumber + 1}`).set('ancestors', ancestorCopy);
-    this.setCache(`key_${selectNumber + 1}`, 'value', value);
-    this.setCache(`key_${selectNumber + 1}`, 'readOnly', false);
-    this.setCache(`level_${selectNumber + 1}`, 'value', nextLevel);
+    const nextSelect = selectNumber + 1;
+    this.controls.get(`key_${nextSelect}`).set('ancestors', ancestorCopy);
+    this.setCache(`key_${nextSelect}`, 'value', value);
+    this.setCache(`key_${nextSelect}`, 'readOnly', false);
+    this.setCache(`level_${nextSelect}`, 'value', nextLevel);
+    this.db.setRec(value, '', ancestorCopy.get(nextLevel).get('container'));
   };
 
   arrayClick = () => {
@@ -382,13 +409,14 @@ export default class ControlView {
       ancestorCopy = new Map(this.controls.get(`key_${selectNumber}`).get('ancestors'));
     } else ancestorCopy = new Map();
     ancestorCopy.set(nextLevel, new Map());
-    ancestorCopy.get(nextLevel).set('key', nextKey);
+    ancestorCopy.get(nextLevel).set('key', key);
     if (ancestor instanceof Map) ancestorCopy.get(nextLevel).set('container', ancestor.get(key));
     else ancestorCopy.get(nextLevel).set('container', ancestor[key]);
     this.controls.get(`key_${selectNumber + 1}`).set('ancestors', ancestorCopy);
     this.setCache(`value_${selectNumber + 1}`, 'value', value);
     this.setCache(`key_${selectNumber + 1}`, 'readOnly', true);
     this.setCache(`level_${selectNumber + 1}`, 'value', nextLevel);
+    this.db.setRec(nextKey, value, ancestorCopy.get(nextLevel).get('container'));
   };
 
   deleteClick = () => {
@@ -434,7 +462,7 @@ export default class ControlView {
     const value = this.getAncestorValue(selectNumber, level, key);
     let innerSize;
     if (value instanceof Map) innerSize = value.size;
-    else if (value instanceof Array) innerSize = value.length;
+    else if (Array.isArray(value)) innerSize = value.length;
     let maxCopyRow = ControlView.maxRows - innerSize;
     // shift down rows leaving gap for expanded map
     while (maxCopyRow) {
@@ -462,7 +490,7 @@ export default class ControlView {
     ancestorsInner.get(nextLevel).set('container', selectValue);
 
     let values = selectValue; // selectValue instanceof Map
-    if (selectValue instanceof Array) {
+    if (Array.isArray(selectValue)) {
       values = selectValue.entries();
     }
     for (const [key, val] of values) {
@@ -567,7 +595,7 @@ export default class ControlView {
   };
 
   postLoad = () => {
-    this.setCache('insert', 'disabled', true);
+    // this.setCache('insert', 'disabled', true);
     this.setCache('update', 'disabled', true);
     this.setCache('delete', 'disabled', false);
   };

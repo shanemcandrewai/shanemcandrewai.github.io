@@ -7,8 +7,11 @@ export default class Db {
   setRec(key, value, parentRec) {
     if (parentRec instanceof Map) {
       parentRec.set(key, value);
-    } else if (parentRec instanceof Array) {
-      parentRec.push(key);
+    } else if (Array.isArray(parentRec)) {
+      if (key === undefined) parentRec.push(value);
+      else {
+        parentRec.splice(key, 0, value);
+      }
     } else this.db.set(key, value);
   }
 
