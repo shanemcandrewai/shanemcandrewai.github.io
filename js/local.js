@@ -9,11 +9,7 @@ export default class Local {
   }
 
   async load(db) {
-    try {
-      return await db.readFile(this.file);
-    } catch (readFileError) {
-      return readFileError;
-    }
+    await db.readFile(this.file);
   }
 
   constructor(file) {

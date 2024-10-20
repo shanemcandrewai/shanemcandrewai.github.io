@@ -30,7 +30,7 @@ export default class Json {
   }
 
   async readFile(file) {
-    this.readText(await file.text());
+    return this.readText(await file.text());
   }
 
   readText(text) {

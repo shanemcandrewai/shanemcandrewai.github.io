@@ -2,13 +2,17 @@ import Json from './json.js';
 import Xlsx from './xlsx.js';
 import Local from './local.js';
 import Dropbox from './dropbox.js';
-import Messages from './messages.js';
 import Db from './db.js';
 
 export default class ControlView {
   static maxRows = 9;
 
-  static lastKeyClick = 0;
+  static lastLineClick = 0;
+
+  static range = (start, stop, step = 1) => Array.from(
+    { length: Math.ceil((stop - start) / step) },
+    (_, i) => start + i * step,
+  );
 
   uploadInputChange = (event) => {
     const file = event.target.files[0];
@@ -34,18 +38,16 @@ export default class ControlView {
   };
 
   loadClick = async () => {
-    // this.setLoad(true);
     this.writeCache();
-    const messages = new Map();
     try {
-      messages.set('load', await this.storage.load(
+      await this.storage.load(
         this.db,
         'db.json',
         this.controls.get('codeTokenInput').get('properties').get('value').get('cache'),
-      ));
+      );
       this.db2view();
     } catch (readFileError) {
-      messages.set('readFileError', readFileError);
+      this.setCache('messages', 'innerHTML', readFileError);
     }
     this.postLoad();
     this.writeCache();
@@ -337,7 +339,7 @@ export default class ControlView {
   };
 
   insertClick = () => {
-    let selectNumber = ControlView.lastKeyClick;
+    let selectNumber = ControlView.lastLineClick;
     let copyFrom = ControlView.maxRows - 1;
     // shift down rows leaving gap for expanded map
     while (copyFrom >= selectNumber) {
@@ -365,7 +367,7 @@ export default class ControlView {
   };
 
   mapClick = () => {
-    const selectNumber = ControlView.lastKeyClick;
+    const selectNumber = ControlView.lastLineClick;
     const level = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
     const nextLevel = level + 1;
     const key = this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache');
@@ -392,7 +394,7 @@ export default class ControlView {
   };
 
   arrayClick = () => {
-    const selectNumber = ControlView.lastKeyClick;
+    const selectNumber = ControlView.lastLineClick;
     const level = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
     const key = this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache');
     const nextLevel = level + 1;
@@ -420,27 +422,44 @@ export default class ControlView {
   };
 
   deleteClick = () => {
-    let selectNumber = 0;
-    while (this.controls.has(`select_${selectNumber}`)) {
-      if (this.controls.get(`select_${selectNumber}`).get('properties').get('checked').get('cache')) {
-        const key = this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache');
-        const level = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
-        const parent = this.getAncestorContainer(selectNumber, level);
-        this.db.deleteRec(key, parent);
-        this.setCache(`key_${selectNumber}`, 'value', '');
-        this.setCache(`value_${selectNumber}`, 'value', '');
-        this.setCache(`select_${selectNumber}`, 'checked', false);
+    const selectNumber = ControlView.lastLineClick;
+    const selectKey = this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache');
+    const selectLevel = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
+    const containerSize = this.getInnerSize(selectNumber);
+    const parent = this.getAncestorContainer(selectNumber, selectLevel);
+    this.db.deleteRec(selectKey, parent);
+    const maxCopyFrom = selectNumber + 1 + containerSize;
+    if (maxCopyFrom > ControlView.maxRows) {
+      this.fillGap(selectNumber);
+    } else {
+      let setRow;
+      for (const fromRow of ControlView.range(maxCopyFrom, ControlView.maxRows + 1)) {
+        setRow = fromRow - containerSize - 1;
+        this.copySelect(fromRow, setRow);
       }
-      selectNumber += 1;
+
+      if (Array.isArray(parent)) {
+        let key = selectKey;
+        let row = selectNumber;
+        while (selectNumber < ControlView.maxRows) {
+          const level = this.controls.get(`level_${row}`).get('properties').get('value').get('cache');
+          if (level === selectLevel) {
+            this.setCache(`key_${row}`, 'value', key);
+            row += 1;
+            key += 1;
+          } else break;
+        }
+      }
+      this.fillGap(setRow);
     }
-    this.db2view();
   };
 
   static keyClick = (event) => {
-    ControlView.lastKeyClick = Number(event.target.id.slice(4));
+    ControlView.lastLineClick = Number(event.target.id.slice(4));
   };
 
   valueClick = (event) => {
+    ControlView.lastLineClick = Number(event.target.id.slice(6));
     const selectNumber = Number(event.target.id.slice(6));
     const level = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
     const key = this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache');
@@ -520,18 +539,13 @@ export default class ControlView {
       this.fillGap(selectNumber);
       return;
     }
-    // const innerContainer = this.getAncestorContainer(selectNumber, level).get(key);
-    // const containerSize = ControlView.getContainerCount(innerContainer);
     const containerSize = this.getInnerSize(selectNumber);
     const maxCopyFrom = selectNumber + 1 + containerSize;
     if (maxCopyFrom > ControlView.maxRows) {
       this.fillGap(selectNumber);
     } else {
       let setRow;
-      for (const fromRow of Array.from(
-        { length: (ControlView.maxRows - maxCopyFrom + 1) },
-        (_, i) => maxCopyFrom + i,
-      )) {
+      for (const fromRow of ControlView.range(maxCopyFrom, ControlView.maxRows + 1)) {
         setRow = fromRow - containerSize;
         this.copySelect(fromRow, setRow);
       }
@@ -644,6 +658,13 @@ export default class ControlView {
     }
   };
 
+  messages = (element, properties) => {
+    if (!properties.has('innerHTML')) properties.set('innerHTML', new Map());
+    if (this[`${element.id}InnerHTML`] && !properties.get('innerHTML').has('calculator')) {
+      properties.get('innerHTML').set('calculator', `${element.id}InnerHTML`);
+    }
+  };
+
   filePassText = (element, properties, events) => {
     if (!properties.has('value')) properties.set('value', new Map());
     if (this[`${element.id}Value`] && !properties.get('value').has('calculator')) {
@@ -743,23 +764,26 @@ export default class ControlView {
       this.butRadCheck(element, properties, events);
     } else if ((element.type === 'file' || element.type === 'password' || element.type === 'text')) {
       this.filePassText(element, properties, events);
+    } else if (element.id === 'messages') {
+      this.messages(element, properties);
     }
     this.calcListAddEvent(element);
   };
 
   static multiplySelectRows = (max) => {
-    for (const selectNumber of Array.from({ length: max }, (_, i) => 1 + i)) {
-      const prevRowElem = document.getElementById(`row_${selectNumber - 1}`);
-      const rowElem = document.getElementById(`row_${selectNumber}`);
+    for (const selectNumber of ControlView.range(0, max)) {
+      const prevRowElem = document.getElementById(`row_${selectNumber}`);
+      const nextRow = selectNumber + 1;
+      const rowElem = document.getElementById(`row_${nextRow}`);
       if (!rowElem) {
         const newRow = prevRowElem.cloneNode(true);
-        newRow.id = `row_${selectNumber}`;
-        newRow.children[0].children[0].id = `select_${selectNumber}`;
-        newRow.children[1].children[0].id = `level_${selectNumber}`;
-        newRow.children[2].children[0].id = `key_${selectNumber}`;
-        newRow.children[2].children[0].placeholder = `key_${selectNumber}`;
-        newRow.children[3].children[0].id = `value_${selectNumber}`;
-        newRow.children[3].children[0].placeholder = `value_${selectNumber}`;
+        newRow.id = `row_${nextRow}`;
+        newRow.children[0].children[0].id = `select_${nextRow}`;
+        newRow.children[1].children[0].id = `level_${nextRow}`;
+        newRow.children[2].children[0].id = `key_${nextRow}`;
+        newRow.children[2].children[0].placeholder = `key_${nextRow}`;
+        newRow.children[3].children[0].id = `value_${nextRow}`;
+        newRow.children[3].children[0].placeholder = `value_${nextRow}`;
         prevRowElem.insertAdjacentElement('afterend', newRow);
       }
     }
@@ -769,14 +793,13 @@ export default class ControlView {
     this.writeCacheImmediately = writeCacheImmediately || false;
     this.controls = controls;
     this.db = new Db();
-    this.messages = new Messages();
     ControlView.multiplySelectRows(ControlView.maxRows);
 
     this.controls.set('messages', new Map());
     this.controls.get('messages').set('properties', new Map());
     this.controls.get('messages').set('events', new Map());
 
-    for (const element of document.querySelectorAll('button, input')) this.initElem(element);
+    for (const element of document.querySelectorAll('button, input, div#messages')) this.initElem(element);
     const sorted = [...this.controls.entries()].sort();
     this.controls.clear();
     sorted.map((entry) => this.controls.set(entry[0], entry[1]));

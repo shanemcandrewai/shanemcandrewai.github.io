@@ -10,13 +10,51 @@ let testUtilities;
 
 suite('MainView', () => {
   setup('setup', () => {
-    for (const selectNumber of Array.from({ length: ControlView.maxRows }, (_, i) => i)) {
+    // for (const selectNumber of Array.from({ length: ControlView.maxRows }, (_, i) => i)) {
+
+    for (const selectNumber of ControlView.range(0, ControlView.maxRows)) {
       document.getElementById(`key_${selectNumber}`).removeAttribute('readOnly');
       document.getElementById(`key_${selectNumber}`).classList.remove('text-bg-danger');
       document.getElementById(`value_${selectNumber}`).removeAttribute('readOnly');
     }
     mainview = new MainView(true);
     testUtilities = new TestUtilities(mainview);
+  });
+  test('load small file click value 0, delete', async () => {
+    await testUtilities.loadSampleJson('small.js');
+    mainview.controlView.genericListener({ target: { id: 'value_0', type: 'text' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('level_1').get('properties').get('value').get('cache'), '1');
+    chai.assert.equal(mainview.controls.get('key_1').get('properties').get('value').get('cache'), '0');
+    chai.assert.equal(mainview.controls.get('value_1').get('properties').get('value').get('cache'), 'bread');
+    chai.assert.equal(mainview.controls.get('key_1').has('ancestors'), true);
+    mainview.controlView.genericListener({ target: { id: 'delete', type: 'button' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('level_1').get('properties').get('value').get('cache'), '0');
+    chai.assert.equal(mainview.controls.get('key_1').get('properties').get('value').get('cache'), 'amap');
+    chai.assert.equal(mainview.controls.get('value_1').get('properties').get('value').get('cache'), '<>');
+    chai.assert.equal(mainview.controls.get('key_1').has('ancestors'), false);
+    chai.assert.equal(mainview.controlView.db.getRec('shopping'), undefined);
+    chai.assert.equal(mainview.controlView.db.db.db.get('shopping'), undefined);
+    chai.assert.equal(mainview.controlView.db.db.db.size, 3);
+  });
+  test('load small file click key 1, delete', async () => {
+    await testUtilities.loadSampleJson('small.js');
+    mainview.controlView.genericListener({ target: { id: 'key_1', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'delete', type: 'button' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('level_1').get('properties').get('value').get('cache'), '0');
+    chai.assert.equal(mainview.controls.get('key_1').get('properties').get('value').get('cache'), 'amap');
+    chai.assert.equal(mainview.controls.get('value_1').get('properties').get('value').get('cache'), '<>');
+    chai.assert.equal(mainview.controls.get('key_1').has('ancestors'), false);
+    chai.assert.equal(mainview.controlView.db.getRec('mk-sim'), undefined);
+    chai.assert.equal(mainview.controlView.db.db.db.get('mk-sim'), undefined);
+    chai.assert.equal(mainview.controlView.db.db.db.size, 3);
+    mainview.controlView.genericListener({ target: { id: 'value_0', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'key_1', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'delete', type: 'button' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('level_1').get('properties').get('value').get('cache'), '1');
+    chai.assert.equal(mainview.controls.get('key_1').get('properties').get('value').get('cache'), '0');
+    chai.assert.equal(mainview.controls.get('value_1').get('properties').get('value').get('cache'), 'cheese');
+    chai.assert.equal(mainview.controlView.db.db.db.get('shopping').length, 1);
+    chai.assert.equal(mainview.controlView.db.db.db.get('shopping')[0], 'cheese');
   });
   test('load small file click key 1, insert', async () => {
     await testUtilities.loadSampleJson('small.js');
@@ -401,7 +439,7 @@ suite('MainView', () => {
   test('compare wlorig.json and stringified DB with record3 deleted', async () => {
     const strObj = await testUtilities.loadSampleJson();
     const strWithoutRecord3 = strObj.slice(0, 234) + strObj.slice(338);
-    testUtilities.setControlEvent('select_2', 'checked', true, 'click');
+    mainview.controlView.genericListener({ target: { id: 'key_2', type: 'text' }, type: 'click' });
     mainview.controlView.genericListener({ target: { id: 'delete', type: 'button' }, type: 'click' });
     const stringifiedDb = mainview.controlView.db.getString(null);
     chai.assert.equal(strWithoutRecord3, stringifiedDb);

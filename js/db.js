@@ -17,7 +17,7 @@ export default class Db {
 
   deleteRec(key, parentRec) {
     if (parentRec instanceof Map) parentRec.delete(key);
-    else if (parentRec instanceof Array) parentRec.pop();
+    else if (Array.isArray(parentRec)) parentRec.splice(key, 1);
     else this.db.delete(key);
   }
 
