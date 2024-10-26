@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>wl</title>
+    <link href="css/main.css" rel="stylesheet">
+    <script type="module" src="js/initmainview.js"></script>
+  </head>
+
+  <body>
+    <div id="mocha"></div>
+    <div class="container row-gap-1">
+      <div class="container row-gap-2">
+        <div class="row">
+          <div class="col">
+            <input
+              type="file"
+              id="uploadInput"
+              class="form-control form-control-sm">
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-3">
+            <label class="col-form-label form-control-sm" for="codeTokenInput"
+              >Authorization</label
+            >
+          </div>
+          <div class="col">
+            <input
+              type="password"
+              id="codeTokenInput"
+              class="form-control form-control-sm">
+          </div>
+          <div class="col">
+            <button
+              type="button"
+              id="load"
+              class="btn btn-outline-primary btn-sm"
+            >
+              load
+            </button>
+          </div>
+          <div class="col">
+            <button
+              type="button"
+              id="save"
+              class="btn btn-outline-primary btn-sm"
+            >
+              save
+            </button>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <button
+              type="button"
+              id="map"
+              class="btn btn-outline-primary btn-sm"
+            >
+              map
+            </button>
+          </div>
+          <div class="col">
+            <button
+              type="button"
+              id="array"
+              class="btn btn-outline-primary btn-sm"
+            >
+              array
+            </button>
+          </div>
+          <div class="col">
+            <button
+              type="button"
+              id="update"
+              class="btn btn-outline-primary btn-sm"
+              disabled
+            >
+              update
+            </button>
+          </div>
+          <div class="col">
+            <button
+              type="button"
+              id="delete"
+              class="btn btn-outline-primary btn-sm"
+            >
+              delete
+            </button>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <button
+              type="button"
+              id="next"
+              class="btn btn-outline-primary btn-sm"
+              disabled
+            >
+              next
+            </button>
+          </div>
+          <div class="col">
+            <button
+              type="button"
+              id="previous"
+              class="btn btn-outline-primary btn-sm"
+              disabled
+            >
+              previous
+            </button>
+          </div>
+          <div class="col">
+            <button
+              type="button"
+              id="up"
+              class="btn btn-outline-primary btn-sm"
+            >
+              up
+            </button>
+          </div>
+          <div class="col">
+            <button
+              type="button"
+              id="down"
+              class="btn btn-outline-primary btn-sm"
+            >
+              down
+            </button>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <button
+              type="button"
+              id="timestamp"
+              class="btn btn-outline-primary btn-sm"
+            >
+              tstamp
+            </button>
+          </div>
+          <div class="col">
+            <button
+              type="button"
+              id="insert"
+              class="btn btn-outline-primary btn-sm"
+            >
+              insert
+            </button>
+          </div>
+          <div class="col">
+            <button
+              type="button"
+              id="child"
+              class="btn btn-outline-primary btn-sm"
+              disabled
+            >
+              child
+            </button>
+          </div>
+          <div class="col">
+            <button
+              type="button"
+              id="swap"
+              class="btn btn-outline-primary btn-sm"
+              disabled
+            >
+              swap
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="row" id="row_0">
+        <div class="col-1">
+          <input type="checkbox" id="select_0" class="form-check-input">
+        </div>
+        <div class="col-1">
+          <input
+            type="text"
+            id="level_0"
+            size="3"
+            value="0"
+            class="form-control form-control-sm"
+            disabled
+          >
+        </div>
+        <div class="col">
+          <input
+            type="text"
+            id="key_0"
+            class="form-control form-control-sm"
+            placeholder="key_0"
+            maxlength="200">
+        </div>
+        <div class="col">
+          <input
+            type="text"
+            id="value_0"
+            class="form-control form-control-sm"
+            placeholder="value_0"
+            maxlength="200">
+        </div>
+      </div>
+      <div id="messages"></div>
+    </div>
+  </body>
+</html>

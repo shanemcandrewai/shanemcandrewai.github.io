@@ -1,0 +1,25 @@
+@import url("bootstrap-reboot.css");
+@import url("bootstrap.css");
+
+.btn-sm {
+  border-color: blue;
+  color: blue;
+  width: 4rem;
+}
+
+.btn:disabled {
+  border-color: blue;
+  color: blue;
+  opacity: 0.35;
+}
+
+.container {
+  background-color: lavender;
+  display: flex;
+  flex-direction: column;
+  font:
+    0.875rem Helvetica,
+    Arial,
+    sans-serif;
+  padding-top: 0.25rem;
+}
