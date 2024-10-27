@@ -26,6 +26,22 @@ export default class ControlView {
     return `${d.toISOString().split('T')[0]} ${d.toLocaleTimeString('NL')}`;
   };
 
+  static localToISO = (input) => {
+    const newDate = new Date(input);
+    let ret;
+    try { ret = newDate.toISOString(); } catch (error) { return input; }
+    return ret;
+  };
+
+  static isLocal = (input) => {
+    const newDate = new Date(input);
+    let iso;
+    try { iso = newDate.toISOString(); } catch (error) { return false; }
+    const local = ControlView.isoToLocal(iso);
+    if (input === local) return true;
+    return false;
+  };
+
   static range = (start, stop, step = 1) => Array.from(
     { length: Math.ceil((stop - start) / step) },
     (_, i) => start + i * step,
@@ -154,24 +170,28 @@ export default class ControlView {
   keyInput = (event) => {
     const selectNumber = event.target.id.slice(4);
     const level = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
+    const inputKey = event.target.value;
+    const cacheKey = this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache');
     const value = this.controls.get(`value_${selectNumber}`).get('properties').get('value').get('cache');
-    const parent = this.getAncestorContainer(selectNumber, level);
+    let calcKey = inputKey;
+    if (ControlView.isISO(cacheKey)) calcKey = ControlView.localToISO(inputKey);
     const oldKey = ControlView.lastKeyClick;
+    const parent = this.getAncestorContainer(selectNumber, level);
     if (parent instanceof Map) {
-      if (parent.has(event.target.value)) {
+      if (parent.has(calcKey)) {
         this.controls.get(event.target.id).get('elemID').classList.add('text-bg-danger');
         return;
       }
     } else if (Array.isArray(parent)) {
-      if (parent.includes(event.target.value)) {
+      if (parent.includes(calcKey)) {
         this.controls.get(event.target.id).get('elemID').classList.add('text-bg-danger');
         return;
       }
     }
 
-    this.controls.get(event.target.id).get('properties').get('value').set('cache', event.target.value);
     this.db.deleteRec(oldKey, parent);
-    this.db.setRec(event.target.value, value, parent);
+    this.db.setRec(calcKey, value, parent);
+    this.controls.get(event.target.id).get('properties').get('value').set('cache', calcKey);
     this.controls.get(event.target.id).get('elemID').classList.remove('text-bg-danger');
     if (!this.controls.get(`key_${Number(selectNumber) + 1}`).get('properties').get('value').get('cache')) {
       this.setCache(`level_${Number(selectNumber) + 1}`, 'value', level);
@@ -182,25 +202,28 @@ export default class ControlView {
         );
       }
     }
-    ControlView.lastKeyClick = event.target.value;
+    ControlView.lastKeyClick = calcKey;
+    if (ControlView.isISO(cacheKey)) {
+      this.controls.get(`value_${selectNumber}`).get('properties').get('value').set('iso', calcKey);
+    }
   };
 
   valueInput = (event) => {
     const selectNumber = event.target.id.slice(6);
     const level = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
-    let selectValue = event.target.value;
-    this.controls.get(event.target.id).get('properties').get('value').set('cache', selectValue);
     const key = this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache');
+    const inputValue = event.target.value;
+    const cacheValue = this.controls.get(`value_${selectNumber}`).get('properties').get('value').get('cache');
+    this.controls.get(event.target.id).get('properties').get('value').set('cache', inputValue);
+    let calcValue = inputValue;
+    if (ControlView.isISO(cacheValue)) {
+      calcValue = ControlView.localToISO(inputValue);
+    }
     const ancestors = this.controls.get(`key_${selectNumber}`).get('ancestors');
     const parent = this.getAncestorContainer(selectNumber, level);
-    const ancValue = this.getAncestorValue(selectNumber, level, key);
-    if (ControlView.isISO(ancValue)) {
-      const newDate = new Date(selectValue);
-      selectValue = newDate.toISOString();
-    }
-    if (parent instanceof Map) this.db.setRec(key, selectValue, parent);
+    if (parent instanceof Map) this.db.setRec(key, calcValue, parent);
     else if (Array.isArray(parent)) {
-      parent[Number(key)] = selectValue;
+      parent[Number(key)] = calcValue;
       if (!this.controls.get(`key_${Number(selectNumber) + 1}`).get('properties').get('value').get('cache')) {
         this.setCache(`level_${Number(selectNumber) + 1}`, 'value', level);
         this.setCache(`key_${Number(selectNumber) + 1}`, 'value', Number(key) + 1);
@@ -414,12 +437,12 @@ export default class ControlView {
       copyFrom -= 1;
     }
     const selectLevel = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
-    const ancestor = this.getAncestorContainer(selectNumber, selectLevel);
+    const ancestors = this.getAncestorContainer(selectNumber, selectLevel);
     this.setCache(`value_${selectNumber}`, 'value', '');
-    if (ancestor instanceof Map) this.db.setRec('', '', ancestor);
-    else {
+    if (ancestors instanceof Map) this.db.setRec('', '', ancestors);
+    else if (Array.isArray(ancestors)) {
       let key = Number(this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache'));
-      ancestor.splice(key, 0, '');
+      ancestors.splice(key, 0, '');
       selectNumber += 1;
       while (selectNumber < ControlView.maxRows) {
         const level = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
@@ -429,7 +452,32 @@ export default class ControlView {
           key += 1;
         } else break;
       }
-    } this.setCache(`key_${selectNumber}`, 'value', '');
+    }
+    this.setCache(`key_${selectNumber}`, 'value', '');
+    this.writeCache();
+  };
+
+  appendClick = () => {
+    const selectNumber = ControlView.lastLineClick + 1;
+    let copyFrom = ControlView.maxRows - 1;
+    // shift down rows leaving gap for expanded map
+    while (copyFrom >= selectNumber) {
+      this.copySelect(copyFrom, copyFrom + 1);
+      copyFrom -= 1;
+    }
+    const selectLevel = this.controls.get(`level_${selectNumber - 1}`).get('properties').get('value').get('cache');
+    const ancestors = this.getAncestorContainer(selectNumber - 1, selectLevel);
+    this.setCache(`level_${selectNumber}`, 'value', selectLevel);
+    this.setCache(`value_${selectNumber}`, 'value', '');
+    this.controls.get(`key_${Number(selectNumber)}`).set(
+      'ancestors',
+      this.controls.get(`key_${selectNumber - 1}`).get('ancestors'),
+    );
+    if (ancestors instanceof Map) this.db.setRec('', '', ancestors);
+    else if (Array.isArray(ancestors)) {
+      ancestors.push('');
+      this.setCache(`key_${selectNumber}`, 'value', ancestors.length - 1);
+    }
     this.writeCache();
   };
 
@@ -442,16 +490,16 @@ export default class ControlView {
     this.setCache(`value_${selectNumber}`, 'value', '<>');
     this.setCache(`value_${selectNumber}`, 'readOnly', true);
     this.setCache(`level_${selectNumber + 1}`, 'value', nextLevel);
-    const ancestor = this.getAncestorContainer(selectNumber, level);
-    this.db.setRec(key, new Map(), ancestor);
+    const ancestors = this.getAncestorContainer(selectNumber, level);
+    this.db.setRec(key, new Map(), ancestors);
     let ancestorCopy;
     if (this.controls.get(`key_${selectNumber}`).has('ancestors')) {
       ancestorCopy = this.controls.get(`key_${selectNumber}`).get('ancestors');
     } else ancestorCopy = new Map();
     ancestorCopy.set(nextLevel, new Map());
     ancestorCopy.get(nextLevel).set('key', key);
-    if (ancestor instanceof Map) ancestorCopy.get(nextLevel).set('container', ancestor.get(key));
-    else ancestorCopy.get(nextLevel).set('container', ancestor[key]);
+    if (ancestors instanceof Map) ancestorCopy.get(nextLevel).set('container', ancestors.get(key));
+    else ancestorCopy.get(nextLevel).set('container', ancestors[key]);
     const nextSelect = selectNumber + 1;
     this.controls.get(`key_${nextSelect}`).set('ancestors', ancestorCopy);
     this.setCache(`key_${nextSelect}`, 'value', value);
@@ -471,16 +519,16 @@ export default class ControlView {
     this.setCache(`value_${selectNumber}`, 'readOnly', true);
     this.setCache(`level_${selectNumber + 1}`, 'value', nextLevel);
     this.setCache(`key_${selectNumber + 1}`, 'value', nextKey);
-    const ancestor = this.getAncestorContainer(selectNumber, level);
-    this.db.setRec(key, [], ancestor);
+    const ancestors = this.getAncestorContainer(selectNumber, level);
+    this.db.setRec(key, [], ancestors);
     let ancestorCopy;
     if (this.controls.get(`key_${selectNumber}`).get('properties').has('ancestors')) {
       ancestorCopy = new Map(this.controls.get(`key_${selectNumber}`).get('ancestors'));
     } else ancestorCopy = new Map();
     ancestorCopy.set(nextLevel, new Map());
     ancestorCopy.get(nextLevel).set('key', key);
-    if (ancestor instanceof Map) ancestorCopy.get(nextLevel).set('container', ancestor.get(key));
-    else ancestorCopy.get(nextLevel).set('container', ancestor[key]);
+    if (ancestors instanceof Map) ancestorCopy.get(nextLevel).set('container', ancestors.get(key));
+    else ancestorCopy.get(nextLevel).set('container', ancestors[key]);
     this.controls.get(`key_${selectNumber + 1}`).set('ancestors', ancestorCopy);
     this.setCache(`value_${selectNumber + 1}`, 'value', value);
     this.setCache(`key_${selectNumber + 1}`, 'readOnly', true);
@@ -492,13 +540,16 @@ export default class ControlView {
     const now = new Date();
     const selectNumber = ControlView.lastLineClick;
     const level = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
-    this.setCache(ControlView.activeElementID, 'value', `${now.toISOString().split('T')[0]} ${now.toLocaleTimeString('NL')}`);
     let key = this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache');
     let value = this.controls.get(`value_${selectNumber}`).get('properties').get('value').get('cache');
-    if (ControlView.activeElementID.slice(0, 3) === 'key') key = now.toISOString();
-    else value = now.toISOString();
-    const ancestor = this.getAncestorContainer(selectNumber, level);
-    this.db.setRec(key, value, ancestor);
+    this.setCache(ControlView.activeElementID, 'value', `${now.toISOString().split('T')[0]} ${now.toLocaleTimeString('NL')}`);
+    this.controls.get(ControlView.activeElementID).get('properties').get('value').set('cache', now.toISOString());
+    const ancestors = this.getAncestorContainer(selectNumber, level);
+    if (ControlView.activeElementID.slice(0, 3) === 'key') {
+      this.db.deleteRec(key, ancestors);
+      key = now.toISOString();
+    } else value = now.toISOString();
+    this.db.setRec(key, value, ancestors);
   };
 
   deleteClick = () => {
@@ -537,7 +588,9 @@ export default class ControlView {
   keyClick = (event) => {
     ControlView.lastLineClick = Number(event.target.id.slice(4));
     ControlView.activeElementID = event.target.id;
-    ControlView.lastKeyClick = this.controls.get(event.target.id).get('properties').get('value').get('cache');
+    const iso = this.controls.get(event.target.id).get('properties').get('value').get('iso');
+    if (iso) ControlView.lastKeyClick = iso;
+    else ControlView.lastKeyClick = this.controls.get(event.target.id).get('properties').get('value').get('cache');
   };
 
   valueClick = (event) => {

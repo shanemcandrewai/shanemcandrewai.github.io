@@ -20,6 +20,19 @@ suite('MainView', () => {
     mainview = new MainView(true);
     testUtilities = new TestUtilities(mainview);
   });
+  test('load small file click value_0, click click value_2, append', async () => {
+    await testUtilities.loadSampleJson('small.js');
+    mainview.controlView.genericListener({ target: { id: 'value_0', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_2', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'append', type: 'button' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('level_3').get('properties').get('value').get('cache'), '1');
+    chai.assert.equal(mainview.controls.get('key_3').get('properties').get('value').get('cache'), '2');
+    chai.assert.equal(mainview.controls.get('value_3').get('properties').get('value').get('cache'), '');
+    chai.assert.equal(mainview.controls.get('key_3').has('ancestors'), true);
+    chai.assert.equal(mainview.controlView.db.getRec('shopping')[2], '');
+    chai.assert.equal(mainview.controlView.db.db.db.get('shopping')[2], '');
+    chai.assert.equal(mainview.controlView.db.db.db.size, 4);
+  });
   test('insert timestamp, edit time, check ISO', async () => {
     testUtilities.setControlEvent('key_0', 'value', 'time', 'input');
     mainview.controlView.genericListener({ target: { id: 'array', type: 'button' }, type: 'click' });
@@ -29,6 +42,16 @@ suite('MainView', () => {
     testUtilities.setControlEvent('value_1', 'value', '2024-10-26 16:00', 'input');
     chai.assert.equal(mainview.controls.get('level_0').get('properties').get('value').get('cache'), '0');
     chai.assert.equal(mainview.controlView.db.getRec('time')[0], '2024-10-26T14:00:00.000Z');
+  });
+  test('insert timestamp in map key, edit time, check ISO', async () => {
+    testUtilities.setControlEvent('key_0', 'value', 'time', 'input');
+    mainview.controlView.genericListener({ target: { id: 'map', type: 'button' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'key_1', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'timestamp', type: 'button' }, type: 'click' });
+    chai.assert.equal(ControlView.isISO(mainview.controlView.db.getRec('time').keys().toArray()[0]), true);
+    testUtilities.setControlEvent('key_1', 'value', '2024-10-26 16:00', 'input');
+    chai.assert.equal(mainview.controls.get('level_0').get('properties').get('value').get('cache'), '0');
+    chai.assert.equal(mainview.controlView.db.getRec('time').keys().toArray()[0], '2024-10-26T14:00:00.000Z');
   });
   test('load small update key_1', async () => {
     await testUtilities.loadSampleJson('small.js');
