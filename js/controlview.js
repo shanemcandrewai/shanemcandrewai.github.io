@@ -175,7 +175,7 @@ export default class ControlView {
     const value = this.controls.get(`value_${selectNumber}`).get('properties').get('value').get('cache');
     let calcKey = inputKey;
     if (ControlView.isISO(cacheKey)) calcKey = ControlView.localToISO(inputKey);
-    const oldKey = ControlView.lastKeyClick;
+    // const oldKey = ControlView.lastKeyClick;
     const parent = this.getAncestorContainer(selectNumber, level);
     if (parent instanceof Map) {
       if (parent.has(calcKey)) {
@@ -189,7 +189,7 @@ export default class ControlView {
       }
     }
 
-    this.db.deleteRec(oldKey, parent);
+    this.db.deleteRec(cacheKey, parent);
     this.db.setRec(calcKey, value, parent);
     this.controls.get(event.target.id).get('properties').get('value').set('cache', calcKey);
     this.controls.get(event.target.id).get('elemID').classList.remove('text-bg-danger');
@@ -214,16 +214,13 @@ export default class ControlView {
     const key = this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache');
     const inputValue = event.target.value;
     const cacheValue = this.controls.get(`value_${selectNumber}`).get('properties').get('value').get('cache');
-    this.controls.get(event.target.id).get('properties').get('value').set('cache', inputValue);
     let calcValue = inputValue;
-    if (ControlView.isISO(cacheValue)) {
-      calcValue = ControlView.localToISO(inputValue);
-    }
+    if (ControlView.isISO(cacheValue)) calcValue = ControlView.localToISO(inputValue);
     const ancestors = this.controls.get(`key_${selectNumber}`).get('ancestors');
     const parent = this.getAncestorContainer(selectNumber, level);
-    if (parent instanceof Map) this.db.setRec(key, calcValue, parent);
-    else if (Array.isArray(parent)) {
-      parent[Number(key)] = calcValue;
+    this.db.setRec(key, calcValue, parent);
+    this.controls.get(event.target.id).get('properties').get('value').set('cache', calcValue);
+    if (Array.isArray(parent)) {
       if (!this.controls.get(`key_${Number(selectNumber) + 1}`).get('properties').get('value').get('cache')) {
         this.setCache(`level_${Number(selectNumber) + 1}`, 'value', level);
         this.setCache(`key_${Number(selectNumber) + 1}`, 'value', Number(key) + 1);
@@ -292,7 +289,7 @@ export default class ControlView {
     for (const elemRec of this.controls.values()) {
       for (const [propName, propRec] of elemRec.get('properties')) {
         if (propRec.get('write')) {
-          elemRec.get('elemID')[propName] = propRec.get('cache');
+          elemRec.get('elemID')[propName] = ControlView.isoToLocal(propRec.get('cache'));
           propRec.set('write', false);
         }
       }
@@ -469,12 +466,16 @@ export default class ControlView {
     const ancestors = this.getAncestorContainer(selectNumber - 1, selectLevel);
     this.setCache(`level_${selectNumber}`, 'value', selectLevel);
     this.setCache(`value_${selectNumber}`, 'value', '');
-    this.controls.get(`key_${Number(selectNumber)}`).set(
-      'ancestors',
-      this.controls.get(`key_${selectNumber - 1}`).get('ancestors'),
-    );
-    if (ancestors instanceof Map) this.db.setRec('', '', ancestors);
-    else if (Array.isArray(ancestors)) {
+    if (this.controls.get(`key_${selectNumber - 1}`).has('ancestors')) {
+      this.controls.get(`key_${selectNumber}`).set(
+        'ancestors',
+        this.controls.get(`key_${selectNumber - 1}`).get('ancestors'),
+      );
+    }
+    if (ancestors instanceof Map) {
+      this.db.setRec('', '', ancestors);
+      this.setCache(`key_${selectNumber}`, 'value', '');
+    } else if (Array.isArray(ancestors)) {
       ancestors.push('');
       this.setCache(`key_${selectNumber}`, 'value', ancestors.length - 1);
     }
@@ -538,17 +539,19 @@ export default class ControlView {
 
   timestampClick = () => {
     const now = new Date();
+    const nowISO = now.toISOString();
     const selectNumber = ControlView.lastLineClick;
     const level = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
     let key = this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache');
     let value = this.controls.get(`value_${selectNumber}`).get('properties').get('value').get('cache');
-    this.setCache(ControlView.activeElementID, 'value', `${now.toISOString().split('T')[0]} ${now.toLocaleTimeString('NL')}`);
-    this.controls.get(ControlView.activeElementID).get('properties').get('value').set('cache', now.toISOString());
+    this.setCache(ControlView.activeElementID, 'value', `${nowISO}`);
+    // this.setCache(ControlView.activeElementID, 'value',
+    //    `${now.toISOString().split('T')[0]} ${now.toLocaleTimeString('NL')}`);
     const ancestors = this.getAncestorContainer(selectNumber, level);
     if (ControlView.activeElementID.slice(0, 3) === 'key') {
       this.db.deleteRec(key, ancestors);
-      key = now.toISOString();
-    } else value = now.toISOString();
+      key = nowISO;
+    } else value = nowISO;
     this.db.setRec(key, value, ancestors);
   };
 

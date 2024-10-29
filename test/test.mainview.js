@@ -42,6 +42,8 @@ suite('MainView', () => {
     testUtilities.setControlEvent('value_1', 'value', '2024-10-26 16:00', 'input');
     chai.assert.equal(mainview.controls.get('level_0').get('properties').get('value').get('cache'), '0');
     chai.assert.equal(mainview.controlView.db.getRec('time')[0], '2024-10-26T14:00:00.000Z');
+    chai.assert.equal(ControlView.isISO(mainview.controls.get('value_1').get('properties').get('value').get('cache')), true);
+    chai.assert.equal(mainview.controls.get('value_1').get('properties').get('value').get('cache'), '2024-10-26T14:00:00.000Z');
   });
   test('insert timestamp in map key, edit time, check ISO', async () => {
     testUtilities.setControlEvent('key_0', 'value', 'time', 'input');
@@ -49,9 +51,12 @@ suite('MainView', () => {
     mainview.controlView.genericListener({ target: { id: 'key_1', type: 'text' }, type: 'click' });
     mainview.controlView.genericListener({ target: { id: 'timestamp', type: 'button' }, type: 'click' });
     chai.assert.equal(ControlView.isISO(mainview.controlView.db.getRec('time').keys().toArray()[0]), true);
+    chai.assert.equal(ControlView.isISO(mainview.controls.get('key_1').get('properties').get('value').get('cache')), true);
     testUtilities.setControlEvent('key_1', 'value', '2024-10-26 16:00', 'input');
     chai.assert.equal(mainview.controls.get('level_0').get('properties').get('value').get('cache'), '0');
     chai.assert.equal(mainview.controlView.db.getRec('time').keys().toArray()[0], '2024-10-26T14:00:00.000Z');
+    chai.assert.equal(ControlView.isISO(mainview.controls.get('key_1').get('properties').get('value').get('cache')), true);
+    chai.assert.equal(mainview.controls.get('key_1').get('properties').get('value').get('cache'), '2024-10-26T14:00:00.000Z');
   });
   test('load small update key_1', async () => {
     await testUtilities.loadSampleJson('small.js');
