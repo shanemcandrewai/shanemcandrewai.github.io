@@ -38,39 +38,35 @@ export default class Json {
     return obj;
   };
 
-  static mapEncoder(key, value) {
+  static mapEncoder = (key, value) => {
     if (value instanceof Map) {
       return { dataType: 'Map', value: Array.from(value.entries()) };
     }
     return value;
-  }
+  };
 
-  static mapDecoder(key, value) {
+  static mapDecoder = (key, value) => {
     if (typeof value === 'object' && value !== null) {
       if (value.dataType === 'Map') {
         return new Map(value.value);
       }
     }
     return value;
-  }
+  };
 
-  getBlob() {
+  getBlob = () => {
     const strObj = this.getString();
     return new Blob(
       [strObj],
       { type: 'application/json' },
     );
-  }
+  };
 
-  getString(spacer = 2) {
-    return JSON.stringify(Json.map2Obj(this.db.db), null, spacer);
-  }
+  getString = (spacer = 2) => JSON.stringify(Json.map2Obj(this.db.db), null, spacer);
 
-  async readFile(file) {
-    return this.readText(await file.text());
-  }
+  readFile = async (file) => this.readText(await file.text());
 
-  readText(text) {
+  readText = (text) => {
     const fileObj = Json.obj2Map(JSON.parse(text, null));
     for (const [key, rec] of fileObj) {
     // shane to do - add Array case
@@ -82,23 +78,25 @@ export default class Json {
       if (rec) this.db.db.set(key, rec);
     }
     return fileObj.size;
-  }
+  };
 
-  getRec(id) { return this.db.getRec(id); }
+  getRec = (id) => this.db.getRec(id);
 
-  setRec(key, value, parentRec) { this.db.setRec(key, value, parentRec); }
+  hasRec = (id) => this.db.hasRec(id);
 
-  getMap() { return this.db.getMap(); }
+  setRec = (key, value, parentRec) => { this.db.setRec(key, value, parentRec); };
 
-  hasID(id) { return this.db.hasID(id); }
+  getMap = () => this.db.getMap();
 
-  getChildren(id) { return this.db.getChildren(id); }
+  hasID = (id) => this.db.hasID(id);
 
-  size() { return this.db.size(); }
+  getChildren = (id) => this.db.getChildren(id);
 
-  deleteRec(id, parentRec) { this.db.deleteRec(id, parentRec); }
+  size = () => this.db.size();
 
-  deleteField(id, elemName) { this.db.deleteField(id, elemName); }
+  deleteRec = (id, parentRec) => { this.db.deleteRec(id, parentRec); };
+
+  deleteField = (id, elemName) => { this.db.deleteField(id, elemName); };
 
   constructor(map) {
     if (map !== undefined) this.db = new Db(map); else this.db = new Db();

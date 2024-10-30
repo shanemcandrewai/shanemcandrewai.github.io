@@ -20,6 +20,25 @@ suite('MainView', () => {
     mainview = new MainView(true);
     testUtilities = new TestUtilities(mainview);
   });
+  test('load small file update key with nested values', async () => {
+    await testUtilities.loadSampleJson('small.js');
+    testUtilities.setControlEvent('key_0', 'value', 'shopping2', 'input');
+    testUtilities.setControlEvent('key_1', 'value', 'mk-sim2', 'input');
+    testUtilities.setControlEvent('key_2', 'value', 'amap2', 'input');
+
+    chai.assert.equal(mainview.controlView.db.hasRec('shopping'), false);
+    chai.assert.equal(mainview.controlView.db.hasRec('shopping2'), true);
+    chai.assert.equal(mainview.controlView.db.hasRec('mk-sim'), false);
+    chai.assert.equal(mainview.controlView.db.hasRec('mk-sim2'), true);
+    chai.assert.equal(mainview.controlView.db.hasRec('amap'), false);
+    chai.assert.equal(mainview.controlView.db.hasRec('amap2'), true);
+
+    chai.assert.equal(mainview.controlView.db.db.db.get('shopping'), undefined);
+    chai.assert.equal(mainview.controlView.db.db.db.get('shopping2')[1], 'cheese');
+    chai.assert.equal(mainview.controlView.db.db.db.get('mk-sim2'), 'vk-sim');
+    chai.assert.equal(mainview.controlView.db.db.db.get('amap2').get('mk0'), 'mv0');
+    chai.assert.equal(mainview.controlView.db.db.db.size, 4);
+  });
   test('load small file click value_0, click click value_2, append', async () => {
     await testUtilities.loadSampleJson('small.js');
     mainview.controlView.genericListener({ target: { id: 'value_0', type: 'text' }, type: 'click' });

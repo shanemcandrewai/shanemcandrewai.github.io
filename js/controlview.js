@@ -136,9 +136,9 @@ export default class ControlView {
 
   getAncestorValue = (selectNumber, level, key) => {
     const container = this.getAncestor(selectNumber, level).get('container');
-    if (container instanceof Map) return container.get(key);
-    if (Array.isArray(container)) return container[key];
-    return undefined;
+    if (container instanceof Map && container.has(key)) return container.get(key);
+    if (Array.isArray(container) && container.includes(key)) return container[key];
+    return '';
   };
 
   static getContainerCount = (container) => {
@@ -172,10 +172,9 @@ export default class ControlView {
     const level = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
     const inputKey = event.target.value;
     const cacheKey = this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache');
-    const value = this.controls.get(`value_${selectNumber}`).get('properties').get('value').get('cache');
+    const value = this.getAncestorValue(selectNumber, level, cacheKey);
     let calcKey = inputKey;
     if (ControlView.isISO(cacheKey)) calcKey = ControlView.localToISO(inputKey);
-    // const oldKey = ControlView.lastKeyClick;
     const parent = this.getAncestorContainer(selectNumber, level);
     if (parent instanceof Map) {
       if (parent.has(calcKey)) {
