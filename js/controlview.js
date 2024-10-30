@@ -158,8 +158,8 @@ export default class ControlView {
           this.setCacheSelect(
             currentSelect,
             0,
-            ControlView.isoToLocal(nextKey),
-            ControlView.isoToLocal(nextValue),
+            nextKey,
+            nextValue,
           );
         }
       } else break;
@@ -217,6 +217,7 @@ export default class ControlView {
     if (ControlView.isISO(cacheValue)) calcValue = ControlView.localToISO(inputValue);
     const ancestors = this.controls.get(`key_${selectNumber}`).get('ancestors');
     const parent = this.getAncestorContainer(selectNumber, level);
+    if (!Number.isNaN(Number(calcValue))) calcValue = Number(calcValue);
     this.db.setRec(key, calcValue, parent);
     this.controls.get(event.target.id).get('properties').get('value').set('cache', calcValue);
     if (Array.isArray(parent)) {
@@ -556,11 +557,12 @@ export default class ControlView {
 
   deleteClick = () => {
     const selectNumber = ControlView.lastLineClick;
-    const selectKey = this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache');
+    const cacheKey = this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache');
     const selectLevel = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
     const containerSize = this.getInnerSize(selectNumber);
     const parent = this.getAncestorContainer(selectNumber, selectLevel);
-    this.db.deleteRec(selectKey, parent);
+
+    this.db.deleteRec(cacheKey, parent);
     const maxCopyFrom = selectNumber + 1 + containerSize;
     if (maxCopyFrom > ControlView.maxRows) {
       this.fillGap(selectNumber);
@@ -572,7 +574,7 @@ export default class ControlView {
       }
 
       if (Array.isArray(parent)) {
-        let key = selectKey;
+        let key = cacheKey;
         let row = selectNumber;
         while (selectNumber < ControlView.maxRows) {
           const level = this.controls.get(`level_${row}`).get('properties').get('value').get('cache');
@@ -650,8 +652,8 @@ export default class ControlView {
       this.setCacheSelect(
         nextSelectNumber,
         nextLevel,
-        ControlView.isoToLocal(selectKey),
-        ControlView.isoToLocal(selectValue),
+        selectKey,
+        selectValue,
       );
     } else {
       let values = selectValue; // selectValue instanceof Map
@@ -664,8 +666,8 @@ export default class ControlView {
           this.setCacheSelect(
             nextSelectNumber,
             nextLevel,
-            ControlView.isoToLocal(key),
-            ControlView.isoToLocal(val),
+            key,
+            val,
           );
         }
         nextSelectNumber += 1;
