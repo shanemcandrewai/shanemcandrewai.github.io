@@ -604,7 +604,7 @@ export default class ControlView {
     const level = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
     const key = this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache');
     const value = this.getAncestorValue(selectNumber, level, key);
-    if (typeof value !== 'string' && value !== undefined) {
+    if (typeof value === 'object') {
       const selectNext = selectNumber + 1;
       if (this.controls.has(`level_${selectNext}`)) {
         const levelNext = this.controls.get(`level_${selectNext}`).get('properties').get('value').get('cache');

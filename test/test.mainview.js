@@ -28,8 +28,8 @@ suite('MainView', () => {
     mainview.controlView.genericListener({ target: { id: 'value_1', type: 'text' }, type: 'click' });
     chai.assert.equal(mainview.controls.get('key_2').get('properties').get('value').get('cache'), '');
     chai.assert.equal(mainview.controls.get('value_2').get('properties').get('value').get('cache'), '');
-    chai.assert.equal(mainview.controlView.db.db.db.get('k1')[0], 777);
-    chai.assert.equal(mainview.controlView.db.db.db.size, 1);
+    chai.assert.equal(mainview.controlView.db.db.get('m1').get('k1'), 777);
+    chai.assert.equal(mainview.controlView.db.db.size, 1);
   });
   test('load small file click value_0, click click value_2, append', async () => {
     await testUtilities.loadSampleJson('small.js');
