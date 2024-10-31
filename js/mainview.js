@@ -11,15 +11,6 @@ export default class MainView {
         },
       },
     },
-    value_0: {
-      events: {
-        input: {
-          recalculate: {
-            update: 'disabled',
-          },
-        },
-      },
-    },
   };
 
   constructor(writeCacheImmediately) {

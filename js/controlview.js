@@ -119,7 +119,6 @@ export default class ControlView {
     } catch (readFileError) {
       this.setCache('messages', 'innerHTML', readFileError);
     }
-    this.postLoad();
     this.writeCache();
   };
 
@@ -545,13 +544,26 @@ export default class ControlView {
     let key = this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache');
     let value = this.controls.get(`value_${selectNumber}`).get('properties').get('value').get('cache');
     this.setCache(ControlView.activeElementID, 'value', `${nowISO}`);
-    // this.setCache(ControlView.activeElementID, 'value',
-    //    `${now.toISOString().split('T')[0]} ${now.toLocaleTimeString('NL')}`);
     const ancestors = this.getAncestorContainer(selectNumber, level);
     if (ControlView.activeElementID.slice(0, 3) === 'key') {
       this.db.deleteRec(key, ancestors);
       key = nowISO;
     } else value = nowISO;
+    this.db.setRec(key, value, ancestors);
+  };
+
+  lengthClick = () => {
+    const { length } = this.db.getString();
+    const selectNumber = ControlView.lastLineClick;
+    const level = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
+    let key = this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache');
+    let value = this.controls.get(`value_${selectNumber}`).get('properties').get('value').get('cache');
+    this.setCache(ControlView.activeElementID, 'value', length);
+    const ancestors = this.getAncestorContainer(selectNumber, level);
+    if (ControlView.activeElementID.slice(0, 3) === 'key') {
+      this.db.deleteRec(key, ancestors);
+      key = length;
+    } else value = length;
     this.db.setRec(key, value, ancestors);
   };
 
@@ -760,12 +772,6 @@ export default class ControlView {
     } catch (readFileError) {
       this.controls.get('messages').set('innerHTML', readFileError);
     }
-  };
-
-  postLoad = () => {
-    // this.setCache('insert', 'disabled', true);
-    this.setCache('update', 'disabled', true);
-    this.setCache('delete', 'disabled', false);
   };
 
   setUploadInput(loadVal) {

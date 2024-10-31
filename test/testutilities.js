@@ -22,7 +22,6 @@ export default class TestUtilities {
     );
     this.mainview.controlView.db.readText(strObj);
     this.mainview.controlView.db2view();
-    this.mainview.controlView.postLoad();
     this.mainview.controlView.writeCache();
     return strObj;
   };

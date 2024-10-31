@@ -20,7 +20,13 @@ suite('MainView', () => {
     mainview = new MainView(true);
     testUtilities = new TestUtilities(mainview);
   });
-  test('load small file test value bug', async () => {
+  test('length button', async () => {
+    await testUtilities.loadSampleJson('small.js');
+    mainview.controlView.genericListener({ target: { id: 'value_1', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'length', type: 'button' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('value_1').get('properties').get('value').get('cache'), '251');
+  });
+  test('number value bug', async () => {
     testUtilities.setControlEvent('key_0', 'value', 'm1', 'input');
     mainview.controlView.genericListener({ target: { id: 'map', type: 'button' }, type: 'click' });
     testUtilities.setControlEvent('key_1', 'value', 'k1', 'input');
@@ -633,10 +639,6 @@ suite('MainView', () => {
     mainview.controlView.genericListener({ target: { id: 'value_5', type: 'text' }, type: 'click' });
     mainview.controlView.genericListener({ target: { id: 'value_8', type: 'text' }, type: 'click' });
     chai.assert.equal(mainview.controls.get('key_9').get('properties').get('value').get('cache'), 8);
-  });
-  test('load Json, and update buttons are disabled', async () => {
-    await testUtilities.loadSampleJson();
-    chai.assert.equal(mainview.controls.get('update').get('elemID').disabled, true);
   });
   test('record with description can be inserted', () => {
     testUtilities.setControlEvent('key_0', 'value', '1', 'input');
