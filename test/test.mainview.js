@@ -10,8 +10,6 @@ let testUtilities;
 
 suite('MainView', () => {
   setup('setup', () => {
-    // for (const selectNumber of Array.from({ length: ControlView.maxRows }, (_, i) => i)) {
-
     for (const selectNumber of ControlView.range(0, ControlView.maxRows)) {
       document.getElementById(`key_${selectNumber}`).removeAttribute('readOnly');
       document.getElementById(`key_${selectNumber}`).classList.remove('text-bg-danger');
@@ -19,6 +17,29 @@ suite('MainView', () => {
     }
     mainview = new MainView(true);
     testUtilities = new TestUtilities(mainview);
+  });
+  test('bug click map clobbers next key', async () => {
+    testUtilities.setControlEvent('key_0', 'value', 'k0', 'input');
+    testUtilities.setControlEvent('key_1', 'value', 'k1', 'input');
+    mainview.controlView.genericListener({ target: { id: 'key_0', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'map', type: 'button' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('key_1').get('properties').get('value').get('cache'), 'k1');
+  });
+  test('insert read only value field bug', async () => {
+    await testUtilities.loadSampleJson('small.js');
+    mainview.controlView.genericListener({ target: { id: 'value_2', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_2', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'insert', type: 'button' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('value_2').get('properties').get('readOnly').get('cache'), false);
+    chai.assert.equal(mainview.controls.get('value_2').get('elemID').readOnly, false);
+  });
+  test('append read only value field bug', async () => {
+    await testUtilities.loadSampleJson('small.js');
+    mainview.controlView.genericListener({ target: { id: 'value_2', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_2', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'append', type: 'button' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('value_3').get('properties').get('readOnly').get('cache'), false);
+    chai.assert.equal(mainview.controls.get('value_3').get('elemID').readOnly, false);
   });
   test('length button', async () => {
     await testUtilities.loadSampleJson('small.js');

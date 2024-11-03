@@ -435,6 +435,7 @@ export default class ControlView {
     const selectLevel = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
     const ancestors = this.getAncestorContainer(selectNumber, selectLevel);
     this.setCache(`value_${selectNumber}`, 'value', '');
+    this.setCache(`value_${selectNumber}`, 'readOnly', false);
     if (ancestors instanceof Map) this.db.setRec('', '', ancestors);
     else if (Array.isArray(ancestors)) {
       let key = Number(this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache'));
@@ -465,6 +466,7 @@ export default class ControlView {
     const ancestors = this.getAncestorContainer(selectNumber - 1, selectLevel);
     this.setCache(`level_${selectNumber}`, 'value', selectLevel);
     this.setCache(`value_${selectNumber}`, 'value', '');
+    this.setCache(`value_${selectNumber}`, 'readOnly', false);
     if (this.controls.get(`key_${selectNumber - 1}`).has('ancestors')) {
       this.controls.get(`key_${selectNumber}`).set(
         'ancestors',
@@ -501,11 +503,14 @@ export default class ControlView {
     if (ancestors instanceof Map) ancestorCopy.get(nextLevel).set('container', ancestors.get(key));
     else ancestorCopy.get(nextLevel).set('container', ancestors[key]);
     const nextSelect = selectNumber + 1;
-    this.controls.get(`key_${nextSelect}`).set('ancestors', ancestorCopy);
-    this.setCache(`key_${nextSelect}`, 'value', value);
-    this.setCache(`key_${nextSelect}`, 'readOnly', false);
-    this.setCache(`level_${nextSelect}`, 'value', nextLevel);
-    this.db.setRec(value, '', ancestorCopy.get(nextLevel).get('container'));
+    if (this.controls.get(`key_${nextSelect}`).get('properties').get('value').get('cache') === ''
+    && this.controls.get(`value_${nextSelect}`).get('properties').get('value').get('cache') === '') {
+      this.controls.get(`key_${nextSelect}`).set('ancestors', ancestorCopy);
+      this.setCache(`key_${nextSelect}`, 'value', value);
+      this.setCache(`key_${nextSelect}`, 'readOnly', false);
+      this.setCache(`level_${nextSelect}`, 'value', nextLevel);
+      this.db.setRec(value, '', ancestorCopy.get(nextLevel).get('container'));
+    }
   };
 
   arrayClick = () => {
