@@ -169,29 +169,28 @@ export default class ControlView {
   keyInput = (event) => {
     const selectNumber = event.target.id.slice(4);
     const level = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
-    const inputKey = event.target.value;
+    let inputKey = event.target.value;
     const cacheKey = this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache');
     const value = this.getAncestorValue(selectNumber, level, cacheKey);
-    let calcKey = inputKey;
-    if (ControlView.isISO(cacheKey)) calcKey = ControlView.localToISO(inputKey);
+    if (ControlView.isISO(cacheKey)) inputKey = ControlView.localToISO(inputKey);
     const parent = this.getAncestorContainer(selectNumber, level);
     if (parent instanceof Map) {
-      if (parent.has(calcKey)) {
+      if (parent.has(inputKey)) {
         this.controls.get(event.target.id).get('elemID').classList.add('text-bg-danger');
         return;
       }
     } else if (Array.isArray(parent)) {
-      if (parent.includes(calcKey)) {
+      if (parent.includes(inputKey)) {
         this.controls.get(event.target.id).get('elemID').classList.add('text-bg-danger');
         return;
       }
     }
 
-    this.db.deleteRec(cacheKey, parent);
-    this.db.setRec(calcKey, value, parent);
-    this.controls.get(event.target.id).get('properties').get('value').set('cache', calcKey);
+    ControlView.replaceKey(parent, cacheKey, inputKey, value);
+    this.controls.get(event.target.id).get('properties').get('value').set('cache', inputKey);
     this.controls.get(event.target.id).get('elemID').classList.remove('text-bg-danger');
-    if (!this.controls.get(`key_${Number(selectNumber) + 1}`).get('properties').get('value').get('cache')) {
+    const nextCacheValue = this.controls.get(`key_${Number(selectNumber) + 1}`).get('properties').get('value').get('cache');
+    if (!nextCacheValue) {
       this.setCache(`level_${Number(selectNumber) + 1}`, 'value', level);
       if (this.controls.get(`key_${selectNumber}`).has('ancestors')) {
         this.controls.get(`key_${Number(selectNumber) + 1}`).set(
@@ -200,10 +199,35 @@ export default class ControlView {
         );
       }
     }
-    ControlView.lastKeyClick = calcKey;
+    ControlView.lastKeyClick = inputKey;
     if (ControlView.isISO(cacheKey)) {
-      this.controls.get(`value_${selectNumber}`).get('properties').get('value').set('iso', calcKey);
+      this.controls.get(`value_${selectNumber}`).get('properties').get('value').set('iso', inputKey);
     }
+    this.wlUpdate();
+  };
+
+  static replaceKey = (mapToUpdate, keyOld, keyNew, valNew) => {
+    const mapToUpdateCopy = new Map(mapToUpdate);
+    mapToUpdate.clear();
+    if (!mapToUpdateCopy.size) mapToUpdate.set(keyNew, valNew);
+    else {
+      for (const [key, val] of mapToUpdateCopy) {
+        if (key === keyOld) mapToUpdate.set(keyNew, valNew);
+        else mapToUpdate.set(key, val);
+      }
+    }
+  };
+
+  wlUpdate = (isoTS) => {
+    if (this.db.hasRec('wl_updated')) {
+      let newIso = isoTS;
+      if (!newIso) {
+        const now = new Date();
+        newIso = now.toISOString();
+      }
+      this.db.setRec('wl_updated', newIso);
+    }
+    this.db2view();
   };
 
   valueInput = (event) => {
@@ -229,6 +253,7 @@ export default class ControlView {
         }
       }
     }
+    this.wlUpdate();
   };
 
   copySelect = (selectFrom, selectTo) => {
@@ -758,12 +783,6 @@ export default class ControlView {
   };
 
   saveClick = async () => {
-    // this.setSave(true);
-    // this.writeCache();
-    // const keys = new Uint32Array([...this.db.getMap().keys()]).sort();
-    // const dbSorted = new Map();
-    // for (const key of keys) dbSorted.set(key, this.db.getRec(key));
-    // this.db = new Json(dbSorted);
     this.controls.get('messages').set('innerHTML', '');
     try {
       const messages = await this.storage.save(

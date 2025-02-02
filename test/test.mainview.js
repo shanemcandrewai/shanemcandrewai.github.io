@@ -18,6 +18,15 @@ suite('MainView', () => {
     mainview = new MainView(true);
     testUtilities = new TestUtilities(mainview);
   });
+  test('test wl_updated', async () => {
+    await testUtilities.loadSampleJson('small2.js');
+    const stringifiedDb = mainview.controlView.db.getString(null);
+    mainview.controlView.db.readText(stringifiedDb);
+    testUtilities.setControlEvent('key_2', 'value', 'k1', 'input');
+    const now = new Date();
+    const nowIso = now.toISOString();
+    chai.assert.equal(mainview.controlView.db.getRec('wl_updated').substring(0, 22), nowIso.substring(0, 22));
+  });
   test('bug click map clobbers next key', async () => {
     testUtilities.setControlEvent('key_0', 'value', 'k0', 'input');
     testUtilities.setControlEvent('key_1', 'value', 'k1', 'input');
