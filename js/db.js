@@ -5,12 +5,14 @@ export default class Db {
   };
 
   setRec = (key, value, parentRec) => {
-    if (parentRec instanceof Map) {
-      parentRec.set(key, value);
-    } else if (Array.isArray(parentRec)) {
-      if (key === undefined) parentRec.push(value);
+    let parent = parentRec;
+    if (!parent) parent = this.getRec(key);
+    if (parent instanceof Map) {
+      parent.set(key, value);
+    } else if (Array.isArray(parent)) {
+      if (key === undefined) parent.push(value);
       else {
-        parentRec.splice(Number(key), 1, value);
+        parent.splice(Number(key), 1, value);
       }
     } else this.db.set(key, value);
   };

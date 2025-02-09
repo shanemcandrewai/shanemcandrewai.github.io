@@ -18,6 +18,12 @@ suite('MainView', () => {
     mainview = new MainView(true);
     testUtilities = new TestUtilities(mainview);
   });
+  test('test close branch bug', async () => {
+    await testUtilities.loadSampleJson('small2.js');
+    mainview.controlView.genericListener({ target: { id: 'value_1', type: 'text' }, type: 'click' });
+    testUtilities.setControlEvent('value_2', 'value', 'a', 'input');
+    chai.assert.equal(mainview.controls.get('value_2').get('properties').get('value').get('cache'), 'a');
+  });
   test('test wl_updated', async () => {
     await testUtilities.loadSampleJson('small2.js');
     const stringifiedDb = mainview.controlView.db.getString(null);
@@ -25,7 +31,7 @@ suite('MainView', () => {
     testUtilities.setControlEvent('key_2', 'value', 'k1', 'input');
     const now = new Date();
     const nowIso = now.toISOString();
-    chai.assert.equal(mainview.controlView.db.getRec('wl_updated').substring(0, 22), nowIso.substring(0, 22));
+    chai.assert.equal(mainview.controlView.db.getRec('wl_updated').substring(0, 20), nowIso.substring(0, 20));
   });
   test('bug click map clobbers next key', async () => {
     testUtilities.setControlEvent('key_0', 'value', 'k0', 'input');

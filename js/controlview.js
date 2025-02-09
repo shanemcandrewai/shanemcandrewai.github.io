@@ -203,14 +203,15 @@ export default class ControlView {
     if (ControlView.isISO(cacheKey)) {
       this.controls.get(`value_${selectNumber}`).get('properties').get('value').set('iso', inputKey);
     }
-    this.wlUpdate();
+    this.wlUpdate(parent);
   };
 
   static replaceKey = (mapToUpdate, keyOld, keyNew, valNew) => {
     const mapToUpdateCopy = new Map(mapToUpdate);
     mapToUpdate.clear();
-    if (!mapToUpdateCopy.size) mapToUpdate.set(keyNew, valNew);
-    else {
+    if (!mapToUpdateCopy.size) {
+      mapToUpdate.set(keyNew, valNew);
+    } else {
       for (const [key, val] of mapToUpdateCopy) {
         if (key === keyOld) mapToUpdate.set(keyNew, valNew);
         else mapToUpdate.set(key, val);
@@ -218,14 +219,19 @@ export default class ControlView {
     }
   };
 
-  wlUpdate = (isoTS) => {
+  wlUpdate = () => {
     if (this.db.hasRec('wl_updated')) {
-      let newIso = isoTS;
-      if (!newIso) {
-        const now = new Date();
-        newIso = now.toISOString();
+      const now = new Date();
+      const nowISO = now.toISOString();
+      this.db.setRec('wl_updated', nowISO);
+      let selectNumber;
+      for (selectNumber of ControlView.range(0, ControlView.maxRows)) {
+        const key = this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache');
+        if (key === 'wl_updated') {
+          break;
+        }
       }
-      this.db.setRec('wl_updated', newIso);
+      this.setCache(`value_${Number(selectNumber)}`, 'value', nowISO);
     }
     this.db2view();
   };
@@ -242,7 +248,7 @@ export default class ControlView {
     const parent = this.getAncestorContainer(selectNumber, level);
     if (!Number.isNaN(Number(calcValue))) calcValue = Number(calcValue);
     this.db.setRec(key, calcValue, parent);
-    this.controls.get(event.target.id).get('properties').get('value').set('cache', calcValue);
+    this.controls.get(`value_${selectNumber}`).get('properties').get('value').set('cache', calcValue);
     if (Array.isArray(parent)) {
       if (!this.controls.get(`key_${Number(selectNumber) + 1}`).get('properties').get('value').get('cache')) {
         this.setCache(`level_${Number(selectNumber) + 1}`, 'value', level);
@@ -251,9 +257,9 @@ export default class ControlView {
         if (this.controls.get(`key_${selectNumber}`).has('ancestors')) {
           this.controls.get(`key_${Number(selectNumber) + 1}`).set('ancestors', ancestors);
         }
+        this.wlUpdate(parent);
       }
     }
-    this.wlUpdate();
   };
 
   copySelect = (selectFrom, selectTo) => {
