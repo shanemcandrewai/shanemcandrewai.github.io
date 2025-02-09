@@ -231,9 +231,9 @@ export default class ControlView {
           break;
         }
       }
-      this.setCache(`value_${Number(selectNumber)}`, 'value', nowISO);
+      this.setCacheSelect(selectNumber, 0, 'wl_updated', nowISO);
+      this.writeCache();
     }
-    this.db2view();
   };
 
   valueInput = (event) => {
@@ -257,9 +257,9 @@ export default class ControlView {
         if (this.controls.get(`key_${selectNumber}`).has('ancestors')) {
           this.controls.get(`key_${Number(selectNumber) + 1}`).set('ancestors', ancestors);
         }
-        this.wlUpdate(parent);
       }
     }
+    this.wlUpdate(parent);
   };
 
   copySelect = (selectFrom, selectTo) => {

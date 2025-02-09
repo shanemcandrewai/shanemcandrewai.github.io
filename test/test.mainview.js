@@ -23,12 +23,22 @@ suite('MainView', () => {
     mainview.controlView.genericListener({ target: { id: 'value_1', type: 'text' }, type: 'click' });
     testUtilities.setControlEvent('value_2', 'value', 'a', 'input');
     chai.assert.equal(mainview.controls.get('value_2').get('properties').get('value').get('cache'), 'a');
+    chai.assert.equal(mainview.controlView.db.db.db.get('shopping')[0], 'a');
   });
-  test('test wl_updated', async () => {
+  test('test wl_updated key input', async () => {
     await testUtilities.loadSampleJson('small2.js');
     const stringifiedDb = mainview.controlView.db.getString(null);
     mainview.controlView.db.readText(stringifiedDb);
     testUtilities.setControlEvent('key_2', 'value', 'k1', 'input');
+    const now = new Date();
+    const nowIso = now.toISOString();
+    chai.assert.equal(mainview.controlView.db.getRec('wl_updated').substring(0, 20), nowIso.substring(0, 20));
+  });
+  test('test wl_updated value input', async () => {
+    await testUtilities.loadSampleJson('small2.js');
+    const stringifiedDb = mainview.controlView.db.getString(null);
+    mainview.controlView.db.readText(stringifiedDb);
+    testUtilities.setControlEvent('value_1', 'value', 'shopping2', 'input');
     const now = new Date();
     const nowIso = now.toISOString();
     chai.assert.equal(mainview.controlView.db.getRec('wl_updated').substring(0, 20), nowIso.substring(0, 20));
