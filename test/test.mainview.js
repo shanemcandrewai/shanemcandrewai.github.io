@@ -18,15 +18,33 @@ suite('MainView', () => {
     mainview = new MainView(true);
     testUtilities = new TestUtilities(mainview);
   });
+  test('test long list bug', async () => {
+    await testUtilities.loadSampleJson('small.js');
+    mainview.controlView.genericListener({ target: { id: 'value_3', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_5', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_6', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'append', type: 'button' }, type: 'click' });
+    testUtilities.setControlEvent('value_7', 'value', '11', 'input');
+    testUtilities.setControlEvent('value_8', 'value', '22', 'input');
+    mainview.controlView.genericListener({ target: { id: 'down', type: 'button' }, type: 'click' });
+    testUtilities.setControlEvent('value_8', 'value', '33', 'input');
+    testUtilities.setControlEvent('value_9', 'value', '44', 'input');
+    mainview.controlView.genericListener({ target: { id: 'value_4', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'up', type: 'button' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_5', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'down', type: 'button' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('value_9').get('properties').get('value').get('cache'), '44');
+    chai.assert.equal(mainview.controlView.db.db.db.get('bmap').get('arr1')[4], '44');
+  });
   test('test close branch bug', async () => {
-    await testUtilities.loadSampleJson('small2.js');
+    await testUtilities.loadSampleJson('wl_updated.js');
     mainview.controlView.genericListener({ target: { id: 'value_1', type: 'text' }, type: 'click' });
     testUtilities.setControlEvent('value_2', 'value', 'a', 'input');
     chai.assert.equal(mainview.controls.get('value_2').get('properties').get('value').get('cache'), 'a');
     chai.assert.equal(mainview.controlView.db.db.db.get('shopping')[0], 'a');
   });
   test('test wl_updated key input', async () => {
-    await testUtilities.loadSampleJson('small2.js');
+    await testUtilities.loadSampleJson('wl_updated.js');
     const stringifiedDb = mainview.controlView.db.getString(null);
     mainview.controlView.db.readText(stringifiedDb);
     testUtilities.setControlEvent('key_2', 'value', 'k1', 'input');
@@ -35,7 +53,7 @@ suite('MainView', () => {
     chai.assert.equal(mainview.controlView.db.getRec('wl_updated').substring(0, 20), nowIso.substring(0, 20));
   });
   test('test wl_updated value input', async () => {
-    await testUtilities.loadSampleJson('small2.js');
+    await testUtilities.loadSampleJson('wl_updated.js');
     const stringifiedDb = mainview.controlView.db.getString(null);
     mainview.controlView.db.readText(stringifiedDb);
     testUtilities.setControlEvent('value_1', 'value', 'shopping2', 'input');

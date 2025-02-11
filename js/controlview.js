@@ -127,6 +127,8 @@ export default class ControlView {
       if (this.controls.get(`key_${selectNumber}`).get('ancestors').has(level)) {
         return this.controls.get(`key_${selectNumber}`).get('ancestors').get(level);
       }
+      return new Map([['key', this.controls.get(`key_${selectNumber}`).get('ancestors').get(level + 1).get('key')],
+        ['container', this.db.getMap()]]);
     }
     return new Map([['container', this.db.getMap()]]);
   };
@@ -249,7 +251,7 @@ export default class ControlView {
     if (!Number.isNaN(Number(calcValue))) calcValue = Number(calcValue);
     this.db.setRec(key, calcValue, parent);
     this.controls.get(`value_${selectNumber}`).get('properties').get('value').set('cache', calcValue);
-    if (Array.isArray(parent)) {
+    if (Array.isArray(parent) && selectNumber < ControlView.maxRows) {
       if (!this.controls.get(`key_${Number(selectNumber) + 1}`).get('properties').get('value').get('cache')) {
         this.setCache(`level_${Number(selectNumber) + 1}`, 'value', level);
         this.setCache(`key_${Number(selectNumber) + 1}`, 'value', Number(key) + 1);
@@ -365,13 +367,13 @@ export default class ControlView {
     const value = this.controls.get(`value_${selectNumber}`).get('properties').get('value').get('cache');
     if (key !== '' || value !== '') {
       const level = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
-      const previousEntry = this.getNext(selectNumber - 1, level);
-      if (previousEntry) {
+      const nextEntry = this.getNext(selectNumber - 1, level);
+      if (nextEntry) {
         this.setCacheSelect(
           selectNumber,
-          previousEntry.level,
-          previousEntry.key,
-          previousEntry.value,
+          nextEntry.level,
+          nextEntry.key,
+          nextEntry.value,
         );
       } else {
         this.setCacheSelect(selectNumber);
@@ -398,17 +400,13 @@ export default class ControlView {
   };
 
   getNext = (selectNumber, level) => {
-    const selectKey = this.controls.get(`key_${selectNumber}`);
     const selectLevel = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
+    const selectKey = this.controls.get(`key_${selectNumber}`);
     let key = selectKey.get('properties').get('value').get('cache');
-    if (!level && selectLevel && this.getAncestor(selectNumber, 1).has('key')) {
-      key = this.getAncestor(selectNumber, 1).get('key');
-    }
+    if (selectLevel !== level) key = this.getAncestor(selectNumber, level).get('key');
     const parentEntries = this.getAncestor(selectNumber, level).get('container').entries();
     let parentEntry = parentEntries.next();
-    let adjacentEntry = key;
     while (!parentEntry.done && parentEntry.value[0] !== key) {
-      [adjacentEntry] = parentEntry.value;
       parentEntry = parentEntries.next();
     }
     parentEntry = parentEntries.next();
@@ -416,13 +414,8 @@ export default class ControlView {
       if (!level) return undefined;
       return this.getNext(selectNumber, level - 1);
     }
-    [adjacentEntry] = parentEntry.value;
-
-    return {
-      key: adjacentEntry,
-      level,
-      value: this.getAncestorValue(selectNumber, level, adjacentEntry),
-    };
+    const [nextKey, nextValue] = parentEntry.value;
+    return { key: nextKey, level, value: nextValue };
   };
 
   getPrevious = (selectNumber, level) => {
