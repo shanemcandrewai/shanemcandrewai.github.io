@@ -407,7 +407,6 @@ suite('MainView', () => {
   });
   test('1 array, enter aa', () => {
     testUtilities.setControlEvent('key_0', 'value', 'm1', 'input');
-    testUtilities.setControlEvent('select_0', 'checked', true, 'click');
     mainview.controlView.genericListener({ target: { id: 'array', type: 'button' }, type: 'click' });
     testUtilities.setControlEvent('value_1', 'value', 'v2', 'input');
     chai.assert.equal(mainview.controlView.db.getRec('m1')[0], 'v2');
@@ -474,7 +473,7 @@ suite('MainView', () => {
     chai.assert.equal(mainview.controlView.db.db.size, 2);
     chai.assert.equal(mainview.controlView.db.db.get('ddd'), 1);
   });
-  test('enter key_0, select_0, Array, key_1 = 0 and readonly, enter value_1, key_2 = 0', () => {
+  test('enter key_0, Array, key_1 = 0 and readonly, enter value_1, key_2 = 0', () => {
     testUtilities.setControlEvent('key_0', 'value', 'numbered list', 'input');
     mainview.controlView.genericListener({ target: { id: 'array', type: 'button' }, type: 'click' });
     chai.assert.equal(mainview.controls.get('key_1').get('properties').get('value').get('cache'), '0');
@@ -482,18 +481,18 @@ suite('MainView', () => {
     testUtilities.setControlEvent('value_1', 'value', 'dd', 'input');
     chai.assert.equal(mainview.controls.get('key_2').get('properties').get('value').get('cache'), '1');
   });
-  test('enter key_0, select_0, Map, key_1 is not readonly', () => {
+  test('enter key_0, Map, key_1 is not readonly', () => {
     testUtilities.setControlEvent('key_0', 'value', '1', 'input');
     mainview.controlView.genericListener({ target: { id: 'map', type: 'button' }, type: 'click' });
     chai.assert.equal(mainview.controls.get('key_1').get('properties').get('readOnly').get('cache'), false);
   });
-  test('enter key_0, select_0, Map, enter key_1, key_2 writable at level 2', () => {
+  test('enter key_0, Map, enter key_1, key_2 writable at level 2', () => {
     mainview.controlView.genericListener({ target: { id: 'map', type: 'button' }, type: 'click' });
     testUtilities.setControlEvent('key_1', 'value', '2', 'input');
     chai.assert.equal(mainview.controls.get('key_2').get('properties').get('readOnly').get('cache'), false);
     chai.assert.equal(mainview.controls.get('level_2').get('properties').get('value').get('cache'), 1);
   });
-  test('enter key_0, select_0, Map, enter key_1, key_2 = key_1 not red', () => {
+  test('enter key_0, Map, enter key_1, key_2 = key_1 not red', () => {
     testUtilities.setControlEvent('key_0', 'value', 'dd', 'input');
     mainview.controlView.genericListener({ target: { id: 'map', type: 'button' }, type: 'click' });
     testUtilities.setControlEvent('key_1', 'value', 'ddd', 'input');
@@ -567,8 +566,6 @@ suite('MainView', () => {
     chai.assert.equal(mainview.controlView.db.getRec('id').get('priority'), '0');
   });
   test('check select rows are reset', () => {
-    chai.assert.equal(mainview.controls.get('select_0').get('properties').get('checked').get('cache'), false);
-    chai.assert.equal(mainview.controls.get('select_1').get('properties').get('checked').get('cache'), false);
     chai.assert.equal(mainview.controls.get('level_0').get('properties').get('value').get('cache'), 0);
     chai.assert.equal(mainview.controls.get('level_1').get('properties').get('value').get('cache'), 0);
     chai.assert.equal(mainview.controls.get('key_0').get('properties').get('value').get('cache'), '');
@@ -706,7 +703,6 @@ suite('MainView', () => {
   });
   test('record with description can be inserted', () => {
     testUtilities.setControlEvent('key_0', 'value', '1', 'input');
-    testUtilities.setControlEvent('select_0', 'checked', true, 'click');
     mainview.controlView.genericListener({ target: { id: 'map', type: 'button' }, type: 'click' });
     testUtilities.setControlEvent('key_1', 'value', 'description', 'input');
     testUtilities.setControlEvent('value_1', 'value', 'aaa', 'input');

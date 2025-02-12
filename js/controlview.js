@@ -350,7 +350,7 @@ export default class ControlView {
   downClick = () => {
     let selectNumber = 0;
     let lastEmpty = 0;
-    while (this.controls.has(`select_${selectNumber}`)) {
+    while (this.controls.has(`key_${selectNumber}`)) {
       if (this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache') === '') {
         if (selectNumber === lastEmpty + 1) return;
         lastEmpty = selectNumber;
@@ -359,7 +359,7 @@ export default class ControlView {
     }
     selectNumber = 0;
 
-    while (this.controls.has(`select_${selectNumber + 1}`)) {
+    while (this.controls.has(`key_${selectNumber + 1}`)) {
       this.copySelect(selectNumber + 1, selectNumber);
       selectNumber += 1;
     }
@@ -961,12 +961,12 @@ export default class ControlView {
       if (!rowElem) {
         const newRow = prevRowElem.cloneNode(true);
         newRow.id = `row_${nextRow}`;
-        newRow.children[0].children[0].id = `select_${nextRow}`;
-        newRow.children[1].children[0].id = `level_${nextRow}`;
-        newRow.children[2].children[0].id = `key_${nextRow}`;
-        newRow.children[2].children[0].placeholder = `key_${nextRow}`;
-        newRow.children[3].children[0].id = `value_${nextRow}`;
-        newRow.children[3].children[0].placeholder = `value_${nextRow}`;
+        // newRow.children[0].children[0].id = `select_${nextRow}`;
+        newRow.children[0].children[0].id = `level_${nextRow}`;
+        newRow.children[1].children[0].id = `key_${nextRow}`;
+        newRow.children[1].children[0].placeholder = `key_${nextRow}`;
+        newRow.children[2].children[0].id = `value_${nextRow}`;
+        newRow.children[2].children[0].placeholder = `value_${nextRow}`;
         prevRowElem.insertAdjacentElement('afterend', newRow);
       }
     }
