@@ -20,5 +20,4 @@ await import('./test.mainview.js');
 await import('./test.arrobj.js');
 await import('./test.json.js');
 await import('./test.xlsx.js');
-await import('./test.utcconv.js');
 mocha.run();

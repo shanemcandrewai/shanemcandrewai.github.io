@@ -1,11 +1,25 @@
-import UtcConv from './utcconv.js';
 import Db from './db.js';
 
 export default class ArrObj {
+  static getLocalDateTime(utcString) {
+    try {
+      const utc = utcString === undefined ? new Date() : new Date(utcString);
+      utc.setMinutes(utc.getMinutes() - utc.getTimezoneOffset());
+      const local = utc.toISOString();
+      return `${local.slice(0, 10)} ${local.slice(11, 16)}`;
+    } catch (error) { return utcString; }
+  }
+
+  static getUTCDateTime(localString) {
+    try {
+      return new Date(localString).toISOString();
+    } catch (error) { return localString; }
+  }
+
   static obj2Map(rowObj) {
     const rowMap = new Map();
     for (const [label, value] of Object.entries(rowObj)) {
-      if (label === 'created') rowMap.set(label, UtcConv.getUTCDateTime(value));
+      if (label === 'created') rowMap.set(label, ArrObj.getUTCDateTime(value));
       else if (label !== 'id') rowMap.set(label, value);
     }
     return rowMap;
@@ -14,7 +28,7 @@ export default class ArrObj {
   static map2Obj(id, rowMap) {
     const objRow = {};
     for (const [label, value] of rowMap) {
-      if (label === 'created') objRow[label] = UtcConv.getLocalDateTime(value);
+      if (label === 'created') objRow[label] = ArrObj.getLocalDateTime(value);
       else objRow[label] = value;
     }
     if (Object.keys(objRow).length) objRow.id = id;

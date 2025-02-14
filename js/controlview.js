@@ -403,7 +403,7 @@ export default class ControlView {
     const selectLevel = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
     const selectKey = this.controls.get(`key_${selectNumber}`);
     let key = selectKey.get('properties').get('value').get('cache');
-    if (selectLevel !== level) key = this.getAncestor(selectNumber, level).get('key');
+    if (selectLevel !== level) key = this.getAncestor(selectNumber, selectLevel).get('key');
     const parentEntries = this.getAncestor(selectNumber, level).get('container').entries();
     let parentEntry = parentEntries.next();
     while (!parentEntry.done && parentEntry.value[0] !== key) {
@@ -682,7 +682,7 @@ export default class ControlView {
 
     let ancestorsInner = new Map(); // key without ancestors
     if (this.controls.get(`key_${selectNumber}`).has('ancestors')) {
-      ancestorsInner = this.controls.get(`key_${selectNumber}`).get('ancestors');
+      ancestorsInner = new Map(this.controls.get(`key_${selectNumber}`).get('ancestors'));
     }
 
     ancestorsInner.set(nextLevel, new Map());

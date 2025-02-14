@@ -18,6 +18,21 @@ suite('MainView', () => {
     mainview = new MainView(true);
     testUtilities = new TestUtilities(mainview);
   });
+  test('test expand over 9 then down', async () => {
+    await testUtilities.loadSampleJson('wl_updated.js');
+    mainview.controlView.genericListener({ target: { id: 'value_4', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_6', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_5', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_3', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'down', type: 'button' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('key_9').get('properties').get('value').get('cache'), 'arr1');
+    mainview.controlView.genericListener({ target: { id: 'down', type: 'button' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_8', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'up', type: 'button' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'up', type: 'button' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'down', type: 'button' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('key_9').get('properties').get('value').get('cache'), 'arr1');
+  });
   test('test long list bug', async () => {
     await testUtilities.loadSampleJson('small.js');
     mainview.controlView.genericListener({ target: { id: 'value_3', type: 'text' }, type: 'click' });

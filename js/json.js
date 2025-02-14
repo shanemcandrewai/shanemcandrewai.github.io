@@ -38,22 +38,6 @@ export default class Json {
     return obj;
   };
 
-  static mapEncoder = (key, value) => {
-    if (value instanceof Map) {
-      return { dataType: 'Map', value: Array.from(value.entries()) };
-    }
-    return value;
-  };
-
-  static mapDecoder = (key, value) => {
-    if (typeof value === 'object' && value !== null) {
-      if (value.dataType === 'Map') {
-        return new Map(value.value);
-      }
-    }
-    return value;
-  };
-
   getBlob = () => {
     const strObj = this.getString();
     return new Blob(
@@ -70,12 +54,7 @@ export default class Json {
     const fileObj = Json.obj2Map(JSON.parse(text, null));
     for (const [key, rec] of fileObj) {
     // shane to do - add Array case
-      if (rec instanceof Map) {
-        for (const [label, value] of rec) {
-          if (typeof value !== 'number' && !value) rec.delete(label);
-        }
-      }
-      if (rec) this.db.db.set(key, rec);
+      this.db.db.set(key, rec);
     }
     return fileObj.size;
   };
