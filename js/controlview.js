@@ -191,8 +191,7 @@ export default class ControlView {
     ControlView.replaceKey(parent, cacheKey, inputKey, value);
     this.controls.get(event.target.id).get('properties').get('value').set('cache', inputKey);
     this.controls.get(event.target.id).get('elemID').classList.remove('text-bg-danger');
-    const nextCacheValue = this.controls.get(`key_${Number(selectNumber) + 1}`).get('properties').get('value').get('cache');
-    if (!nextCacheValue) {
+    if (this.controls.has(`key_${Number(selectNumber) + 1}`)) {
       this.setCache(`level_${Number(selectNumber) + 1}`, 'value', level);
       if (this.controls.get(`key_${selectNumber}`).has('ancestors')) {
         this.controls.get(`key_${Number(selectNumber) + 1}`).set(

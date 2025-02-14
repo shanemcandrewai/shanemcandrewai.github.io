@@ -18,6 +18,16 @@ suite('MainView', () => {
     mainview = new MainView(true);
     testUtilities = new TestUtilities(mainview);
   });
+  test('test expand insert value in key_9', async () => {
+    await testUtilities.loadSampleJson('wl_updated.js');
+    mainview.controlView.genericListener({ target: { id: 'value_4', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_6', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_5', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_3', type: 'text' }, type: 'click' });
+    testUtilities.setControlEvent('key_9', 'value', '11', 'input');
+    chai.assert.equal(mainview.controls.get('key_9').get('properties').get('value').get('cache'), '11');
+    chai.assert.equal(mainview.controlView.db.db.db.get('bmap').get('bmk0').get('11'), 'bvv1');
+  });
   test('test expand over 9 then down', async () => {
     await testUtilities.loadSampleJson('wl_updated.js');
     mainview.controlView.genericListener({ target: { id: 'value_4', type: 'text' }, type: 'click' });
