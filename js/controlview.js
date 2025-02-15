@@ -325,6 +325,27 @@ export default class ControlView {
         }
       }
     }
+    for (const rowNum of ControlView.range(0, ControlView.maxRows + 1)) {
+      const level = this.controls.get(`level_${rowNum}`).get('properties').get('value').get('cache');
+      const colorFlag = level % 4;
+      switch (colorFlag) {
+        case 3:
+          this.controls.get(`key_${rowNum}`).get('elemID').style.background = 'lightcyan';
+          this.controls.get(`value_${rowNum}`).get('elemID').style.background = 'lightcyan';
+          break;
+        case 2:
+          this.controls.get(`key_${rowNum}`).get('elemID').style.background = 'honeydew';
+          this.controls.get(`value_${rowNum}`).get('elemID').style.background = 'honeydew';
+          break;
+        case 1:
+          this.controls.get(`key_${rowNum}`).get('elemID').style.background = 'lavenderblush';
+          this.controls.get(`value_${rowNum}`).get('elemID').style.background = 'lavenderblush';
+          break;
+        default:
+          this.controls.get(`key_${rowNum}`).get('elemID').style.background = 'white';
+          this.controls.get(`value_${rowNum}`).get('elemID').style.background = 'white';
+      }
+    }
   };
 
   genericListener = (event) => {
