@@ -123,7 +123,7 @@ export default class ControlView {
   };
 
   getAncestor = (selectNumber, level) => {
-    if (this.controls.get(`key_${selectNumber}`).has('ancestors')) {
+    if (level > 0 && this.controls.get(`key_${selectNumber}`).has('ancestors')) {
       if (this.controls.get(`key_${selectNumber}`).get('ancestors').has(level)) {
         return this.controls.get(`key_${selectNumber}`).get('ancestors').get(level);
       }
@@ -212,12 +212,12 @@ export default class ControlView {
     mapToUpdate.clear();
     if (!mapToUpdateCopy.size) {
       mapToUpdate.set(keyNew, valNew);
-    } else {
+    } else if (mapToUpdateCopy.has(keyOld)) {
       for (const [key, val] of mapToUpdateCopy) {
         if (key === keyOld) mapToUpdate.set(keyNew, valNew);
         else mapToUpdate.set(key, val);
       }
-    }
+    } else mapToUpdate.set(keyNew, valNew);
   };
 
   wlUpdate = () => {
@@ -363,11 +363,13 @@ export default class ControlView {
       selectNumber += 1;
     }
     const key = this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache');
+    const ancestors = this.controls.get(`key_${selectNumber}`).get('ancestors');
     const value = this.controls.get(`value_${selectNumber}`).get('properties').get('value').get('cache');
     if (key !== '' || value !== '') {
       const level = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
-      const nextEntry = this.getNext(selectNumber - 1, level);
+      const nextEntry = this.getNext(selectNumber - 1, level, ancestors);
       if (nextEntry) {
+        this.controls.get(`key_${selectNumber}`).set('ancestors', nextEntry.ancestors);
         this.setCacheSelect(
           selectNumber,
           nextEntry.level,
@@ -376,6 +378,7 @@ export default class ControlView {
         );
       } else {
         this.setCacheSelect(selectNumber);
+        this.controls.get(`key_${selectNumber}`).delete('ancestors');
       }
     }
   };
@@ -398,10 +401,13 @@ export default class ControlView {
     }
   };
 
-  getNext = (selectNumber, level) => {
+  getNext = (selectNumber, level, ancestors) => {
     const selectLevel = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
     const selectKey = this.controls.get(`key_${selectNumber}`);
     let key = selectKey.get('properties').get('value').get('cache');
+    let selectAncestors;
+    if (ancestors) selectAncestors = ancestors;
+    else selectAncestors = selectKey.get('ancestors');
     if (selectLevel !== level) key = this.getAncestor(selectNumber, selectLevel).get('key');
     const parentEntries = this.getAncestor(selectNumber, level).get('container').entries();
     let parentEntry = parentEntries.next();
@@ -411,10 +417,12 @@ export default class ControlView {
     parentEntry = parentEntries.next();
     if (parentEntry.done) {
       if (!level) return undefined;
-      return this.getNext(selectNumber, level - 1);
+      return this.getNext(selectNumber, level - 1, selectAncestors);
     }
     const [nextKey, nextValue] = parentEntry.value;
-    return { key: nextKey, level, value: nextValue };
+    return {
+      key: nextKey, level, value: nextValue, ancestors,
+    };
   };
 
   getPrevious = (selectNumber, level) => {
@@ -616,7 +624,7 @@ export default class ControlView {
       if (Array.isArray(parent)) {
         let key = cacheKey;
         let row = selectNumber;
-        while (selectNumber < ControlView.maxRows) {
+        while (row < ControlView.maxRows && selectNumber < ControlView.maxRows) {
           const level = this.controls.get(`level_${row}`).get('properties').get('value').get('cache');
           if (level === selectLevel) {
             this.setCache(`key_${row}`, 'value', key);
