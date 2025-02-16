@@ -217,7 +217,10 @@ export default class ControlView {
         if (key === keyOld) mapToUpdate.set(keyNew, valNew);
         else mapToUpdate.set(key, val);
       }
-    } else mapToUpdate.set(keyNew, valNew);
+    } else {
+      for (const [key, val] of mapToUpdateCopy) mapToUpdate.set(key, val);
+      mapToUpdate.set(keyNew, valNew);
+    }
   };
 
   wlUpdate = () => {
