@@ -528,13 +528,24 @@ export default class ControlView {
       copyFrom -= 1;
     }
     const selectLevel = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
-    const ancestors = this.getAncestorContainer(selectNumber, selectLevel);
+    const selectKey = this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache');
+    const container = this.getAncestorContainer(selectNumber, selectLevel);
     this.setCache(`value_${selectNumber}`, 'value', '');
     this.setCache(`value_${selectNumber}`, 'readOnly', false);
-    if (ancestors instanceof Map) this.db.setRec('', '', ancestors);
-    else if (Array.isArray(ancestors)) {
+    if (container instanceof Map) {
+      const containerCopy = new Map(container);
+      container.clear();
+      const containerEntries = containerCopy.entries();
+      let containerEntry = containerEntries.next();
+      while (!containerEntry.done) {
+        if (containerEntry.value[0] === selectKey) container.set('', '');
+        container.set(containerEntry.value[0], containerEntry.value[1]);
+        containerEntry = containerEntries.next();
+      }
+      // this.db.setRec('', '', container);
+    } else if (Array.isArray(container)) {
       let key = Number(this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache'));
-      ancestors.splice(key, 0, '');
+      container.splice(key, 0, '');
       selectNumber += 1;
       while (selectNumber < ControlView.maxRows) {
         const level = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');

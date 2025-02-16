@@ -18,6 +18,18 @@ suite('MainView', () => {
     mainview = new MainView(true);
     testUtilities = new TestUtilities(mainview);
   });
+  test('correct order to map member insertions', async () => {
+    testUtilities.setControlEvent('key_0', 'value', 'k0', 'input');
+    mainview.controlView.genericListener({ target: { id: 'map', type: 'button' }, type: 'click' });
+    testUtilities.setControlEvent('key_1', 'value', 'm1', 'input');
+    mainview.controlView.genericListener({ target: { id: 'insert', type: 'button' }, type: 'click' });
+    testUtilities.setControlEvent('key_1', 'value', 'm2', 'input');
+    mainview.controlView.genericListener({ target: { id: 'value_0', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_0', type: 'text' }, type: 'click' });
+    chai.assert.equal(mainview.controlView.db.db.get('k0').has('m2'), true);
+    chai.assert.equal(mainview.controls.get('key_1').get('properties').get('value').get('cache'), 'm2');
+    chai.assert.equal(mainview.controls.get('key_2').get('properties').get('value').get('cache'), 'm1');
+  });
   test('add multiple root members', async () => {
     testUtilities.setControlEvent('key_0', 'value', 'k0', 'input');
     testUtilities.setControlEvent('key_1', 'value', 'k1', 'input');
