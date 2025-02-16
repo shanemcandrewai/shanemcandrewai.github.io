@@ -138,7 +138,7 @@ export default class ControlView {
   getAncestorValue = (selectNumber, level, key) => {
     const container = this.getAncestor(selectNumber, level).get('container');
     if (container instanceof Map && container.has(key)) return container.get(key);
-    if (Array.isArray(container) && container.includes(key)) return container[key];
+    if (Array.isArray(container)) return container[key];
     return '';
   };
 
@@ -307,43 +307,83 @@ export default class ControlView {
   };
 
   setCache = (elemName, propName, value) => {
-    if (this.controls.get(elemName).get('properties').get(propName).get('cache') !== value) {
-      this.controls.get(elemName).get('properties').get(propName).set('cache', value);
-      this.controls.get(elemName).get('properties').get(propName).set('write', true);
+    let elemPropName = this.controls.get(elemName).get('properties').get(propName);
+    if (!elemPropName) {
+      elemPropName = new Map();
+      this.controls.get(elemName).get('properties').set(propName, elemPropName);
+    }
+    if (elemPropName.get('cache') !== value) {
+      elemPropName.set('cache', value);
+      elemPropName.set('write', true);
     }
     if (this.writeCacheImmediately) {
       this.writeCache();
     }
   };
 
-  writeCache = () => {
-    for (const elemRec of this.controls.values()) {
-      for (const [propName, propRec] of elemRec.get('properties')) {
-        if (propRec.get('write')) {
-          elemRec.get('elemID')[propName] = ControlView.isoToLocal(propRec.get('cache'));
-          propRec.set('write', false);
-        }
-      }
-    }
-    for (const rowNum of ControlView.range(0, ControlView.maxRows + 1)) {
+  setLevelColors = () => {
+    let rowNum = 0;
+    while (this.controls.has(`level_${rowNum}`)) {
       const level = this.controls.get(`level_${rowNum}`).get('properties').get('value').get('cache');
       const colorFlag = level % 4;
+      const keyRow = this.controls.get(`key_${rowNum}`);
+      const valueRow = this.controls.get(`value_${rowNum}`);
+      const keyStyle = keyRow.get('properties').get('style');
+      const valueStyle = valueRow.get('properties').get('style');
+      let keyBackground;
+      let valueBackground;
+      if (keyStyle instanceof Map) keyBackground = keyStyle.get('background');
+      if (valueStyle instanceof Map) valueBackground = valueStyle.get('background');
+      let keyCache;
+      let valueCache;
+      if (keyBackground instanceof Map) keyCache = keyBackground.get('cache');
+      if (valueBackground instanceof Map) valueCache = valueBackground.get('cache');
+
+      let calcBackground;
       switch (colorFlag) {
         case 3:
-          this.controls.get(`key_${rowNum}`).get('elemID').style.background = 'lightcyan';
-          this.controls.get(`value_${rowNum}`).get('elemID').style.background = 'lightcyan';
+          calcBackground = 'lightcyan';
           break;
         case 2:
-          this.controls.get(`key_${rowNum}`).get('elemID').style.background = 'honeydew';
-          this.controls.get(`value_${rowNum}`).get('elemID').style.background = 'honeydew';
+          calcBackground = 'honeydew';
           break;
         case 1:
-          this.controls.get(`key_${rowNum}`).get('elemID').style.background = 'lavenderblush';
-          this.controls.get(`value_${rowNum}`).get('elemID').style.background = 'lavenderblush';
+          calcBackground = 'lavenderblush';
           break;
         default:
-          this.controls.get(`key_${rowNum}`).get('elemID').style.background = 'white';
-          this.controls.get(`value_${rowNum}`).get('elemID').style.background = 'white';
+          calcBackground = 'white';
+      }
+      if ((keyCache !== undefined || colorFlag) && calcBackground !== keyCache) {
+        if (!keyStyle) keyRow.get('properties').set('style', new Map());
+        if (!keyBackground) keyRow.get('properties').get('style').set('background', new Map());
+        keyRow.get('properties').get('style').get('background').set('cache', calcBackground);
+        keyRow.get('properties').get('style').get('background').set('write', true);
+      }
+      if ((valueCache !== undefined || colorFlag) && calcBackground !== valueCache) {
+        if (!valueStyle) valueRow.get('properties').set('style', new Map());
+        if (!valueBackground) valueRow.get('properties').get('style').set('background', new Map());
+        valueRow.get('properties').get('style').get('background').set('cache', calcBackground);
+        valueRow.get('properties').get('style').get('background').set('write', true);
+      }
+      rowNum += 1;
+    }
+  };
+
+  writeCache = () => {
+    this.setLevelColors();
+    for (const elemRec of this.controls.values()) {
+      for (const [propName, propRec] of elemRec.get('properties')) {
+        for (const [propNameLower, propLower] of propRec) {
+          if (propNameLower === 'write') {
+            if (propLower) {
+              elemRec.get('elemID')[propName] = ControlView.isoToLocal(propRec.get('cache'));
+              propRec.set('write', false);
+            }
+          } else if (!['cache', 'iso'].includes(propNameLower)) {
+            elemRec.get('elemID')[propName][propNameLower] = propLower.get('cache');
+            propLower.set('write', false);
+          }
+        }
       }
     }
   };

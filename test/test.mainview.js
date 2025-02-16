@@ -18,15 +18,17 @@ suite('MainView', () => {
     mainview = new MainView(true);
     testUtilities = new TestUtilities(mainview);
   });
-  test('expand, down, change value in key_9', async () => {
-    await testUtilities.loadSampleJson('wl_updated.js');
-    mainview.controlView.genericListener({ target: { id: 'value_4', type: 'text' }, type: 'click' });
-    mainview.controlView.genericListener({ target: { id: 'value_5', type: 'text' }, type: 'click' });
-    mainview.controlView.genericListener({ target: { id: 'value_8', type: 'text' }, type: 'click' });
-    mainview.controlView.genericListener({ target: { id: 'down', type: 'button' }, type: 'click' });
-    testUtilities.setControlEvent('key_9', 'value', '11', 'input');
-    chai.assert.equal(mainview.controls.get('key_8').get('properties').get('value').get('cache'), '0');
-    chai.assert.equal(mainview.controls.get('value_8').get('properties').get('value').get('cache'), 'be0');
+  test('array inside array callapse and expand', async () => {
+    testUtilities.setControlEvent('key_0', 'value', 'k0', 'input');
+    mainview.controlView.genericListener({ target: { id: 'array', type: 'button' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'key_1', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'array', type: 'button' }, type: 'click' });
+     testUtilities.setControlEvent('value_2', 'value', 'v2', 'input');
+   mainview.controlView.genericListener({ target: { id: 'value_0', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_0', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_1', type: 'text' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('key_2').get('properties').get('value').get('cache'), '0');
+    chai.assert.equal(mainview.controls.get('value_2').get('properties').get('value').get('cache'), 'v2');
   });
   test('expand insert value in key_9', async () => {
     await testUtilities.loadSampleJson('wl_updated.js');
