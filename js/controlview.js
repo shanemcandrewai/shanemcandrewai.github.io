@@ -5,7 +5,7 @@ import Dropbox from './dropbox.js';
 import Db from './db.js';
 
 export default class ControlView {
-  static maxRows = 9;
+  static maxRows = 14;
 
   static lastLineClick = 0;
 
@@ -542,12 +542,12 @@ export default class ControlView {
         container.set(containerEntry.value[0], containerEntry.value[1]);
         containerEntry = containerEntries.next();
       }
-      // this.db.setRec('', '', container);
+      this.setCache(`key_${selectNumber}`, 'value', '');
     } else if (Array.isArray(container)) {
       let key = Number(this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache'));
       container.splice(key, 0, '');
       selectNumber += 1;
-      while (selectNumber < ControlView.maxRows) {
+      while (selectNumber <= ControlView.maxRows) {
         const level = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
         if (level === selectLevel) {
           this.setCache(`key_${selectNumber}`, 'value', key + 1);
@@ -556,7 +556,6 @@ export default class ControlView {
         } else break;
       }
     }
-    this.setCache(`key_${selectNumber}`, 'value', '');
     this.writeCache();
   };
 

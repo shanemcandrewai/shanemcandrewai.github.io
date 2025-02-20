@@ -14,6 +14,8 @@ suite('MainView', () => {
       document.getElementById(`key_${selectNumber}`).removeAttribute('readOnly');
       document.getElementById(`key_${selectNumber}`).classList.remove('text-bg-danger');
       document.getElementById(`value_${selectNumber}`).removeAttribute('readOnly');
+      document.getElementById(`key_${selectNumber}`).style.background = 'white';
+      document.getElementById(`value_${selectNumber}`).style.background = 'white';
     }
     mainview = new MainView(true);
     testUtilities = new TestUtilities(mainview);
@@ -58,12 +60,17 @@ suite('MainView', () => {
     chai.assert.equal(mainview.controls.get('key_9').get('properties').get('value').get('cache'), '11');
     chai.assert.equal(mainview.controlView.db.db.db.get('bmap').get('bmk0').get('11'), 'bvv1');
   });
-  test('expand over 9 then down', async () => {
+  test('expand over ControlView.maxRows then down', async () => {
     await testUtilities.loadSampleJson('wl_updated.js');
     mainview.controlView.genericListener({ target: { id: 'value_4', type: 'text' }, type: 'click' });
     mainview.controlView.genericListener({ target: { id: 'value_6', type: 'text' }, type: 'click' });
     mainview.controlView.genericListener({ target: { id: 'value_5', type: 'text' }, type: 'click' });
     mainview.controlView.genericListener({ target: { id: 'value_3', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'key_4', type: 'text' }, type: 'click' });
+    for (let i = 9; i < ControlView.maxRows; i += 1) {
+      mainview.controlView.genericListener({ target: { id: 'insert', type: 'button' }, type: 'click' });
+      testUtilities.setControlEvent('key_4', 'value', i, 'input');
+    }
     mainview.controlView.genericListener({ target: { id: 'down', type: 'button' }, type: 'click' });
     chai.assert.equal(mainview.controls.get('key_9').get('properties').get('value').get('cache'), 'arr1');
     mainview.controlView.genericListener({ target: { id: 'down', type: 'button' }, type: 'click' });
@@ -81,6 +88,9 @@ suite('MainView', () => {
     mainview.controlView.genericListener({ target: { id: 'append', type: 'button' }, type: 'click' });
     testUtilities.setControlEvent('value_7', 'value', '11', 'input');
     testUtilities.setControlEvent('value_8', 'value', '22', 'input');
+    for (let i = 9; i < ControlView.maxRows; i += 1) {
+      mainview.controlView.genericListener({ target: { id: 'insert', type: 'button' }, type: 'click' });
+    }
     mainview.controlView.genericListener({ target: { id: 'down', type: 'button' }, type: 'click' });
     testUtilities.setControlEvent('value_8', 'value', '33', 'input');
     testUtilities.setControlEvent('value_9', 'value', '44', 'input');
@@ -341,10 +351,15 @@ suite('MainView', () => {
     mainview.controlView.genericListener({ target: { id: 'value_5', type: 'text' }, type: 'click' });
     mainview.controlView.genericListener({ target: { id: 'value_4', type: 'text' }, type: 'click' });
     mainview.controlView.genericListener({ target: { id: 'value_2', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'key_3', type: 'text' }, type: 'click' });
+    for (let i = 9; i < ControlView.maxRows; i += 1) {
+      mainview.controlView.genericListener({ target: { id: 'insert', type: 'button' }, type: 'click' });
+      testUtilities.setControlEvent('key_3', 'value', i, 'input');
+    }
     mainview.controlView.genericListener({ target: { id: 'down', type: 'button' }, type: 'click' });
-    chai.assert.equal(mainview.controls.get('level_9').get('properties').get('value').get('cache'), '0');
-    chai.assert.equal(mainview.controls.get('key_9').get('properties').get('value').get('cache'), '');
-    chai.assert.equal(mainview.controls.get('value_9').get('properties').get('value').get('cache'), '');
+    chai.assert.equal(mainview.controls.get(`level_${ControlView.maxRows}`).get('properties').get('value').get('cache'), '0');
+    chai.assert.equal(mainview.controls.get(`key_${ControlView.maxRows}`).get('properties').get('value').get('cache'), '');
+    chai.assert.equal(mainview.controls.get(`value_${ControlView.maxRows}`).get('properties').get('value').get('cache'), '');
   });
   test('load small file click value 4, 5, 4', async () => {
     await testUtilities.loadSampleJson('small.js');
