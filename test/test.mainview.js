@@ -10,7 +10,7 @@ let testUtilities;
 
 suite('MainView', () => {
   setup('setup', () => {
-    for (const selectNumber of ControlView.range(0, ControlView.maxRows)) {
+    for (let selectNumber = 0; selectNumber < ControlView.maxRows; selectNumber += 1) {
       document.getElementById(`key_${selectNumber}`).removeAttribute('readOnly');
       document.getElementById(`key_${selectNumber}`).classList.remove('text-bg-danger');
       document.getElementById(`value_${selectNumber}`).removeAttribute('readOnly');
@@ -88,6 +88,7 @@ suite('MainView', () => {
     mainview.controlView.genericListener({ target: { id: 'append', type: 'button' }, type: 'click' });
     testUtilities.setControlEvent('value_7', 'value', '11', 'input');
     testUtilities.setControlEvent('value_8', 'value', '22', 'input');
+    chai.assert.equal(mainview.controlView.db.db.db.get('bmap').get('arr1')[2], '22');
     for (let i = 9; i < ControlView.maxRows; i += 1) {
       mainview.controlView.genericListener({ target: { id: 'insert', type: 'button' }, type: 'click' });
     }
@@ -214,19 +215,6 @@ suite('MainView', () => {
     chai.assert.equal(mainview.controlView.db.getRec('mk-sim'), undefined);
     chai.assert.equal(mainview.controlView.db.db.db.get('mk-sim'), undefined);
     chai.assert.equal(mainview.controlView.db.db.db.size, 4);
-  });
-  test('map2Obj', async () => {
-    const mapInput = new Map([['a', 1], ['b', new Map([['c', 2],
-      ['d', new Map([['e', 3]])]])], ['f', [4, new Map([['g', 5]])]]]);
-    const nestedObject = ControlView.map2Obj(mapInput);
-    chai.assert.equal(typeof nestedObject, 'object');
-    chai.assert.equal(nestedObject.a, 1);
-    chai.assert.equal(nestedObject.b.c, 2);
-    chai.assert.equal(nestedObject.b.d.e, 3);
-    chai.assert.equal(Array.isArray(nestedObject.f), true);
-    chai.assert.equal(nestedObject.f[0], 4);
-    chai.assert.equal(nestedObject.f[1] instanceof Map, true);
-    chai.assert.equal(nestedObject.f[1].get('g'), 5);
   });
   test('obj2Map', async () => {
     const objInput = { a: 1, b: { c: 2, d: { e: 3 } }, f: [4, { g: 5 }] };
