@@ -116,8 +116,6 @@ export default class ControlView {
     return new Map([['container', this.db.getMap()]]);
   };
 
-  getAncestorContainer = (selectNumber, level) => this.getAncestor(selectNumber, level).get('container');
-
   getAncestorValue = (selectNumber, level, key) => {
     const container = this.getAncestor(selectNumber, level).get('container');
     if (container instanceof Map && container.has(key)) return container.get(key);
@@ -131,7 +129,7 @@ export default class ControlView {
       const entry = entries.next();
       if (!entry.done) {
         const [nextKey, nextValue] = entry.value;
-        this.setCacheSelect(currentSelect, 0, nextKey, nextValue);
+        this.setCacheRow(currentSelect, 0, nextKey, nextValue);
       } else break;
     }
   };
@@ -142,7 +140,7 @@ export default class ControlView {
     const [level, cacheKey] = this.getProps(selectNumber);
     const value = this.getAncestorValue(selectNumber, level, cacheKey);
     if (ControlView.isISO(cacheKey)) inputKey = ControlView.localToISO(inputKey);
-    const parent = this.getAncestorContainer(selectNumber, level);
+    const parent = this.getAncestor(selectNumber, level).get('container');
     if (parent instanceof Map) {
       if (parent.has(inputKey)) {
         this.controls.get(event.target.id).get('elemID').classList.add('text-bg-danger');
@@ -183,7 +181,7 @@ export default class ControlView {
           break;
         }
       }
-      this.setCacheSelect(selectNumber, 0, 'wl_updated', nowISO);
+      this.setCacheRow(selectNumber, 0, 'wl_updated', nowISO);
       this.writeCache();
     }
   };
@@ -192,7 +190,6 @@ export default class ControlView {
     this.controls.get(`level_${row}`).get('properties').get('value').get('cache'),
     this.controls.get(`key_${row}`).get('properties').get('value').get('cache'),
     this.controls.get(`value_${row}`).get('properties').get('value').get('cache'),
-
   ];
 
   valueInput = (event) => {
@@ -203,7 +200,7 @@ export default class ControlView {
     let calcValue = inputValue;
     if (ControlView.isISO(cacheValue)) calcValue = ControlView.localToISO(inputValue);
     if (!Number.isNaN(Number(calcValue))) calcValue = Number(calcValue);
-    const parent = this.getAncestorContainer(selectNumber, level);
+    const parent = this.getAncestor(selectNumber, level).get('container');
     this.db.setRec(key, calcValue, parent);
     this.setCache(`value_${selectNumber}`, 'value', calcValue);
     if (Array.isArray(parent) && selectNumber < ControlView.maxRows) {
@@ -220,7 +217,7 @@ export default class ControlView {
     this.wlUpdate();
   };
 
-  copySelect = (selectFrom, selectTo) => {
+  copyRow = (selectFrom, selectTo) => {
     for (const elemType of ['level', 'key', 'value']) {
       const propsFrom = this.controls.get(`${elemType}_${selectFrom}`).get('properties');
       const propsTo = this.controls.get(`${elemType}_${selectTo}`).get('properties');
@@ -239,7 +236,7 @@ export default class ControlView {
     else this.controls.get(`key_${selectTo}`).delete('ancestors');
   };
 
-  setCacheSelect = (selectNumber = 0, level = 0, key = '', value = '') => {
+  setCacheRow = (selectNumber = 0, level = 0, key = '', value = '') => {
     this.setCache(`level_${selectNumber}`, 'value', level);
     this.setCache(`key_${selectNumber}`, 'value', key);
     if (Array.isArray(this.getAncestor(selectNumber, level))) {
@@ -372,7 +369,7 @@ export default class ControlView {
     }
 
     for (let selectNumber = 0; selectNumber < ControlView.maxRows; selectNumber += 1) {
-      this.copySelect(selectNumber + 1, selectNumber);
+      this.copyRow(selectNumber + 1, selectNumber);
     }
     const key = this.controls.get(`key_${ControlView.maxRows}`).get('properties').get('value').get('cache');
     const ancestors = this.controls.get(`key_${ControlView.maxRows}`).get('ancestors');
@@ -382,14 +379,14 @@ export default class ControlView {
       const nextEntry = this.getNext(ControlView.maxRows - 1, level, ancestors);
       if (nextEntry) {
         this.controls.get(`key_${ControlView.maxRows}`).set('ancestors', nextEntry.ancestors);
-        this.setCacheSelect(
+        this.setCacheRow(
           ControlView.maxRows,
           nextEntry.level,
           nextEntry.key,
           nextEntry.value,
         );
       } else {
-        this.setCacheSelect(ControlView.maxRows);
+        this.setCacheRow(ControlView.maxRows);
         this.controls.get(`key_${ControlView.maxRows}`).delete('ancestors');
       }
     }
@@ -401,10 +398,10 @@ export default class ControlView {
     if (previousEntry !== undefined) {
       let selectNumber = ControlView.maxRows - 1;
       while (selectNumber + 1) {
-        this.copySelect(selectNumber, selectNumber + 1);
+        this.copyRow(selectNumber, selectNumber + 1);
         selectNumber -= 1;
       }
-      this.setCacheSelect(
+      this.setCacheRow(
         selectNumber + 1,
         previousEntry.level,
         previousEntry.key,
@@ -472,12 +469,12 @@ export default class ControlView {
     let copyFrom = ControlView.maxRows - 1;
     // shift down rows leaving gap for expanded map
     while (copyFrom >= selectNumber) {
-      this.copySelect(copyFrom, copyFrom + 1);
+      this.copyRow(copyFrom, copyFrom + 1);
       copyFrom -= 1;
     }
     const selectLevel = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
     const selectKey = this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache');
-    const container = this.getAncestorContainer(selectNumber, selectLevel);
+    const container = this.getAncestor(selectNumber, selectLevel).get('container');
     this.setCache(`value_${selectNumber}`, 'value', '');
     this.setCache(`value_${selectNumber}`, 'readOnly', false);
     if (container instanceof Map) {
@@ -512,11 +509,11 @@ export default class ControlView {
     let copyFrom = ControlView.maxRows - 1;
     // shift down rows leaving gap for expanded map
     while (copyFrom >= selectNumber) {
-      this.copySelect(copyFrom, copyFrom + 1);
+      this.copyRow(copyFrom, copyFrom + 1);
       copyFrom -= 1;
     }
     const selectLevel = this.controls.get(`level_${selectNumber - 1}`).get('properties').get('value').get('cache');
-    const ancestors = this.getAncestorContainer(selectNumber - 1, selectLevel);
+    const ancestors = this.getAncestor(selectNumber - 1, selectLevel).get('container');
     this.setCache(`level_${selectNumber}`, 'value', selectLevel);
     this.setCache(`value_${selectNumber}`, 'value', '');
     this.setCache(`value_${selectNumber}`, 'readOnly', false);
@@ -545,7 +542,7 @@ export default class ControlView {
     this.setCache(`value_${selectNumber}`, 'value', '<>');
     this.setCache(`value_${selectNumber}`, 'readOnly', true);
     this.setCache(`level_${selectNumber + 1}`, 'value', nextLevel);
-    const ancestors = this.getAncestorContainer(selectNumber, level);
+    const ancestors = this.getAncestor(selectNumber, level).get('container');
     this.db.setRec(key, new Map(), ancestors);
     let ancestorCopy;
     if (this.controls.get(`key_${selectNumber}`).has('ancestors')) {
@@ -577,7 +574,7 @@ export default class ControlView {
     this.setCache(`value_${selectNumber}`, 'readOnly', true);
     this.setCache(`level_${selectNumber + 1}`, 'value', nextLevel);
     this.setCache(`key_${selectNumber + 1}`, 'value', nextKey);
-    const ancestors = this.getAncestorContainer(selectNumber, level);
+    const ancestors = this.getAncestor(selectNumber, level).get('container');
     this.db.setRec(key, [], ancestors);
     let ancestorCopy;
     if (this.controls.get(`key_${selectNumber}`).get('properties').has('ancestors')) {
@@ -602,7 +599,7 @@ export default class ControlView {
     let key = this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache');
     let value = this.controls.get(`value_${selectNumber}`).get('properties').get('value').get('cache');
     this.setCache(ControlView.activeElementID, 'value', `${nowISO}`);
-    const ancestors = this.getAncestorContainer(selectNumber, level);
+    const ancestors = this.getAncestor(selectNumber, level).get('container');
     if (ControlView.activeElementID.slice(0, 3) === 'key') {
       this.db.deleteRec(key, ancestors);
       key = nowISO;
@@ -617,7 +614,7 @@ export default class ControlView {
     let key = this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache');
     let value = this.controls.get(`value_${selectNumber}`).get('properties').get('value').get('cache');
     this.setCache(ControlView.activeElementID, 'value', length);
-    const ancestors = this.getAncestorContainer(selectNumber, level);
+    const ancestors = this.getAncestor(selectNumber, level).get('container');
     if (ControlView.activeElementID.slice(0, 3) === 'key') {
       this.db.deleteRec(key, ancestors);
       key = length;
@@ -630,7 +627,7 @@ export default class ControlView {
     const cacheKey = this.controls.get(`key_${selectNumber}`).get('properties').get('value').get('cache');
     const selectLevel = this.controls.get(`level_${selectNumber}`).get('properties').get('value').get('cache');
     const containerSize = this.getInnerSize(selectNumber);
-    const parent = this.getAncestorContainer(selectNumber, selectLevel);
+    const parent = this.getAncestor(selectNumber, selectLevel).get('container');
 
     this.db.deleteRec(cacheKey, parent);
     const maxCopyFrom = selectNumber + 1 + containerSize;
@@ -640,7 +637,7 @@ export default class ControlView {
       let setRow;
       for (let fromRow = maxCopyFrom; fromRow < ControlView.maxRows + 1; fromRow += 1) {
         setRow = fromRow - containerSize - 1;
-        this.copySelect(fromRow, setRow);
+        this.copyRow(fromRow, setRow);
       }
 
       if (Array.isArray(parent)) {
@@ -694,7 +691,7 @@ export default class ControlView {
     while (maxCopyRow > 0) {
       const setRow = maxCopyRow + innerSize;
       if (setRow <= ControlView.maxRows && setRow > selectNumber + innerSize) {
-        this.copySelect(maxCopyRow, setRow);
+        this.copyRow(maxCopyRow, setRow);
       }
       maxCopyRow -= 1;
     }
@@ -716,7 +713,7 @@ export default class ControlView {
     ancestorsInner.get(nextLevel).set('container', selectValue);
 
     if (typeof selectValue === 'string' || typeof selectValue === 'number') {
-      this.setCacheSelect(
+      this.setCacheRow(
         nextSelectNumber,
         nextLevel,
         selectKey,
@@ -730,7 +727,7 @@ export default class ControlView {
       for (const [key, val] of values) {
         if (nextSelectNumber <= ControlView.maxRows) {
           this.controls.get(`key_${nextSelectNumber}`).set('ancestors', ancestorsInner);
-          this.setCacheSelect(
+          this.setCacheRow(
             nextSelectNumber,
             nextLevel,
             key,
@@ -768,7 +765,7 @@ export default class ControlView {
       let setRow;
       for (let fromRow = maxCopyFrom; fromRow < ControlView.maxRows + 1; fromRow += 1) {
         setRow = fromRow - containerSize;
-        this.copySelect(fromRow, setRow);
+        this.copyRow(fromRow, setRow);
       }
       this.fillGap(setRow);
     }
@@ -792,12 +789,12 @@ export default class ControlView {
         const [nextKey, nextValue] = parentEntry.value;
         if (selectKey.has('ancestors')) fillRowKey.set('ancestors', selectKey.get('ancestors'));
         else fillRowKey.delete('ancestors');
-        this.setCacheSelect(fillRow, level, nextKey, nextValue);
+        this.setCacheRow(fillRow, level, nextKey, nextValue);
       } else if (level && (fillRow !== ControlView.maxRows)) {
         this.fillGap(fillRow - 1, level - 1);
         return;
       } else {
-        this.setCacheSelect(fillRow, 0, '', '');
+        this.setCacheRow(fillRow);
         fillRowKey.delete('ancestors');
       }
 
@@ -831,7 +828,6 @@ export default class ControlView {
 
   setLoad(loadVal) {
     this.setCache('load', 'disabled', loadVal);
-    // this.setCache('messages', 'disabled', messagesVal);
   }
 
   setSave(saveVal) {
@@ -985,7 +981,6 @@ export default class ControlView {
       if (!rowElem) {
         const newRow = prevRowElem.cloneNode(true);
         newRow.id = `row_${nextRow}`;
-        // newRow.children[0].children[0].id = `select_${nextRow}`;
         newRow.children[0].children[0].id = `level_${nextRow}`;
         newRow.children[1].children[0].id = `key_${nextRow}`;
         newRow.children[1].children[0].placeholder = `key_${nextRow}`;
