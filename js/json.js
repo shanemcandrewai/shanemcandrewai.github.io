@@ -1,23 +1,60 @@
 import Db from './db.js';
 
 export default class Json {
+  static obj2Map = (obj, map = new Map()) => {
+    if (Array.isArray(obj)) {
+      const newArr = [];
+      for (const va of obj.values()) {
+        if (typeof (va) === 'object' && va !== null) {
+          newArr.push(Json.obj2Map(va));
+        } else newArr.push(va);
+      }
+      return newArr;
+    }
+    for (const [k, v] of Object.entries(obj)) {
+      if (typeof (v) === 'object' && v !== null) {
+        map.set(k, Json.obj2Map(v));
+      } else map.set(k, v);
+    }
+    return map;
+  };
+
+  static map2Obj = (map, obj = {}) => {
+    if (Array.isArray(map)) {
+      const newArr = [];
+      for (const va of map.values()) {
+        if (typeof (va) === 'object' && va !== null) {
+          newArr.push(Json.map2Obj(va));
+        } else newArr.push(va);
+      }
+      return newArr;
+    }
+    for (const [k, v] of map) {
+      const ob = obj;
+      if (v instanceof Map) {
+        ob[k] = Json.map2Obj(v);
+      } else ob[k] = v;
+    }
+    return obj;
+  };
+
   getBlob = () => {
-    const strObj = this.db.getString();
+    const strObj = this.getString();
     return new Blob(
       [strObj],
       { type: 'application/json' },
     );
   };
 
+  getString = (spacer = 2) => JSON.stringify(Json.map2Obj(this.db.db), null, spacer);
+
   readFile = async (file) => this.readText(await file.text());
 
-  getString = (spacer = 2) => this.db.getString(spacer);
-
   readText = (text) => {
-    const fileObj = Db.obj2Map(JSON.parse(text, null));
+    const fileObj = Json.obj2Map(JSON.parse(text, null));
     for (const [key, rec] of fileObj) {
     // shane to do - add Array case
-      this.setRec(key, rec);
+      this.db.db.set(key, rec);
     }
     return fileObj.size;
   };
@@ -32,7 +69,7 @@ export default class Json {
 
   hasID = (id) => this.db.hasID(id);
 
-  getChildren = (id) => this.db.getRecChildren(id);
+  getChildren = (id) => this.db.getChildren(id);
 
   size = () => this.db.size();
 
