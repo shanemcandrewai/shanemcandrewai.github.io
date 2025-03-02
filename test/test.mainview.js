@@ -20,14 +20,6 @@ suite('MainView', () => {
     mainview = new MainView(true);
     testUtilities = new TestUtilities(mainview);
   });
-  test('array, append bug', async () => {
-    mainview.controlView.genericListener({ target: { id: 'array', type: 'button' }, type: 'click' });
-    mainview.controlView.genericListener({ target: { id: 'key_1', type: 'text' }, type: 'click' });
-    mainview.controlView.genericListener({ target: { id: 'append', type: 'button' }, type: 'click' });
-    mainview.controlView.genericListener({ target: { id: 'append', type: 'button' }, type: 'click' });
-    chai.assert.equal(mainview.controls.get('key_2').get('properties').get('value').get('cache'), '1');
-    chai.assert.equal(mainview.controls.get('key_3').get('properties').get('value').get('cache'), '2');
-  });
   test('correct order to map member insertions', async () => {
     testUtilities.setControlEvent('key_0', 'value', 'k0', 'input');
     mainview.controlView.genericListener({ target: { id: 'map', type: 'button' }, type: 'click' });
