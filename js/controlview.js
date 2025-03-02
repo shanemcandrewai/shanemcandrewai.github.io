@@ -7,10 +7,6 @@ import Db from './db.js';
 export default class ControlView {
   static maxRows = 14;
 
-  static lastLineClick = 0;
-
-  static activeElementID = 'value_0';
-
   static isISO = (input) => {
     if (!/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z/.test(input)) return false;
     const d = new Date(input);
@@ -33,23 +29,7 @@ export default class ControlView {
     return ret;
   };
 
-  static obj2Map = (obj, map = new Map()) => {
-    if (Array.isArray(obj)) {
-      const newArr = [];
-      for (const va of obj.values()) {
-        if (typeof (va) === 'object' && va !== null) {
-          newArr.push(ControlView.obj2Map(va));
-        } else newArr.push(va);
-      }
-      return newArr;
-    }
-    for (const [k, v] of Object.entries(obj)) {
-      if (typeof (v) === 'object' && v !== null) {
-        map.set(k, ControlView.obj2Map(v));
-      } else map.set(k, v);
-    }
-    return map;
-  };
+  static obj2Map = (obj, map = new Map()) => Db.obj2Map(obj, map);
 
   static replaceKey = (mapToUpdate, keyOld, keyNew, valNew) => {
     const mapToUpdateCopy = new Map(mapToUpdate);
@@ -170,7 +150,7 @@ export default class ControlView {
         );
       }
     }
-    ControlView.lastKeyClick = inputKey;
+    this.activeElementID = inputKey;
     this.wlUpdate();
   };
 
@@ -465,7 +445,7 @@ export default class ControlView {
   };
 
   insertClick = () => {
-    let selectNumber = ControlView.lastLineClick;
+    let selectNumber = this.lastLineClick;
     for (let copyFrom = ControlView.maxRows - 1; copyFrom >= selectNumber; copyFrom -= 1) {
       this.copyRow(copyFrom, copyFrom + 1);
     }
@@ -499,22 +479,22 @@ export default class ControlView {
   };
 
   appendClick = () => {
-    let nextRow = ControlView.lastLineClick + 1;
+    let nextRow = this.lastLineClick + 1;
     for (let copyFrom = ControlView.maxRows - 1; copyFrom >= nextRow; copyFrom -= 1) {
       this.copyRow(copyFrom, copyFrom + 1);
     }
-    const [thisLevel, thisKey] = this.getProps(ControlView.lastLineClick);
-    const ancestors = this.getAncestor(ControlView.lastLineClick, thisLevel);
+    const [thisLevel, thisKey] = this.getProps(this.lastLineClick);
+    const ancestors = this.getAncestor(this.lastLineClick, thisLevel);
     this.setCache(`level_${nextRow}`, 'value', thisLevel);
     this.setCache(`value_${nextRow}`, 'value', '');
     this.setCache(`value_${nextRow}`, 'readOnly', false);
-    const key = this.controls.get(`key_${ControlView.lastLineClick}`);
+    const key = this.controls.get(`key_${this.lastLineClick}`);
     if (key.has('ancestors')) {
       this.controls.get(`key_${nextRow}`).set('ancestors', key.get('ancestors'));
     }
     const container = ancestors.get('container');
     if (container instanceof Map) {
-      this.db.setRec('', '', container);
+      this.db.setRec('', '', container, thisKey);
       this.setCache(`key_${nextRow}`, 'value', '');
     } else if (Array.isArray(container)) {
       container.splice(Number(thisKey) + 1, 0, '');
@@ -527,7 +507,7 @@ export default class ControlView {
   };
 
   mapClick = () => {
-    const selectNumber = ControlView.lastLineClick;
+    const selectNumber = this.lastLineClick;
     const [level, key, value] = this.getProps(selectNumber);
     const nextLevel = level + 1;
     this.setCache(`value_${selectNumber}`, 'value', '<>');
@@ -555,7 +535,7 @@ export default class ControlView {
   };
 
   arrayClick = () => {
-    const selectNumber = ControlView.lastLineClick;
+    const selectNumber = this.lastLineClick;
     const [level, key, value] = this.getProps(selectNumber);
     const nextLevel = level + 1;
     const nextKey = '0';
@@ -583,13 +563,13 @@ export default class ControlView {
   timestampClick = () => {
     const now = new Date();
     const nowISO = now.toISOString();
-    const selectNumber = ControlView.lastLineClick;
+    const selectNumber = this.lastLineClick;
     const [level, cacheKey, cacheValue] = this.getProps(selectNumber);
     let key = cacheKey;
     let value = cacheValue;
-    this.setCache(ControlView.activeElementID, 'value', `${nowISO}`);
+    this.setCache(this.activeElementID, 'value', `${nowISO}`);
     const ancestors = this.getAncestor(selectNumber, level).get('container');
-    if (ControlView.activeElementID.slice(0, 3) === 'key') {
+    if (this.activeElementID.slice(0, 3) === 'key') {
       this.db.deleteRec(key, ancestors);
       key = nowISO;
     } else value = nowISO;
@@ -598,13 +578,13 @@ export default class ControlView {
 
   lengthClick = () => {
     const { length } = this.db.getString();
-    const selectNumber = ControlView.lastLineClick;
+    const selectNumber = this.lastLineClick;
     const [level, cacheKey, cacheValue] = this.getProps(selectNumber);
     let key = cacheKey;
     let value = cacheValue;
-    this.setCache(ControlView.activeElementID, 'value', length);
+    this.setCache(this.activeElementID, 'value', length);
     const ancestors = this.getAncestor(selectNumber, level).get('container');
-    if (ControlView.activeElementID.slice(0, 3) === 'key') {
+    if (this.activeElementID.slice(0, 3) === 'key') {
       this.db.deleteRec(key, ancestors);
       key = length;
     } else value = length;
@@ -612,7 +592,7 @@ export default class ControlView {
   };
 
   deleteClick = () => {
-    const selectNumber = ControlView.lastLineClick;
+    const selectNumber = this.lastLineClick;
     const [selectLevel, cacheKey] = this.getProps(selectNumber);
     const containerSize = this.getInnerSize(selectNumber);
     const parent = this.getAncestor(selectNumber, selectLevel).get('container');
@@ -645,14 +625,13 @@ export default class ControlView {
   };
 
   keyClick = (event) => {
-    ControlView.lastLineClick = Number(event.target.id.slice(4));
-    ControlView.activeElementID = event.target.id;
-    [, ControlView.lastKeyClick] = this.getProps(event.target.id.slice(4));
+    this.lastLineClick = Number(event.target.id.slice(4));
+    this.activeElementID = event.target.id;
   };
 
   valueClick = (event) => {
-    ControlView.lastLineClick = Number(event.target.id.slice(6));
-    ControlView.activeElementID = event.target.id;
+    this.lastLineClick = Number(event.target.id.slice(6));
+    this.activeElementID = event.target.id;
     const selectNumber = Number(event.target.id.slice(6));
     const [level, key] = this.getProps(selectNumber);
     const value = this.getAncestorValue(selectNumber, level, key);
@@ -971,6 +950,9 @@ export default class ControlView {
   };
 
   constructor(controls, writeCacheImmediately) {
+    this.lastLineClick = 0;
+    this.activeElementID = 'value_0';
+
     this.writeCacheImmediately = writeCacheImmediately || false;
     this.controls = controls;
     this.db = new Db();
