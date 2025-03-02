@@ -7,7 +7,7 @@ let mainview;
 let testUtilities;
 
 /* global suite, test, setup, chai */
-
+//
 suite('MainView', () => {
   setup('setup', () => {
     for (let selectNumber = 0; selectNumber < ControlView.maxRows; selectNumber += 1) {
