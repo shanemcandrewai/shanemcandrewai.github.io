@@ -7,7 +7,7 @@ let mainview;
 let testUtilities;
 
 /* global suite, test, setup, chai */
-//
+
 suite('MainView', () => {
   setup('setup', () => {
     for (let selectNumber = 0; selectNumber < ControlView.maxRows; selectNumber += 1) {
@@ -671,7 +671,7 @@ suite('MainView', () => {
   });
   test('load wlorig.json', async () => {
     await testUtilities.loadSampleJson();
-    const desc = mainview.controlView.db.getRec(2).get('description');
+    const desc = mainview.controlView.db.getRec('2').get('description');
     chai.assert.equal(desc, 'Change tr');
     chai.assert.equal(mainview.controls.get('key_1').get('properties').get('value').get('cache'), 2);
     chai.assert.equal(mainview.controls.get('key_2').get('properties').get('value').get('cache'), 3);
@@ -686,11 +686,11 @@ suite('MainView', () => {
   });
   test('load file with priority 0', async () => {
     await testUtilities.loadSampleJson();
-    chai.assert.equal(mainview.controlView.db.getRec(11).get('priority'), 0);
+    chai.assert.equal(mainview.controlView.db.getRec('11').get('priority'), 0);
   });
   test('empty string in file is not inserted into db', async () => {
     await testUtilities.loadSampleJson();
-    chai.assert.equal(mainview.controlView.db.getRec(3).get('description'), undefined);
+    chai.assert.equal(mainview.controlView.db.getRec('3').get('description'), undefined);
   });
   test('load wl.json and check', async () => {
     await testUtilities.loadSampleJson();
@@ -706,14 +706,14 @@ suite('MainView', () => {
       .has('description'), true);
     chai.assert.equal(mainview.controls.get('key_1').get('properties').get('value').get('cache'), 'created');
     chai.assert.equal(mainview.controls.get('key_4').get('properties').get('value').get('cache'), 3);
-    chai.assert.equal(mainview.controlView.db.getRec(1).has('description'), true);
-    chai.assert.equal(mainview.controlView.db.getRec(1).get('description')
-      === mainview.controlView.db.getRec('1').get('description'), true);
-    chai.assert.equal(mainview.controlView.db.getRec(1) instanceof Map, true);
-    chai.assert.equal(mainview.controlView.db.getRec(1).size, 2);
+    chai.assert.equal(mainview.controlView.db.getRec('1').has('description'), true);
+    chai.assert.equal(mainview.controlView.db.getRec('1').get('description')
+      === mainview.controlView.db.db.getRec('1').get('description'), true);
+    chai.assert.equal(mainview.controlView.db.getRec('1') instanceof Map, true);
+    chai.assert.equal(mainview.controlView.db.getRec('1').size, 2);
     chai.assert.equal(mainview.controls.get('value_2').get('properties').get('value').get('cache'), 'Log');
     testUtilities.setControlEvent('value_2', 'value', 'Log updated', 'input');
-    chai.assert.equal(mainview.controlView.db.getRec(1).get('description'), 'Log updated');
+    chai.assert.equal(mainview.controlView.db.getRec('1').get('description'), 'Log updated');
   });
   test('click map 3, then map 4', async () => {
     await testUtilities.loadSampleJson();

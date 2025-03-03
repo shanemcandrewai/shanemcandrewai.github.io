@@ -38,7 +38,7 @@ export default class Db {
 
   getRec = (key, parentRec) => {
     if (parentRec) return parentRec.get(key);
-    return this.db.get(String(key));
+    return this.db.get(key);
   };
 
   setRec = (key, value, parentRec, position) => {

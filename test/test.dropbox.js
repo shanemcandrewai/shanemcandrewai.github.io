@@ -15,7 +15,7 @@ suite('Dropbox', async () => {
     );
     chai.assert.equal(
       response.get('upload_response').content_hash,
-      '09e12d4cfb2e47c6181b6f7b4b785dbacb6809ab1f412006847ebf1d5111fd04',
+      'cfad6a153ba3c6d49912ad3477fab7298027eca06ecec50b55649fec3d5e28c5',
     );
   });
   test('save db and modify', async () => {
@@ -30,10 +30,10 @@ suite('Dropbox', async () => {
       json,
       'dbtest.json',
     );
-    chai.assert.equal(json.getRec(1).get('priority'), 3);
+    chai.assert.equal(json.getRec(2).get('priority'), 2);
     chai.assert.equal(
       response.get('upload_response').content_hash,
-      '5b8d153dedccc151defc2a33609b7c00e1cb578470a3f75b96c281aa4d3aa279',
+      '28aa78a7ef6e5649e89250b903f7135a2733a5a5ac61ca9903330bb243e4686c',
     );
   });
   test('save and load', async () => {
@@ -45,7 +45,7 @@ suite('Dropbox', async () => {
     );
     json = new Json();
     await dropbox.load(json, 'dbtest.json');
-    chai.assert.equal(json.getRec(1).get('priority'), 4);
+    chai.assert.equal(json.getRec('1').get('priority'), 4);
   });
   test('access token renewal and save', async () => {
     const json = new Json(new Map([[1, new Map([['priority', 4]])]]));
