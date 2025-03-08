@@ -29,8 +29,6 @@ export default class ControlView {
     return ret;
   };
 
-  static obj2Map = (obj, map = new Map()) => Db.obj2Map(obj, map);
-
   static replaceKey = (mapToUpdate, keyOld, keyNew, valNew) => {
     const mapToUpdateCopy = new Map(mapToUpdate);
     mapToUpdate.clear();
@@ -105,7 +103,7 @@ export default class ControlView {
 
   db2view = () => {
     const entries = this.db.getMap().entries();
-    for (let currentSelect = 0; currentSelect < ControlView.maxRows; currentSelect += 1) {
+    for (let currentSelect = 0; currentSelect <= ControlView.maxRows; currentSelect += 1) {
       const entry = entries.next();
       if (!entry.done) {
         const [nextKey, nextValue] = entry.value;
@@ -261,7 +259,7 @@ export default class ControlView {
   };
 
   setLevelColors = () => {
-    for (let rowNum = 0; rowNum < ControlView.maxRows; rowNum += 1) {
+    for (let rowNum = 0; rowNum <= ControlView.maxRows; rowNum += 1) {
       const level = this.getProps(rowNum)[0];
       const colorFlag = level % 4;
       const keyRow = this.controls.get(`key_${rowNum}`);
@@ -400,16 +398,15 @@ export default class ControlView {
     else selectAncestors = this.controls.get(`key_${selectNumber}`).get('ancestors');
     if (selectLevel !== level) key = this.getAncestor(selectNumber, selectLevel).get('key');
     const parentEntries = this.getAncestor(selectNumber, level).get('container').entries();
-    let parentEntry = parentEntries.next();
-    for (;!parentEntry.done && parentEntry.value[0] !== key;) {
-      parentEntry = parentEntries.next();
+    for (let parEntry = parentEntries.next(); !parEntry.done && parEntry.value[0] !== key;) {
+      parEntry = parentEntries.next();
     }
-    parentEntry = parentEntries.next();
-    if (parentEntry.done) {
+    const nextEntry = parentEntries.next();
+    if (nextEntry.done) {
       if (!level) return undefined;
       return this.getNext(selectNumber, level - 1, selectAncestors);
     }
-    const [nextKey, nextValue] = parentEntry.value;
+    const [nextKey, nextValue] = nextEntry.value;
     return {
       key: nextKey, level, value: nextValue, ancestors,
     };
@@ -454,15 +451,8 @@ export default class ControlView {
     this.setCache(`value_${selectNumber}`, 'value', '');
     this.setCache(`value_${selectNumber}`, 'readOnly', false);
     if (container instanceof Map) {
-      const containerCopy = new Map(container);
-      container.clear();
-      const containerEntries = containerCopy.entries();
-      for (let containerEntry = containerEntries.next(); !containerEntry.done;) {
-        if (containerEntry.value[0] === selectKey) container.set('', '');
-        container.set(containerEntry.value[0], containerEntry.value[1]);
-        containerEntry = containerEntries.next();
-      }
       this.setCache(`key_${selectNumber}`, 'value', '');
+      this.db.setRec('', '', container, selectKey);
     } else if (Array.isArray(container)) {
       let key = Number(this.getProps(selectNumber)[1]);
       container.splice(key, 0, '');
@@ -494,7 +484,7 @@ export default class ControlView {
     }
     const container = ancestors.get('container');
     if (container instanceof Map) {
-      this.db.setRec('', '', container, thisKey);
+      this.db.setRec('', '', container, thisKey, true);
       this.setCache(`key_${nextRow}`, 'value', '');
     } else if (Array.isArray(container)) {
       container.splice(Number(thisKey) + 1, 0, '');
@@ -513,16 +503,26 @@ export default class ControlView {
     this.setCache(`value_${selectNumber}`, 'value', '<>');
     this.setCache(`value_${selectNumber}`, 'readOnly', true);
     this.setCache(`level_${selectNumber + 1}`, 'value', nextLevel);
-    const ancestors = this.getAncestor(selectNumber, level).get('container');
-    this.db.setRec(key, new Map(), ancestors);
+    const container = this.getAncestor(selectNumber, level).get('container');
+    const dbValue = this.getAncestorValue(selectNumber, level, key);
+    let newMap = new Map();
+    if (Array.isArray(dbValue)) {
+      newMap = new Map(dbValue.reduce((acc, curr, ind) => {
+        acc.push([ind, curr]);
+        return acc;
+      }, []));
+    }
+    this.db.setRec(key, newMap, container);
+    this.insertExpanded(selectNumber, key, newMap);
+
     let ancestorCopy;
     if (this.controls.get(`key_${selectNumber}`).has('ancestors')) {
       ancestorCopy = this.controls.get(`key_${selectNumber}`).get('ancestors');
     } else ancestorCopy = new Map();
     ancestorCopy.set(nextLevel, new Map());
     ancestorCopy.get(nextLevel).set('key', key);
-    if (ancestors instanceof Map) ancestorCopy.get(nextLevel).set('container', ancestors.get(key));
-    else ancestorCopy.get(nextLevel).set('container', ancestors[key]);
+    if (container instanceof Map) ancestorCopy.get(nextLevel).set('container', container.get(key));
+    else ancestorCopy.get(nextLevel).set('container', container[key]);
     const nextSelect = selectNumber + 1;
     const [, keyCache, valueCache] = this.getProps(nextSelect);
     if (keyCache === '' && valueCache === '') {
@@ -536,6 +536,10 @@ export default class ControlView {
 
   arrayClick = () => {
     const selectNumber = this.lastLineClick;
+    const nextRow = this.lastLineClick + 1;
+    for (let copyFrom = ControlView.maxRows - 1; copyFrom >= nextRow; copyFrom -= 1) {
+      this.copyRow(copyFrom, copyFrom + 1);
+    }
     const [level, key, value] = this.getProps(selectNumber);
     const nextLevel = level + 1;
     const nextKey = '0';
@@ -704,11 +708,12 @@ export default class ControlView {
 
   getInnerSize = (selectNumber) => {
     const selectLevel = this.getProps(selectNumber)[0];
-    for (let count = 0; count <= ControlView.maxRows - selectNumber - 1; count += 1) {
+    let count = 0;
+    for (count; count <= ControlView.maxRows - selectNumber - 1; count += 1) {
       const level = this.getProps(selectNumber + count + 1)[0];
       if (selectLevel >= level) return count;
     }
-    return 0;
+    return count;
   };
 
   collapse = (event) => {

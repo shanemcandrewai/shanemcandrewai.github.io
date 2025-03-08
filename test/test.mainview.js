@@ -1,6 +1,7 @@
 import MainView from '../js/mainview.js';
 import ControlView from '../js/controlview.js';
 import Json from '../js/json.js';
+import Db from '../js/db.js';
 import TestUtilities from './testutilities.js';
 
 let mainview;
@@ -10,7 +11,7 @@ let testUtilities;
 
 suite('MainView', () => {
   setup('setup', () => {
-    for (let selectNumber = 0; selectNumber < ControlView.maxRows; selectNumber += 1) {
+    for (let selectNumber = 0; selectNumber <= ControlView.maxRows; selectNumber += 1) {
       document.getElementById(`key_${selectNumber}`).removeAttribute('readOnly');
       document.getElementById(`key_${selectNumber}`).classList.remove('text-bg-danger');
       document.getElementById(`value_${selectNumber}`).removeAttribute('readOnly');
@@ -19,6 +20,49 @@ suite('MainView', () => {
     }
     mainview = new MainView(true);
     testUtilities = new TestUtilities(mainview);
+  });
+  test('last row is filled', async () => {
+    await testUtilities.loadSampleJson();
+    chai.assert.equal(mainview.controls.get(`key_${ControlView.maxRows}`).get('properties').get('value').get('cache'), ControlView.maxRows + 1);
+    chai.assert.equal(mainview.controls.get(`value_${ControlView.maxRows}`).get('properties').get('value').get('cache'), '<>');
+    const lastKey = String(ControlView.maxRows + 1);
+    const lastValue = mainview.controlView.getAncestorValue(ControlView.maxRows, 0, lastKey);
+    chai.assert.equal(lastValue instanceof Map, true);
+  });
+  test('click array does not clobber next row', async () => {
+    await testUtilities.loadSampleJson('small.js');
+    mainview.controlView.genericListener({ target: { id: 'key_1', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'array', type: 'button' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('level_2').get('properties').get('value').get('cache'), '1');
+    chai.assert.equal(mainview.controls.get('key_3').get('properties').get('value').get('cache'), 'amap');
+    chai.assert.equal(mainview.controls.get('key_4').get('properties').get('value').get('cache'), 'bmap');
+  });
+  test('expand array and switch to map', async () => {
+    await testUtilities.loadSampleJson('small.js');
+    mainview.controlView.genericListener({ target: { id: 'value_2', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_4', type: 'text' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('key_4').get('properties').get('value').get('cache'), 'arr1');
+    chai.assert.equal(mainview.controls.get('value_5').get('properties').get('value').get('cache'), 'e0');
+    mainview.controlView.genericListener({ target: { id: 'map', type: 'button' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('key_5').get('ancestors').get(2).get('container') instanceof Map, true);
+    mainview.controlView.genericListener({ target: { id: 'value_4', type: 'text' }, type: 'click' });
+    mainview.controlView.genericListener({ target: { id: 'value_4', type: 'text' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get('value_5').get('properties').get('value').get('cache'), 'e0');
+  });
+  test('expand 12 then collapse bug', async () => {
+    await testUtilities.loadSampleJson();
+    chai.assert.equal(mainview.controls.get(`key_${ControlView.maxRows - 1}`).get('properties').get('value').get('cache'), ControlView.maxRows);
+    mainview.controlView.genericListener({ target: { id: `value_${ControlView.maxRows - 2}`, type: 'text' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get(`key_${ControlView.maxRows - 1}`).get('properties').get('value').get('cache'), 'parent');
+    mainview.controlView.genericListener({ target: { id: `value_${ControlView.maxRows - 2}`, type: 'text' }, type: 'click' });
+    chai.assert.equal(mainview.controls.get(`key_${ControlView.maxRows - 1}`).get('properties').get('value').get('cache'), ControlView.maxRows);
+  });
+  test('expand map, on last row, check colour', async () => {
+    await testUtilities.loadSampleJson();
+    mainview.controlView.genericListener({ target: { id: `value_${ControlView.maxRows - 1}`, type: 'text' }, type: 'click' });
+    const background = mainview.controls.get(`key_${ControlView.maxRows}`).get('properties').get('style').get('background')
+      .get('cache');
+    chai.assert.equal(background, 'lavenderblush');
   });
   test('expand map, click first member and append', async () => {
     await testUtilities.loadSampleJson('wl_updated.js');
@@ -253,7 +297,7 @@ suite('MainView', () => {
   });
   test('obj2Map', async () => {
     const objInput = { a: 1, b: { c: 2, d: { e: 3 } }, f: [4, { g: 5 }] };
-    const nestedMap = ControlView.obj2Map(objInput);
+    const nestedMap = Db.obj2Map(objInput);
     chai.assert.equal(nestedMap instanceof Map, true);
     chai.assert.equal(nestedMap.get('a'), 1);
     chai.assert.equal(nestedMap.get('b').get('c'), 2);

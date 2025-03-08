@@ -41,7 +41,7 @@ export default class Db {
     return this.db.get(key);
   };
 
-  setRec = (key, value, parentRec, position) => {
+  setRec = (key, value, parentRec, position, append) => {
     let parent = parentRec;
     if (!parent) parent = this.getRec(key);
     if (parent instanceof Map) {
@@ -52,8 +52,13 @@ export default class Db {
         const parentEntries = parentNew.entries();
         let parentEntry = parentEntries.next();
         for (parentNew; !parentEntry.done; parentEntry = parentEntries.next()) {
-          parent.set(parentEntry.value[0], parentEntry.value[1]);
-          if (position === parentEntry.value[0]) parent.set(key, value);
+          if (append) {
+            parent.set(parentEntry.value[0], parentEntry.value[1]);
+            if (position === parentEntry.value[0]) parent.set(key, value);
+          } else {
+            if (position === parentEntry.value[0]) parent.set(key, value);
+            parent.set(parentEntry.value[0], parentEntry.value[1]);
+          }
         }
       }
     } else if (Array.isArray(parent)) {

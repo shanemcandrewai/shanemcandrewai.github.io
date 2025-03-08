@@ -1,4 +1,5 @@
 import ControlView from './controlview.js';
+import Db from './db.js';
 
 export default class MainView {
   controlsObj = {
@@ -14,7 +15,7 @@ export default class MainView {
   };
 
   constructor(writeCacheImmediately) {
-    this.controls = ControlView.obj2Map(this.controlsObj);
+    this.controls = Db.obj2Map(this.controlsObj);
     this.controlView = new ControlView(this.controls, writeCacheImmediately || false);
   }
 }

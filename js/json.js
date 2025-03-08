@@ -26,7 +26,13 @@ export default class Json {
 
   hasRec = (id) => this.db.hasRec(id);
 
-  setRec = (key, value, parentRec, position) => this.db.setRec(key, value, parentRec, position);
+  setRec = (key, value, parentRec, position, append) => this.db.setRec(
+    key,
+    value,
+    parentRec,
+    position,
+    append,
+  );
 
   getMap = () => this.db.getMap();
 
