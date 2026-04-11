@@ -7,12 +7,31 @@
       <script async type="text/javascript" src="checkers_emscripten.js"></script>
    </head>
    <body>
-      <div class="emscripten_border">
-         <canvas class="emscripten" id="canvas"
-            oncontextmenu="event.preventDefault()"
-            tabindex=-1>
-         </canvas>
-      </div>
-      <textarea id="output" rows="8"></textarea>
+      <!-- <div class="emscripten_border"> -->
+         <!-- <canvas class="emscripten" id="canvas" -->
+            <!-- oncontextmenu="event.preventDefault()" -->
+            <!-- tabindex=-1> -->
+         <!-- </canvas> -->
+      <!-- </div> -->
+      <!-- <textarea id="output" rows="8"></textarea> -->
+
+    <span id='controls'>
+      <span><input type="checkbox" id="resize">Resize canvas</span>
+      <span><input type="checkbox" id="pointerLock" checked>Lock/hide mouse pointer &nbsp;&nbsp;&nbsp;</span>
+      <span><input type="button" value="Fullscreen" onclick="Module.requestFullscreen(document.getElementById('pointerLock').checked,
+                                                                                document.getElementById('resize').checked)">
+      </span>
+    </span>
+
+    <div class="emscripten">
+      <progress value="0" max="100" id="progress" hidden=1></progress>
+    </div>
+
+    <div class="emscripten_border">
+      <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
+    </div>
+    <textarea id="output" rows="8"></textarea>
+
+
    </body>
 </html>
