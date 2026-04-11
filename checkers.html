@@ -5,44 +5,6 @@
     <title>Emscripten-Generated Code</title>
     <style>
 
-
-#status {
-  display: inline-block;
-  vertical-align: top;
-  margin-top: 30px;
-  margin-left: 20px;
-  font-weight: bold;
-  color: rgb(120, 120, 120);
-}
-
-#progress {
-  height: 20px;
-  width: 300px;
-}
-
-#controls {
-  display: inline-block;
-  float: right;
-  vertical-align: top;
-  margin-top: 30px;
-  margin-right: 20px;
-}
-
-#output {
-  width: 100%;
-  height: 200px;
-  margin: 0 auto;
-  margin-top: 10px;
-  border-left: 0px;
-  border-right: 0px;
-  padding-left: 0px;
-  padding-right: 0px;
-  display: block;
-  background-color: black;
-  color: white;
-  font-family: 'Lucida Console', Monaco, monospace;
-  outline: none;
-}
 </style>
   </head>
   <body>
@@ -51,7 +13,7 @@
     <div class="emscripten" id="status">Downloading...</div>
 
     <span id='controls'>
-      <span><input type="checkbox" id="resize">4Resize canvas</span>
+      <span><input type="checkbox" id="resize">5Resize canvas</span>
       <span><input type="checkbox" id="pointerLock" checked>Lock/hide mouse pointer &nbsp;&nbsp;&nbsp;</span>
       <span><input type="button" value="Fullscreen" onclick="Module.requestFullscreen(document.getElementById('pointerLock').checked,
                                                                                 document.getElementById('resize').checked)">
