@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8">
+      <!-- <meta name="viewport" content="width=device-width,initial-scale=1"> -->
+      <title>Emscripten-Generated Code</title>
+      <script async type="text/javascript" src="helloworld.js"></script>
+   </head>
+   <body>
+      <canvas id="canvas"></canvas>
+      <script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+ctx.fillStyle = "green";
+ctx.fillRect(10, 10, 150, 100);
+
+
+      </script>
+   </body>
+</html>
