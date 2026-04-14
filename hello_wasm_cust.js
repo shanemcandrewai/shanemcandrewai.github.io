@@ -1,13 +1,14 @@
-console.log("wasm loading");
-const importObject = {
-  my_namespace: {
-    imported_func: arg => {
-      console.log(arg);
-    }
-  }
-};
+console.log("wasm loaded");
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+// var scale = 1.0;
+canvas.addEventListener('click', function () {
+  // scale *= 1.1;
+  canvas.style.transformOrigin = "top left";
+  // canvas.style.transform = "scale(" + scale + ")";
+  canvas.style.transform = "scale(2)";
+  console.log("checkers_cust.js scaled");
 
-WebAssembly.instantiateStreaming(fetch("hello_wasm.wasm"), importObject)
-  .then(obj => {
-    obj.instance.exports.exported_func();
-  });
+});
+
+console.log("checkers_cust.js finished");
