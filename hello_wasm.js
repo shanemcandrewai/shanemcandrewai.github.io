@@ -9241,6 +9241,6 @@ var wasmExports;
 createWasm();
 
 run();
-
+console.log("hello_wasm.js run() complete")
 // end include: postamble.js
 
