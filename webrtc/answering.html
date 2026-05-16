@@ -6,7 +6,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>answering webrtc without signaling server demo</title>
 <link rel="stylesheet" type="text/css" href="style.css">
-
+<script src="common.js"></script>
+<script src="answering.js"></script>
 <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
 </head>
 
@@ -14,10 +15,6 @@
 
 <h1>webrtc without signaling server demo.</h1>
 <div id="stun"></div>
-<<<<<<< HEAD
-
-=======
->>>>>>> stunfix
 <div id="chatlog" class="chatlog"></div>
 <input id="chatinput" type="text"  placeholder="type here" disabled>
 <button id="chatbutton" onclick="chatbuttonclick()" disabled>send</button>
@@ -45,12 +42,5 @@ document.getElementById("stun").innerHTML = stun;
 </script>
 
 </body>
-
-<script>
-const stun = "stun:stun.stunprotocol.org";
-document.getElementById("stun").innerHTML = stun;
-</script>
-<script src="common.js"></script>
-<script src="answering.js"></script>
 
 </html>
