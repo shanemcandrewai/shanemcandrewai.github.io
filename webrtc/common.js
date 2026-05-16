@@ -1,3 +1,4 @@
+const stun = "stun:stun.stunprotocol.org";
 
 function chatlog(msg) {
   chatelement = document.getElementById('chatlog');
