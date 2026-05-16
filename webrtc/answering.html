@@ -14,7 +14,7 @@
 <body>
 
 <h1>webrtc without signaling server demo.</h1>
-
+<div id="stun"></div>
 <div id="chatlog" class="chatlog"></div>
 <input id="chatinput" type="text"  placeholder="type here" disabled>
 <button id="chatbutton" onclick="chatbuttonclick()" disabled>send</button>
@@ -36,6 +36,10 @@ please send following answer to peer
 <textarea id="textanswer" readonly
   placeholder="please wait a few seconds"></textarea>
 </span>
+
+<script>
+document.getElementById("stun").innerHTML = stun;
+</script>
 
 </body>
 

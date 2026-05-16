@@ -1,3 +1,4 @@
+const stun = "stun:stun.stunprotocol.org";
 
 function chatlog(msg) {
   chatelement = document.getElementById('chatlog');
@@ -10,7 +11,7 @@ function chatlog(msg) {
 function createPeerConnection(lasticecandidate) {
   configuration = {
     iceServers: [{
-      urls: "stun:stun.stunprotocol.org"}]};
+      urls: stun}]};
   try {
     peerConnection = new RTCPeerConnection(configuration);
   } catch(err) {
