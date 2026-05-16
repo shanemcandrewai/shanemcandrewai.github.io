@@ -10,7 +10,7 @@ function chatlog(msg) {
 function createPeerConnection(lasticecandidate) {
   configuration = {
     iceServers: [{
-      urls: "stun:stun.stunxxxprotocol.org"}]};
+      urls: "stun:stun.stunprotocol.org"}]};
   try {
     peerConnection = new RTCPeerConnection(configuration);
   } catch(err) {
