@@ -6,9 +6,9 @@ let answer;
 let candidates = [];
 export let datachannel;
 
-const messagelog = document.getElementById("messagelog");
-const buttonsend = document.getElementById("buttonsend");
-const inputmessage = document.getElementById("inputmessage");
+// const messagelog = document.getElementById("messagelog");
+// const buttonsend = document.getElementById("buttonsend");
+// const inputmessage = document.getElementById("inputmessage");
 
 export let socket;
 
@@ -27,9 +27,9 @@ const opensocket = async (event) => {
 socket.addEventListener("open", await opensocket);
 
 const init = async () => {
-  buttonsend.disabled = false;
-  inputmessage.disabled = true;
-  buttonsend.textContent = "connect";
+//   buttonsend.disabled = false;
+//   inputmessage.disabled = true;
+//   buttonsend.textContent = "connect";
   offer = null;
   answer = null;
   candidates = [];
@@ -97,17 +97,17 @@ export const setDataChannel = (dc) => (datachannel = dc);
 
 const datachannelopen = (event) => {
   console.log("==11.0 dc open: ", event);
-  buttonsend.textContent = "send";
-  inputmessage.disabled = false;
-  messagelog.innerHTML += "connected: ";
-  messagelog.innerHTML += event.srcElement.label;
-  messagelog.innerHTML += "<br />";
+//   buttonsend.textContent = "send";
+//   inputmessage.disabled = false;
+//   messagelog.innerHTML += "connected: ";
+//   messagelog.innerHTML += event.srcElement.label;
+//   messagelog.innerHTML += "<br />";
 };
 
 const datachannelmessage = (message) => {
   console.log("===9.7 dc message received: ", message.data);
-  messagelog.innerHTML += message.data;
-  messagelog.innerHTML += "<br />";
+//   messagelog.innerHTML += message.data;
+//   messagelog.innerHTML += "<br />";
 };
 
 const datachannelclose = async (event) => {
@@ -115,11 +115,12 @@ const datachannelclose = async (event) => {
   await init();
 };
 
-const buttonsendclick = async () => {
+// const buttonsendclick = async () => {
+await new Promise(r => setTimeout(r, 2000));
   if (datachannel && datachannel.readyState === "open") {
     try {
-      datachannel.send(inputmessage.value);
-      console.log("==12.0 inputmessage sent: ", inputmessage.value);
+      datachannel.send("inputmessage.value");
+      console.log("==12.0 inputmessage sent: ", "inputmessage.value");
     } catch (err) {
       console.log("xxx error: " + err);
     }
@@ -128,6 +129,6 @@ const buttonsendclick = async () => {
     console.log("===6.0 socket send offer", offer);
     socket.send(JSON.stringify(offer));
   }
-};
+// };
 
-buttonsend.addEventListener("click", await buttonsendclick);
+// buttonsend.addEventListener("click", await buttonsendclick);
