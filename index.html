@@ -1,22 +1,23 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>checkers</title>
-  <!-- <script defer src="checkers.js"></script> -->
-  <!-- <script defer src="checkers_cust.js"></script> -->
-  <!-- <script type="module" src="checkers.js"></script> -->
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>checkers</title>
     <script type="module">
       import checkers from "./checkers.js";
-      const module = await checkers();
+      let module;
+      try {
+        module = await checkers();
+      } catch (err) {
+        console.log("xxx error: " + err);
+      }
+      console.log("Module", module);
+      // module._sayHi();
     </script>
-    <script type="module" src="webrtc.js"></script>
-</head>
+  </head>
 
-<body>
-  <canvas id="canvas"></canvas>
-</body>
-
+  <body>
+    <canvas id="canvas"></canvas>
+  </body>
 </html>
