@@ -7,16 +7,15 @@
     <script type="module">
       import checkers from "./checkers.js";
       let module;
-      try {
+      // try {
         module = await checkers();
-      } catch (err) {
-        console.log("xxx error: " + err);
-      }
+      // } catch (err) {
+      //   console.log("xxx error: " + err);
+      // }
       console.log("Module", module);
       // module._sayHi();
     </script>
   </head>
-
   <body>
     <canvas id="canvas"></canvas>
   </body>
