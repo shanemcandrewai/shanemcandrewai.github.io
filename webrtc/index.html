@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>checkers</title>
+    <script type="module">
+      import checkers from "./checkers.js";
+      let module;
+      // try {
+        module = await checkers();
+      // } catch (err) {
+      //   console.log("xxx error: " + err);
+      // }
+      console.log("Module", module);
+      // module._sayHi();
+    </script>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+  </body>
+</html>
