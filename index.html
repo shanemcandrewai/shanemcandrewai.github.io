@@ -7,13 +7,12 @@
     <script type="module">
       import checkers from "./checkers.js";
       let module;
-      // try {
+      try {
         module = await checkers();
-      // } catch (err) {
-      //   console.log("xxx error: " + err);
-      // }
-      console.log("Module", module);
-      // module._sayHi();
+      } catch (err) {
+        console.log("xxx error: " + err);
+        console.log("Module", module);
+      }
     </script>
   </head>
   <body>
